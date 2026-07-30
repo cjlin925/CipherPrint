@@ -1188,7 +1188,7 @@
 
     cipherTypeInput.addEventListener("change", updateDynamicForm);
 
-    randomMissionButton.addEventListener("click", () => {
+    function populateRandomMission(shouldFocus = true) {
       const selectedTheme = document.querySelector('input[name="missionTheme"]:checked').value;
       const theme = missionThemes[selectedTheme];
       const customKeyword = customMissionKeywordInput.value.trim().toUpperCase().replace(/\s+/g, " ");
@@ -1200,8 +1200,10 @@
       customMissionKeywordInput.value = customKeyword;
       missionWordCountInput.value = targetWordCount;
       messageInput.value = generateRandomMission(theme, customKeyword, targetWordCount);
-      messageInput.focus();
-    });
+      if (shouldFocus) messageInput.focus();
+    }
+
+    randomMissionButton.addEventListener("click", () => populateRandomMission());
 
     keywordInput.addEventListener("input", () => {
       keywordInput.value = keywordInput.value.toUpperCase().replace(/[^A-Z]/g, "");
@@ -1229,6 +1231,7 @@
     updateDynamicForm();
     renderAffineMapping();
     renderVigenereSquare();
+    populateRandomMission(false);
     generateMission();
   </script>
 </body>
