@@ -1,0 +1,1118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CipherPrint</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17201b;
+      --muted: #69736d;
+      --paper: #ffffff;
+      --accent: #215c42;
+      --accent-dark: #17412f;
+      --line: #dfe5e1;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(33, 92, 66, 0.08), transparent 28rem),
+        #f4f6f4;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .screen {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+      padding: 2rem;
+    }
+
+    .generator {
+      width: min(100%, 52rem);
+      padding: clamp(1.75rem, 5vw, 3rem);
+      border: 1px solid rgba(23, 32, 27, 0.08);
+      border-radius: 1.25rem;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 1.5rem 4rem rgba(23, 32, 27, 0.09);
+    }
+
+    .eyebrow {
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.5rem, 8vw, 4.25rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.95;
+    }
+
+    .intro {
+      max-width: 40rem;
+      margin: 1rem 0 2rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .field {
+      margin-top: 1.25rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 3.2rem;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      color: var(--ink);
+      background: var(--paper);
+      font: inherit;
+      outline: none;
+      transition: border-color 150ms ease, box-shadow 150ms ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(33, 92, 66, 0.12);
+    }
+
+    select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+        linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+      background-position:
+        calc(100% - 1.15rem) 50%,
+        calc(100% - 0.85rem) 50%;
+      background-repeat: no-repeat;
+      background-size: 0.32rem 0.32rem;
+    }
+
+    input[type="number"] {
+      max-width: 8rem;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .field-hint {
+      margin: 0.45rem 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .mission-builder {
+      margin: 1.5rem 0 0;
+      padding: 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 0.85rem;
+      background: #fafcfb;
+    }
+
+    .mission-builder legend {
+      padding: 0 0.45rem;
+      color: var(--accent-dark);
+      font-size: 0.85rem;
+      font-weight: 800;
+    }
+
+    .theme-label {
+      margin: 0 0 0.65rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .theme-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+
+    .theme-pills input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .theme-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.5rem;
+      margin: 0;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+    }
+
+    .theme-pills input:checked + .theme-pill {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .theme-pills input:focus-visible + .theme-pill {
+      box-shadow: 0 0 0 3px rgba(33, 92, 66, 0.16);
+    }
+
+    .mission-options {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 10rem;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .mission-options .field {
+      margin: 0;
+    }
+
+    .message-control {
+      display: flex;
+      align-items: stretch;
+      gap: 0.65rem;
+    }
+
+    .message-control textarea {
+      min-height: 5.75rem;
+      min-width: 0;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .random-button {
+      width: auto;
+      margin: 0;
+      padding-inline: 1rem;
+      border: 1px solid var(--line);
+      color: var(--accent-dark);
+      background: #f7faf8;
+      white-space: nowrap;
+    }
+
+    .random-button:hover {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    @media (max-width: 640px) {
+      .screen {
+        padding: 1rem;
+      }
+
+      .message-control {
+        flex-direction: column;
+      }
+
+      .random-button {
+        width: 100%;
+      }
+
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .mission-options {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 1.75rem;
+      padding: 0.9rem 1.2rem;
+      border: 0;
+      border-radius: 0.65rem;
+      color: white;
+      background: var(--accent);
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .privacy {
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .print-sheet {
+      display: none;
+    }
+
+    @page {
+      size: auto;
+      margin: 12mm;
+    }
+
+    @media print {
+      :root {
+        --ink: #000;
+      }
+
+      html,
+      body {
+        min-height: auto;
+        background: #fff;
+      }
+
+      .screen {
+        display: none !important;
+      }
+
+      .print-sheet {
+        display: block;
+        max-width: 190mm;
+        margin: 0 auto;
+        color: #000;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .mission-header {
+        padding-bottom: 3mm;
+        border-bottom: 2px solid #000;
+        text-align: center;
+      }
+
+      .mission-header p {
+        margin: 0 0 1.5mm;
+        font-size: 8pt;
+        font-weight: 700;
+        letter-spacing: 0.24em;
+      }
+
+      .mission-header h2 {
+        margin: 0;
+        font-size: 19pt;
+        letter-spacing: 0.08em;
+      }
+
+      .mission-meta {
+        display: flex;
+        justify-content: space-between;
+        margin: 3mm 0 1mm;
+        font-size: 8pt;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .cipher-aid {
+        display: none;
+      }
+
+      .cipher-aid.active {
+        display: block;
+      }
+
+      .wheel-section.active {
+        display: grid;
+        grid-template-columns: 88mm 1fr;
+        align-items: center;
+        gap: 8mm;
+        min-height: 94mm;
+        padding: 3mm 0;
+        border-bottom: 1px solid #000;
+        break-inside: avoid;
+      }
+
+      #cipher-wheel {
+        display: block;
+        width: 88mm;
+        height: 88mm;
+      }
+
+      .wheel-notes h3,
+      .aid-title,
+      .message-section h3 {
+        margin: 0 0 2mm;
+        font-size: 11pt;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+
+      .wheel-notes p {
+        margin: 0 0 2.5mm;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 9.5pt;
+        line-height: 1.4;
+      }
+
+      .cut-key {
+        display: inline-block;
+        width: 8mm;
+        border-top: 1px dashed #000;
+        vertical-align: middle;
+      }
+
+      .calculation-box {
+        margin: 5mm 0 0;
+        padding: 5mm;
+        border: 1.5px solid #000;
+        break-inside: avoid;
+      }
+
+      .affine-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8mm;
+        margin: 0 0 4mm;
+      }
+
+      .affine-summary p {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 10pt;
+      }
+
+      .formula {
+        padding: 2.5mm 4mm;
+        border: 1px solid #000;
+        font-family: "Courier New", monospace;
+        font-size: 11pt;
+        font-weight: 700;
+      }
+
+      .mapping-table,
+      .vigenere-table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+      }
+
+      .mapping-table td {
+        height: 7mm;
+        border: 0.5px solid #000;
+        font-family: "Courier New", monospace;
+        font-size: 8pt;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .mapping-table tr:last-child td {
+        height: 9mm;
+      }
+
+      .vigenere-section {
+        padding-top: 4mm;
+        break-inside: avoid;
+      }
+
+      .vigenere-table td {
+        height: 5.35mm;
+        padding: 0;
+        border: 0.35px solid #000;
+        font-family: "Courier New", monospace;
+        font-size: 6.5pt;
+        line-height: 1;
+        text-align: center;
+      }
+
+      .vigenere-table tr:first-child td,
+      .vigenere-table td:first-child {
+        font-weight: 700;
+        background: #eee;
+      }
+
+      .message-section {
+        padding-top: 5mm;
+        break-before: auto;
+      }
+
+      .message-section > p {
+        margin: 0 0 5mm;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 9.5pt;
+      }
+
+      .cipher-message {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 5mm 0;
+      }
+
+      .cipher-word {
+        display: inline-flex;
+        gap: 1.4mm;
+        break-inside: avoid;
+      }
+
+      .cipher-character {
+        display: inline-grid;
+        grid-template-rows: 7mm 5mm;
+        width: 5.4mm;
+        text-align: center;
+      }
+
+      .keyword-letter {
+        display: none;
+        font-family: "Courier New", monospace;
+        font-size: 8pt;
+        font-weight: 700;
+        line-height: 4mm;
+      }
+
+      .cipher-vigenere .cipher-character {
+        grid-template-rows: 4mm 7mm 5mm;
+      }
+
+      .cipher-vigenere .keyword-letter {
+        display: block;
+      }
+
+      .cipher-vigenere .message-section {
+        break-before: page;
+      }
+
+      .keyword-legend {
+        display: none;
+      }
+
+      .cipher-vigenere .keyword-legend {
+        display: block;
+        margin-bottom: 2mm;
+        font-family: "Courier New", monospace;
+        font-size: 8pt;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+      }
+
+      .cipher-letter {
+        font-family: "Courier New", monospace;
+        font-size: 15pt;
+        font-weight: 700;
+        line-height: 7mm;
+      }
+
+      .answer-line {
+        display: block;
+        width: 100%;
+        margin-top: 3.5mm;
+        border-bottom: 1px solid #000;
+      }
+
+      .punctuation {
+        align-self: start;
+        padding-top: 0;
+        font-family: "Courier New", monospace;
+        font-size: 15pt;
+        font-weight: 700;
+      }
+
+      .cipher-space {
+        display: inline-block;
+        flex: 0 0 5.5mm;
+        min-height: 1px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="screen">
+    <section class="generator" aria-labelledby="app-title">
+      <p class="eyebrow">Offline mission generator</p>
+      <h1 id="app-title">CipherPrint</h1>
+      <p class="intro">Turn a secret message into a printable cryptography mission. Everything stays in this browser.</p>
+
+      <form id="cipher-form">
+        <div class="field">
+          <label for="cipher-type">Cipher Type</label>
+          <select id="cipher-type" name="cipherType">
+            <option value="caesar">Caesar</option>
+            <option value="affine">Affine</option>
+            <option value="vigenere">Vigenère</option>
+          </select>
+        </div>
+
+        <fieldset class="mission-builder">
+          <legend>Custom Mission Generator</legend>
+          <p class="theme-label">Mission Theme</p>
+          <div class="theme-pills">
+            <input id="theme-base" name="missionTheme" type="radio" value="base" checked>
+            <label class="theme-pill" for="theme-base" title="Treehouse, headquarters, bunker, and radar missions">🌲 Base &amp; Outpost</label>
+
+            <input id="theme-snacks" name="missionTheme" type="radio" value="snacks">
+            <label class="theme-pill" for="theme-snacks" title="Cookies, secret stash, juice box, and pizza missions">🍪 Snacks &amp; Loot</label>
+
+            <input id="theme-gadgets" name="missionTheme" type="radio" value="gadgets">
+            <label class="theme-pill" for="theme-gadgets" title="Laser grid, invisible ink, jetpack, and decoder missions">🕵️‍♂️ Spy Gadgets</label>
+          </div>
+
+          <div class="mission-options">
+            <div class="field">
+              <label for="custom-mission-keyword">Custom Keyword (optional)</label>
+              <input id="custom-mission-keyword" type="text" placeholder="Try PIZZA, DRAGON, or MOON" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="mission-word-count">Target Word Count</label>
+              <input id="mission-word-count" type="number" value="9" min="6" max="18" step="1" aria-describedby="word-count-hint">
+              <p id="word-count-hint" class="field-hint">Approximately 6–18 words.</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="field">
+          <label for="secret-message">Secret Message</label>
+          <div class="message-control">
+            <textarea id="secret-message" name="message" rows="3" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
+            <button id="random-mission" class="random-button" type="button">🎲 Random Mission</button>
+          </div>
+        </div>
+
+        <div id="caesar-fields" class="cipher-fields">
+          <div class="field">
+            <label for="caesar-shift">Shift</label>
+            <input id="caesar-shift" name="caesarShift" type="number" value="3" min="1" max="25" required>
+          </div>
+        </div>
+
+        <div id="affine-fields" class="cipher-fields" hidden>
+          <div class="field-row">
+            <div class="field">
+              <label for="affine-a">Multiplier “a”</label>
+              <input id="affine-a" name="affineA" type="number" value="5" min="1" max="25">
+              <p class="field-hint">Must be coprime with 26.</p>
+            </div>
+            <div class="field">
+              <label for="affine-b">Shift “b”</label>
+              <input id="affine-b" name="affineB" type="number" value="8" min="0" max="25">
+            </div>
+          </div>
+        </div>
+
+        <div id="vigenere-fields" class="cipher-fields" hidden>
+          <div class="field">
+            <label for="vigenere-keyword">Keyword</label>
+            <input id="vigenere-keyword" name="keyword" type="text" value="LEMON" pattern="[A-Z]+" autocapitalize="characters" autocomplete="off">
+            <p class="field-hint">Letters A–Z only.</p>
+          </div>
+        </div>
+
+        <button type="submit">Generate &amp; Print</button>
+      </form>
+      <p class="privacy">No network. No saved messages. Just print.</p>
+    </section>
+  </main>
+
+  <article class="print-sheet" aria-label="Printable cryptography mission">
+    <header class="mission-header">
+      <p>CLASSIFIED // EYES ONLY</p>
+      <h2>TOP SECRET MISSION FOR HECTOR</h2>
+    </header>
+
+    <div class="mission-meta">
+      <span id="mission-type">Mission: Caesar Cipher</span>
+      <span id="mission-key">Shift: 3</span>
+    </div>
+
+    <section id="caesar-print" class="cipher-aid wheel-section active">
+      <svg id="cipher-wheel" viewBox="0 0 400 400" role="img" aria-label="Cut-out Caesar cipher wheel"></svg>
+      <div class="wheel-notes">
+        <h3>Cipher Wheel</h3>
+        <p>Cut around both dashed circles. Place the smaller wheel over the larger wheel and fasten them together through the center marks.</p>
+        <p><span class="cut-key"></span> Cut line</p>
+        <p>The wheel is already aligned to this mission's shift.</p>
+      </div>
+    </section>
+
+    <section id="affine-print" class="cipher-aid calculation-box">
+      <h3 class="aid-title">Affine Calculation Box</h3>
+      <div class="affine-summary">
+        <p id="affine-keys">Keys: a = 5, b = 8</p>
+        <div class="formula">E(x) = (a × x + b) mod 26</div>
+      </div>
+      <table class="mapping-table" aria-label="Blank Affine alphabet mapping table">
+        <tbody id="affine-mapping"></tbody>
+      </table>
+    </section>
+
+    <section id="vigenere-print" class="cipher-aid vigenere-section">
+      <h3 class="aid-title">Vigenère Square — Tabula Recta</h3>
+      <table class="vigenere-table" aria-label="Vigenère square">
+        <tbody id="vigenere-square"></tbody>
+      </table>
+    </section>
+
+    <section class="message-section">
+      <h3>Encrypted Transmission</h3>
+      <p id="mission-instructions">Use the cipher aid to decode each letter. Write the decrypted letter on the line beneath it.</p>
+      <div class="keyword-legend">KEYWORD LETTER / ENCRYPTED LETTER / ANSWER</div>
+      <div id="cipher-message" class="cipher-message" aria-label="Encrypted message"></div>
+    </section>
+  </article>
+
+  <script>
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const missionThemes = {
+      base: {
+        standard: [
+          "MEET ME AT THE TREEHOUSE AT MIDNIGHT",
+          "REPORT TO HEADQUARTERS BEFORE SUNSET",
+          "THE SECRET BUNKER IS BEHIND THE OLD OAK",
+          "AGENT HECTOR CHECK THE RADAR AT DAWN",
+          "THE EAGLE HAS LANDED AT THE NORTH OUTPOST"
+        ],
+        custom: [
+          "AGENT HECTOR SECURE THE {keyword} AT THE TREEHOUSE",
+          "DELIVER THE {keyword} TO HEADQUARTERS BEFORE SUNSET",
+          "HIDE THE {keyword} INSIDE THE SECRET BUNKER",
+          "THE RADAR DETECTED THE {keyword} NEAR THE OUTPOST"
+        ],
+        addOns: [
+          "BEFORE SUNSET",
+          "WITHOUT BEING SEEN",
+          "AND REPORT BACK TO HEADQUARTERS",
+          "BEFORE THE RADAR SWEEPS AGAIN"
+        ]
+      },
+      snacks: {
+        standard: [
+          "CRACK THE CODE TO FIND THE COOKIES",
+          "OPERATION MIDNIGHT SNACK IS A GO",
+          "SECURE THE SECRET STASH BEFORE LUNCH",
+          "THE JUICE BOX IS HIDDEN BEHIND THE BOOKS",
+          "DELIVER THE PIZZA TO AGENT HECTOR"
+        ],
+        custom: [
+          "AGENT HECTOR SECURE THE {keyword} AT MIDNIGHT",
+          "HIDE THE {keyword} IN THE SECRET SNACK STASH",
+          "FOLLOW THE CRUMBS TO RECOVER THE {keyword}",
+          "DELIVER THE {keyword} BEFORE THE GUARDS GET HUNGRY"
+        ],
+        addOns: [
+          "BEFORE MIDNIGHT",
+          "WITHOUT DROPPING A SINGLE CRUMB",
+          "AND SHARE THE LOOT WITH YOUR TEAM",
+          "BEFORE THE SNACK ALARM SOUNDS"
+        ]
+      },
+      gadgets: {
+        standard: [
+          "CAUTION THE LASER GRID IS ACTIVE",
+          "WRITE THE PASSWORD USING INVISIBLE INK",
+          "THE JETPACK IS READY FOR TAKEOFF",
+          "USE THE DECODER TO UNLOCK THE SECRET FILE",
+          "AGENT HECTOR ACTIVATE THE POCKET RADAR"
+        ],
+        custom: [
+          "USE THE DECODER TO LOCATE THE {keyword}",
+          "THE LASER GRID IS GUARDING THE {keyword}",
+          "WRITE {keyword} WITH INVISIBLE INK",
+          "PACK THE {keyword} BESIDE THE EMERGENCY JETPACK"
+        ],
+        addOns: [
+          "BEFORE THE BATTERY RUNS OUT",
+          "WITHOUT TRIGGERING THE LASER ALARM",
+          "AND SEND THE SIGNAL TO AGENT HECTOR",
+          "BEFORE THE NEXT RADAR SCAN"
+        ]
+      }
+    };
+    const form = document.getElementById("cipher-form");
+    const cipherTypeInput = document.getElementById("cipher-type");
+    const messageInput = document.getElementById("secret-message");
+    const randomMissionButton = document.getElementById("random-mission");
+    const customMissionKeywordInput = document.getElementById("custom-mission-keyword");
+    const missionWordCountInput = document.getElementById("mission-word-count");
+    const caesarShiftInput = document.getElementById("caesar-shift");
+    const affineAInput = document.getElementById("affine-a");
+    const affineBInput = document.getElementById("affine-b");
+    const keywordInput = document.getElementById("vigenere-keyword");
+    const messageOutput = document.getElementById("cipher-message");
+    const printSheet = document.querySelector(".print-sheet");
+    const missionType = document.getElementById("mission-type");
+    const missionKey = document.getElementById("mission-key");
+    const missionInstructions = document.getElementById("mission-instructions");
+    const affineKeys = document.getElementById("affine-keys");
+    const affineMapping = document.getElementById("affine-mapping");
+    const vigenereSquare = document.getElementById("vigenere-square");
+    const wheel = document.getElementById("cipher-wheel");
+    const svgNS = "http://www.w3.org/2000/svg";
+    const cipherFields = {
+      caesar: document.getElementById("caesar-fields"),
+      affine: document.getElementById("affine-fields"),
+      vigenere: document.getElementById("vigenere-fields")
+    };
+    const printAids = {
+      caesar: document.getElementById("caesar-print"),
+      affine: document.getElementById("affine-print"),
+      vigenere: document.getElementById("vigenere-print")
+    };
+
+    function caesarEncrypt(message, shift) {
+      return message.toUpperCase().replace(/[A-Z]/g, (letter) => {
+        const index = alphabet.indexOf(letter);
+        return alphabet[(index + shift) % alphabet.length];
+      });
+    }
+
+    function affineEncrypt(message, a, b) {
+      return message.toUpperCase().replace(/[A-Z]/g, (letter) => {
+        const index = alphabet.indexOf(letter);
+        return alphabet[(a * index + b) % alphabet.length];
+      });
+    }
+
+    function vigenereEncrypt(message, keyword) {
+      let keyIndex = 0;
+      return message.toUpperCase().replace(/[A-Z]/g, (letter) => {
+        const letterIndex = alphabet.indexOf(letter);
+        const shift = alphabet.indexOf(keyword[keyIndex % keyword.length]);
+        keyIndex += 1;
+        return alphabet[(letterIndex + shift) % alphabet.length];
+      });
+    }
+
+    function greatestCommonDivisor(a, b) {
+      while (b !== 0) {
+        [a, b] = [b, a % b];
+      }
+      return Math.abs(a);
+    }
+
+    function svgElement(name, attributes = {}, text = "") {
+      const element = document.createElementNS(svgNS, name);
+      Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+      if (text) element.textContent = text;
+      return element;
+    }
+
+    function addRing(radius, letterRadius, letters, fontSize) {
+      wheel.appendChild(svgElement("circle", {
+        cx: 200,
+        cy: 200,
+        r: radius,
+        fill: "none",
+        stroke: "#000",
+        "stroke-width": 1.5,
+        "stroke-dasharray": "5 4"
+      }));
+
+      letters.forEach((letter, index) => {
+        const angle = (index * 360 / 26 - 90) * Math.PI / 180;
+        const x = 200 + Math.cos(angle) * letterRadius;
+        const y = 200 + Math.sin(angle) * letterRadius;
+        wheel.appendChild(svgElement("text", {
+          x,
+          y,
+          fill: "#000",
+          "font-family": "Arial, Helvetica, sans-serif",
+          "font-size": fontSize,
+          "font-weight": "700",
+          "text-anchor": "middle",
+          "dominant-baseline": "central"
+        }, letter));
+      });
+    }
+
+    function renderWheel(shift) {
+      wheel.replaceChildren();
+      wheel.appendChild(svgElement("circle", {
+        cx: 200,
+        cy: 200,
+        r: 184,
+        fill: "none",
+        stroke: "#000",
+        "stroke-width": 1,
+        "stroke-dasharray": "5 4"
+      }));
+      wheel.appendChild(svgElement("circle", {
+        cx: 200,
+        cy: 200,
+        r: 121,
+        fill: "#fff",
+        stroke: "#000",
+        "stroke-width": 1,
+        "stroke-dasharray": "5 4"
+      }));
+
+      addRing(167, 151, [...alphabet], 15);
+      const shiftedAlphabet = [...alphabet].map((_, index) => alphabet[(index + shift) % 26]);
+      addRing(108, 93, shiftedAlphabet, 13);
+
+      wheel.appendChild(svgElement("circle", {
+        cx: 200,
+        cy: 200,
+        r: 4,
+        fill: "none",
+        stroke: "#000",
+        "stroke-width": 1
+      }));
+      wheel.appendChild(svgElement("line", {
+        x1: 191,
+        y1: 200,
+        x2: 209,
+        y2: 200,
+        stroke: "#000",
+        "stroke-width": 1
+      }));
+      wheel.appendChild(svgElement("line", {
+        x1: 200,
+        y1: 191,
+        x2: 200,
+        y2: 209,
+        stroke: "#000",
+        "stroke-width": 1
+      }));
+    }
+
+    function renderAffineMapping() {
+      affineMapping.replaceChildren();
+      const letters = document.createElement("tr");
+      const blanks = document.createElement("tr");
+
+      [...alphabet].forEach((letter) => {
+        const letterCell = document.createElement("td");
+        letterCell.textContent = letter;
+        letters.appendChild(letterCell);
+        blanks.appendChild(document.createElement("td"));
+      });
+
+      affineMapping.append(letters, blanks);
+    }
+
+    function renderVigenereSquare() {
+      vigenereSquare.replaceChildren();
+      for (let rowIndex = 0; rowIndex < 26; rowIndex += 1) {
+        const row = document.createElement("tr");
+        for (let columnIndex = 0; columnIndex < 26; columnIndex += 1) {
+          const cell = document.createElement("td");
+          cell.textContent = alphabet[(rowIndex + columnIndex) % 26];
+          row.appendChild(cell);
+        }
+        vigenereSquare.appendChild(row);
+      }
+    }
+
+    function renderMessage(encryptedMessage, keyword = "") {
+      messageOutput.replaceChildren();
+      const parts = encryptedMessage.match(/[A-Z]+|\s+|[^A-Z\s]+/g) || [];
+      let keyIndex = 0;
+
+      parts.forEach((part) => {
+        if (/^[A-Z]+$/.test(part)) {
+          const word = document.createElement("span");
+          word.className = "cipher-word";
+
+          [...part].forEach((letter) => {
+            const character = document.createElement("span");
+            character.className = "cipher-character";
+
+            const keyLetter = document.createElement("span");
+            keyLetter.className = "keyword-letter";
+            if (keyword) {
+              keyLetter.textContent = keyword[keyIndex % keyword.length];
+              keyIndex += 1;
+            }
+
+            const encrypted = document.createElement("span");
+            encrypted.className = "cipher-letter";
+            encrypted.textContent = letter;
+
+            const line = document.createElement("span");
+            line.className = "answer-line";
+
+            character.append(keyLetter, encrypted, line);
+            word.appendChild(character);
+          });
+
+          messageOutput.appendChild(word);
+        } else if (/^\s+$/.test(part)) {
+          [...part].forEach(() => {
+            const space = document.createElement("span");
+            space.className = "cipher-space";
+            space.setAttribute("aria-hidden", "true");
+            messageOutput.appendChild(space);
+          });
+        } else {
+          const punctuation = document.createElement("span");
+          punctuation.className = "punctuation";
+          punctuation.textContent = part;
+          messageOutput.appendChild(punctuation);
+        }
+      });
+    }
+
+    function updateDynamicForm() {
+      const selectedType = cipherTypeInput.value;
+
+      Object.entries(cipherFields).forEach(([type, fields]) => {
+        const isSelected = type === selectedType;
+        fields.hidden = !isSelected;
+        fields.querySelectorAll("input").forEach((input) => {
+          input.disabled = !isSelected;
+          input.required = isSelected;
+        });
+      });
+
+      affineAInput.setCustomValidity("");
+    }
+
+    function generateMission() {
+      const type = cipherTypeInput.value;
+      let encryptedMessage = "";
+      let keyword = "";
+
+      Object.entries(printAids).forEach(([aidType, aid]) => {
+        aid.classList.toggle("active", aidType === type);
+      });
+      printSheet.className = `print-sheet cipher-${type}`;
+
+      if (type === "caesar") {
+        const shift = Number.parseInt(caesarShiftInput.value, 10);
+        missionType.textContent = "Mission: Caesar Cipher";
+        missionKey.textContent = `Shift: ${shift}`;
+        missionInstructions.textContent = "Use the cipher wheel to decode each letter. Write the decrypted letter on the line beneath it.";
+        renderWheel(shift);
+        encryptedMessage = caesarEncrypt(messageInput.value, shift);
+      } else if (type === "affine") {
+        const a = Number.parseInt(affineAInput.value, 10);
+        const b = Number.parseInt(affineBInput.value, 10);
+        missionType.textContent = "Mission: Affine Cipher";
+        missionKey.textContent = `Keys: a = ${a}, b = ${b}`;
+        missionInstructions.textContent = "Complete the mapping table, then decode each letter. Write the decrypted letter on the line beneath it.";
+        affineKeys.textContent = `Keys: a = ${a}, b = ${b}`;
+        encryptedMessage = affineEncrypt(messageInput.value, a, b);
+      } else {
+        keyword = keywordInput.value.toUpperCase();
+        keywordInput.value = keyword;
+        missionType.textContent = "Mission: Vigenère Cipher";
+        missionKey.textContent = `Keyword: ${keyword}`;
+        missionInstructions.textContent = "Use the keyword letters and Tabula Recta to decode the transmission. Write each answer on the line.";
+        encryptedMessage = vigenereEncrypt(messageInput.value, keyword);
+      }
+
+      renderMessage(encryptedMessage, keyword);
+    }
+
+    cipherTypeInput.addEventListener("change", updateDynamicForm);
+
+    randomMissionButton.addEventListener("click", () => {
+      const selectedTheme = document.querySelector('input[name="missionTheme"]:checked').value;
+      const theme = missionThemes[selectedTheme];
+      const customKeyword = customMissionKeywordInput.value.trim().toUpperCase().replace(/\s+/g, " ");
+      const templates = customKeyword ? theme.custom : theme.standard;
+      const targetWordCount = Math.min(
+        18,
+        Math.max(6, Number.parseInt(missionWordCountInput.value, 10) || 9)
+      );
+      const baseMissions = templates.map((template) => template.replace("{keyword}", customKeyword));
+      const generatedMissions = new Set(baseMissions);
+
+      baseMissions.forEach((mission) => {
+        theme.addOns.forEach((addOn, firstIndex) => {
+          if (!mission.includes(addOn)) {
+            generatedMissions.add(`${mission} ${addOn}`);
+          }
+
+          theme.addOns.forEach((secondAddOn, secondIndex) => {
+            if (firstIndex !== secondIndex && !mission.includes(addOn) && !mission.includes(secondAddOn)) {
+              generatedMissions.add(`${mission} ${addOn} ${secondAddOn}`);
+            }
+          });
+        });
+      });
+
+      const candidates = [...generatedMissions];
+      const wordCount = (mission) => mission.trim().split(/\s+/).length;
+      const closestDifference = Math.min(
+        ...candidates.map((mission) => Math.abs(wordCount(mission) - targetWordCount))
+      );
+      const closestMissions = candidates.filter(
+        (mission) => Math.abs(wordCount(mission) - targetWordCount) === closestDifference
+      );
+      const alternatives = closestMissions.filter((mission) => mission !== messageInput.value);
+      const missions = alternatives.length ? alternatives : closestMissions;
+
+      customMissionKeywordInput.value = customKeyword;
+      missionWordCountInput.value = targetWordCount;
+      messageInput.value = missions[Math.floor(Math.random() * missions.length)];
+      messageInput.focus();
+    });
+
+    keywordInput.addEventListener("input", () => {
+      keywordInput.value = keywordInput.value.toUpperCase().replace(/[^A-Z]/g, "");
+    });
+
+    affineAInput.addEventListener("input", () => {
+      const a = Number.parseInt(affineAInput.value, 10);
+      affineAInput.setCustomValidity(
+        Number.isInteger(a) && greatestCommonDivisor(a, 26) !== 1
+          ? "Multiplier a must be coprime with 26 (for example 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, or 25)."
+          : ""
+      );
+    });
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (cipherTypeInput.value === "affine") {
+        affineAInput.dispatchEvent(new Event("input"));
+      }
+      if (!form.reportValidity()) return;
+      generateMission();
+      window.print();
+    });
+
+    updateDynamicForm();
+    renderAffineMapping();
+    renderVigenereSquare();
+    generateMission();
+  </script>
+</body>
+</html>
