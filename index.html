@@ -601,8 +601,8 @@
             </div>
             <div class="field">
               <label for="mission-word-count">Target Word Count</label>
-              <input id="mission-word-count" type="number" value="9" min="6" max="18" step="1" aria-describedby="word-count-hint">
-              <p id="word-count-hint" class="field-hint">Approximately 6–18 words.</p>
+              <input id="mission-word-count" type="number" value="24" min="12" max="40" step="1" aria-describedby="word-count-hint">
+              <p id="word-count-hint" class="field-hint">Approximately 12–40 words.</p>
             </div>
           </div>
         </fieldset>
@@ -610,7 +610,7 @@
         <div class="field">
           <label for="secret-message">Secret Message</label>
           <div class="message-control">
-            <textarea id="secret-message" name="message" rows="3" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
+            <textarea id="secret-message" name="message" rows="4" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
             <button id="random-mission" class="random-button" type="button">🎲 Random Mission</button>
           </div>
         </div>
@@ -699,71 +699,159 @@
 
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const missionCharacters = [
+      "AGENT HECTOR",
+      "PROFESSOR PICKLE",
+      "A SQUIRREL WEARING SUNGLASSES",
+      "CAPTAIN WHISKERS THE CAT",
+      "ROBOT AGENT BEEP",
+      "JUNIOR AGENT NOVA",
+      "A VERY POLITE NINJA",
+      "DETECTIVE PANCAKE"
+    ];
+    const missionStoryFrames = [
+      ({ character, objective, object, location, deadline }) =>
+        `${character} WAS SENT TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `HEADQUARTERS ASKED ${character} TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} THOUGHT IT WOULD BE EASY TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, object, location, deadline }) =>
+        `WHEN ${object} VANISHED, ${character} FOLLOWED A TRAIL OF CLUES ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} FOUND A SECRET NOTE ORDERING THE TEAM TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `THE ALARM RANG WHEN ${character} TRIED TO ${objective} ${object} ${location} ${deadline}.`
+    ];
+    const missionTwistFrames = [
+      (twist) => `UNFORTUNATELY, ${twist}.`,
+      (twist) => `THE ONLY PROBLEM WAS THAT ${twist}.`,
+      (twist) => `EVERYTHING WENT PERFECTLY UNTIL ${twist}.`,
+      (twist) => `THEN HEADQUARTERS REPORTED THAT ${twist}.`
+    ];
     const missionThemes = {
       base: {
-        standard: [
-          "MEET ME AT THE TREEHOUSE AT MIDNIGHT",
-          "REPORT TO HEADQUARTERS BEFORE SUNSET",
-          "THE SECRET BUNKER IS BEHIND THE OLD OAK",
-          "AGENT HECTOR CHECK THE RADAR AT DAWN",
-          "THE EAGLE HAS LANDED AT THE NORTH OUTPOST"
+        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "INSPECT"],
+        objects: [
+          "THE SECRET MAP",
+          "THE RADAR KEY",
+          "THE SUPPLY CRATE",
+          "THE HIDDEN BLUEPRINTS",
+          "THE COMMAND FLAG",
+          "THE MYSTERY PACKAGE"
         ],
-        custom: [
-          "AGENT HECTOR SECURE THE {keyword} AT THE TREEHOUSE",
-          "DELIVER THE {keyword} TO HEADQUARTERS BEFORE SUNSET",
-          "HIDE THE {keyword} INSIDE THE SECRET BUNKER",
-          "THE RADAR DETECTED THE {keyword} NEAR THE OUTPOST"
+        locations: [
+          "AT THE TREEHOUSE",
+          "INSIDE THE HIDDEN BUNKER",
+          "NEAR THE NORTH OUTPOST",
+          "BEHIND HEADQUARTERS",
+          "BESIDE THE OLD OAK",
+          "UNDER THE RADAR TOWER"
         ],
-        addOns: [
+        deadlines: [
           "BEFORE SUNSET",
-          "WITHOUT BEING SEEN",
-          "AND REPORT BACK TO HEADQUARTERS",
-          "BEFORE THE RADAR SWEEPS AGAIN"
+          "AT MIDNIGHT",
+          "BEFORE THE NEXT RADAR SWEEP",
+          "AT FIRST LIGHT",
+          "BEFORE THE EAGLE LANDS"
+        ],
+        twists: [
+          "A PIGEON IN A TINY HAT STOLE THE ONLY CLUE",
+          "THE BUNKER DOOR STARTED SINGING OPERA",
+          "A CONFUSED MOOSE ASKED TO SEE EVERYONE'S BADGES",
+          "THE RADAR WAS ACTUALLY TRACKING A RUNAWAY BALLOON",
+          "THREE HAMSTERS ARRIVED CLAIMING TO BE BACKUP",
+          "THE TREEHOUSE HAD BEEN TAKEN OVER BY POLITE PIRATES"
+        ],
+        resolutions: [
+          "THE TEAM DISTRACTED EVERYONE WITH A RUBBER CHICKEN",
+          "HECTOR SENT A MESSAGE USING SOCK PUPPETS",
+          "THE AGENTS HID BEHIND A SUSPICIOUSLY SMALL PLANT",
+          "PROFESSOR PICKLE SOLVED THE PROBLEM WITH A KAZOO"
         ]
       },
       snacks: {
-        standard: [
-          "CRACK THE CODE TO FIND THE COOKIES",
-          "OPERATION MIDNIGHT SNACK IS A GO",
-          "SECURE THE SECRET STASH BEFORE LUNCH",
-          "THE JUICE BOX IS HIDDEN BEHIND THE BOOKS",
-          "DELIVER THE PIZZA TO AGENT HECTOR"
+        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "RESCUE"],
+        objects: [
+          "THE COOKIE TIN",
+          "THE SECRET STASH",
+          "THE LAST JUICE BOX",
+          "THE MIDNIGHT PIZZA",
+          "THE GOLDEN CUPCAKE",
+          "THE EMERGENCY POPCORN"
         ],
-        custom: [
-          "AGENT HECTOR SECURE THE {keyword} AT MIDNIGHT",
-          "HIDE THE {keyword} IN THE SECRET SNACK STASH",
-          "FOLLOW THE CRUMBS TO RECOVER THE {keyword}",
-          "DELIVER THE {keyword} BEFORE THE GUARDS GET HUNGRY"
+        locations: [
+          "BEHIND THE BOOKS",
+          "INSIDE THE SNACK VAULT",
+          "AT THE TREEHOUSE",
+          "UNDER THE PICNIC TABLE",
+          "NEAR THE KITCHEN DOOR",
+          "BESIDE THE SECRET COOLER"
         ],
-        addOns: [
-          "BEFORE MIDNIGHT",
-          "WITHOUT DROPPING A SINGLE CRUMB",
-          "AND SHARE THE LOOT WITH YOUR TEAM",
-          "BEFORE THE SNACK ALARM SOUNDS"
+        deadlines: [
+          "BEFORE LUNCH",
+          "AT MIDNIGHT",
+          "BEFORE THE SNACK BELL RINGS",
+          "AFTER THE GUARDS LEAVE",
+          "BEFORE THE CRUMBS DISAPPEAR"
+        ],
+        twists: [
+          "A GOAT WEARING ROLLER SKATES ATE THE MISSION NOTES",
+          "THE PIZZA BEGAN SENDING MORSE CODE WITH PEPPERONI",
+          "A SLEEPY PANDA WAS GUARDING THE LAST COOKIE",
+          "THE JUICE BOX INSISTED THAT IT WAS THE TEAM LEADER",
+          "A TRAIL OF CRUMBS LED DIRECTLY TO A DANCING LLAMA",
+          "THE COOKIE JAR DEMANDED THE SECRET PASSWORD"
+        ],
+        resolutions: [
+          "THE TEAM OFFERED THE GUARD A DECOY SANDWICH",
+          "HECTOR ESCAPED ON A SHOPPING CART",
+          "THE AGENTS BUILT A TRAP FROM WAFFLES AND STRING",
+          "DETECTIVE PANCAKE FOLLOWED THE SYRUP TRAIL"
         ]
       },
       gadgets: {
-        standard: [
-          "CAUTION THE LASER GRID IS ACTIVE",
-          "WRITE THE PASSWORD USING INVISIBLE INK",
-          "THE JETPACK IS READY FOR TAKEOFF",
-          "USE THE DECODER TO UNLOCK THE SECRET FILE",
-          "AGENT HECTOR ACTIVATE THE POCKET RADAR"
+        objectives: ["ACTIVATE", "RECOVER", "TEST", "DELIVER", "LOCATE", "PROTECT"],
+        objects: [
+          "THE POCKET DECODER",
+          "THE INVISIBLE INK PEN",
+          "THE MINI JETPACK",
+          "THE LASER MAP",
+          "THE SECRET SIGNAL WATCH",
+          "THE MAGNETIC GRAPPLING HOOK"
         ],
-        custom: [
-          "USE THE DECODER TO LOCATE THE {keyword}",
-          "THE LASER GRID IS GUARDING THE {keyword}",
-          "WRITE {keyword} WITH INVISIBLE INK",
-          "PACK THE {keyword} BESIDE THE EMERGENCY JETPACK"
+        locations: [
+          "BEYOND THE LASER GRID",
+          "INSIDE THE GADGET LAB",
+          "AT THE HIDDEN DROP POINT",
+          "UNDER THE CONTROL PANEL",
+          "NEAR THE SATELLITE DISH",
+          "BEHIND THE SECRET SCREEN"
         ],
-        addOns: [
+        deadlines: [
           "BEFORE THE BATTERY RUNS OUT",
-          "WITHOUT TRIGGERING THE LASER ALARM",
-          "AND SEND THE SIGNAL TO AGENT HECTOR",
-          "BEFORE THE NEXT RADAR SCAN"
+          "AT MIDNIGHT",
+          "BEFORE THE NEXT RADAR SCAN",
+          "WHEN THE BLUE LIGHT FLASHES",
+          "BEFORE THE SIGNAL DISAPPEARS"
+        ],
+        twists: [
+          "THE JETPACK WOULD ONLY FLY BACKWARD",
+          "A CHICKEN HAD LEARNED TO OPERATE THE LASER GRID",
+          "THE INVISIBLE INK REVEALED A RECIPE FOR PICKLE SOUP",
+          "THE ROBOT GUARD KEPT STOPPING TO TELL BAD JOKES",
+          "THE DECODER TRANSLATED EVERY MESSAGE INTO DUCK NOISES",
+          "A CURIOUS OCTOPUS WAS PRESSING ALL THE CONTROL BUTTONS"
+        ],
+        resolutions: [
+          "THE TEAM REPAIRED IT WITH TAPE AND A BANANA",
+          "AGENT BEEP CONFUSED THE ALARM BY DANCING",
+          "HECTOR USED A TOY MAGNET TO SAVE THE MISSION",
+          "THE AGENTS ESCAPED ON THE EMERGENCY SCOOTER"
         ]
       }
     };
+    const recentMissions = [];
     const form = document.getElementById("cipher-form");
     const cipherTypeInput = document.getElementById("cipher-type");
     const messageInput = document.getElementById("secret-message");
@@ -824,6 +912,63 @@
         [a, b] = [b, a % b];
       }
       return Math.abs(a);
+    }
+
+    function randomItem(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
+
+    function countWords(text) {
+      return text.trim().split(/\s+/).length;
+    }
+
+    function buildMission(theme, customKeyword) {
+      const customObject = customKeyword
+        ? /^(THE|A|AN|MY|YOUR|HIS|HER|OUR|THEIR)\b/.test(customKeyword)
+          ? customKeyword
+          : `THE ${customKeyword}`
+        : "";
+      const details = {
+        character: randomItem(missionCharacters),
+        objective: randomItem(theme.objectives),
+        object: customObject || randomItem(theme.objects),
+        location: randomItem(theme.locations),
+        deadline: randomItem(theme.deadlines)
+      };
+      const opening = randomItem(missionStoryFrames)(details);
+
+      if (Math.random() < 0.18) return opening;
+
+      const twist = randomItem(missionTwistFrames)(randomItem(theme.twists));
+      if (Math.random() < 0.48) {
+        return `${opening} ${twist.slice(0, -1)}, SO ${randomItem(theme.resolutions)}.`;
+      }
+      return `${opening} ${twist}`;
+    }
+
+    function generateRandomMission(theme, customKeyword, targetWordCount) {
+      const candidates = new Set();
+
+      for (let attempt = 0; attempt < 240; attempt += 1) {
+        candidates.add(buildMission(theme, customKeyword));
+      }
+
+      const allCandidates = [...candidates];
+      const freshCandidates = allCandidates.filter(
+        (mission) => !recentMissions.includes(mission) && mission !== messageInput.value
+      );
+      const pool = freshCandidates.length ? freshCandidates : allCandidates;
+      const closestDifference = Math.min(
+        ...pool.map((mission) => Math.abs(countWords(mission) - targetWordCount))
+      );
+      const closestMissions = pool.filter(
+        (mission) => Math.abs(countWords(mission) - targetWordCount) === closestDifference
+      );
+      const selectedMission = randomItem(closestMissions);
+
+      recentMissions.push(selectedMission);
+      if (recentMissions.length > 20) recentMissions.shift();
+      return selectedMission;
     }
 
     function svgElement(name, attributes = {}, text = "") {
@@ -1047,42 +1192,14 @@
       const selectedTheme = document.querySelector('input[name="missionTheme"]:checked').value;
       const theme = missionThemes[selectedTheme];
       const customKeyword = customMissionKeywordInput.value.trim().toUpperCase().replace(/\s+/g, " ");
-      const templates = customKeyword ? theme.custom : theme.standard;
       const targetWordCount = Math.min(
-        18,
-        Math.max(6, Number.parseInt(missionWordCountInput.value, 10) || 9)
+        40,
+        Math.max(12, Number.parseInt(missionWordCountInput.value, 10) || 24)
       );
-      const baseMissions = templates.map((template) => template.replace("{keyword}", customKeyword));
-      const generatedMissions = new Set(baseMissions);
-
-      baseMissions.forEach((mission) => {
-        theme.addOns.forEach((addOn, firstIndex) => {
-          if (!mission.includes(addOn)) {
-            generatedMissions.add(`${mission} ${addOn}`);
-          }
-
-          theme.addOns.forEach((secondAddOn, secondIndex) => {
-            if (firstIndex !== secondIndex && !mission.includes(addOn) && !mission.includes(secondAddOn)) {
-              generatedMissions.add(`${mission} ${addOn} ${secondAddOn}`);
-            }
-          });
-        });
-      });
-
-      const candidates = [...generatedMissions];
-      const wordCount = (mission) => mission.trim().split(/\s+/).length;
-      const closestDifference = Math.min(
-        ...candidates.map((mission) => Math.abs(wordCount(mission) - targetWordCount))
-      );
-      const closestMissions = candidates.filter(
-        (mission) => Math.abs(wordCount(mission) - targetWordCount) === closestDifference
-      );
-      const alternatives = closestMissions.filter((mission) => mission !== messageInput.value);
-      const missions = alternatives.length ? alternatives : closestMissions;
 
       customMissionKeywordInput.value = customKeyword;
       missionWordCountInput.value = targetWordCount;
-      messageInput.value = missions[Math.floor(Math.random() * missions.length)];
+      messageInput.value = generateRandomMission(theme, customKeyword, targetWordCount);
       messageInput.focus();
     });
 
