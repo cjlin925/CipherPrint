@@ -214,23 +214,56 @@
       gap: 0.65rem;
     }
 
+    .message-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+    }
+
+    .shift-control {
+      display: flex;
+      align-items: stretch;
+      gap: 0.65rem;
+    }
+
+    .shift-control input {
+      max-width: 8rem;
+    }
+
     .message-control textarea {
+      flex: 1;
       min-height: 5.75rem;
       min-width: 0;
       resize: vertical;
       line-height: 1.5;
     }
 
-    .random-button {
-      width: auto;
-      margin: 0;
-      padding-inline: 1rem;
-      border: 1px solid var(--line);
-      color: var(--accent-dark);
-      background: #f7faf8;
-      white-space: nowrap;
+    #secret-message.is-masked {
+      -webkit-text-security: disc;
+      text-security: disc;
     }
 
+    .reveal-button,
+    .random-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 3.2rem;
+      margin: 0;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.65rem;
+      color: var(--accent-dark);
+      background: #f7faf8;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    .reveal-button:hover,
     .random-button:hover {
       color: #fff;
       background: var(--accent);
@@ -245,7 +278,9 @@
         flex-direction: column;
       }
 
-      .random-button {
+      .message-actions,
+      .random-button,
+      .reveal-button {
         width: 100%;
       }
 
@@ -592,6 +627,12 @@
 
             <input id="theme-gadgets" name="missionTheme" type="radio" value="gadgets">
             <label class="theme-pill" for="theme-gadgets" title="Laser grid, invisible ink, jetpack, and decoder missions">🕵️‍♂️ Spy Gadgets</label>
+
+            <input id="theme-space" name="missionTheme" type="radio" value="space">
+            <label class="theme-pill" for="theme-space" title="Rockets, moon bases, aliens, and star maps">🚀 Space &amp; Stars</label>
+
+            <input id="theme-dogman" name="missionTheme" type="radio" value="dogman">
+            <label class="theme-pill" for="theme-dogman" title="Dog Man, Petey, Li'l Petey, 80-HD, Flippy, and Supa Buddy missions">🐶 Dog Man</label>
           </div>
 
           <div class="mission-options">
@@ -610,15 +651,21 @@
         <div class="field">
           <label for="secret-message">Secret Message</label>
           <div class="message-control">
-            <textarea id="secret-message" name="message" rows="4" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
-            <button id="random-mission" class="random-button" type="button">🎲 Random Mission</button>
+            <textarea id="secret-message" class="is-masked" name="message" rows="4" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
+            <div class="message-actions">
+              <button id="random-mission" class="random-button" type="button">🎲 Random Mission</button>
+              <button id="toggle-secret-visibility" class="reveal-button" type="button" aria-pressed="false" aria-controls="secret-message">Show plaintext</button>
+            </div>
           </div>
         </div>
 
         <div id="caesar-fields" class="cipher-fields">
           <div class="field">
             <label for="caesar-shift">Shift</label>
-            <input id="caesar-shift" name="caesarShift" type="number" value="3" min="1" max="25" required>
+            <div class="shift-control">
+              <input id="caesar-shift" name="caesarShift" type="number" value="3" min="1" max="25" required>
+              <button id="random-shift" class="random-button" type="button">🎲 Random</button>
+            </div>
           </div>
         </div>
 
@@ -700,7 +747,6 @@
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     const missionCharacters = [
-      "AGENT HECTOR",
       "PROFESSOR PICKLE",
       "A SQUIRREL WEARING SUNGLASSES",
       "CAPTAIN WHISKERS THE CAT",
@@ -765,7 +811,7 @@
         ],
         resolutions: [
           "THE TEAM DISTRACTED EVERYONE WITH A RUBBER CHICKEN",
-          "HECTOR SENT A MESSAGE USING SOCK PUPPETS",
+          "THE TEAM SENT A MESSAGE USING SOCK PUPPETS",
           "THE AGENTS HID BEHIND A SUSPICIOUSLY SMALL PLANT",
           "PROFESSOR PICKLE SOLVED THE PROBLEM WITH A KAZOO"
         ]
@@ -805,7 +851,7 @@
         ],
         resolutions: [
           "THE TEAM OFFERED THE GUARD A DECOY SANDWICH",
-          "HECTOR ESCAPED ON A SHOPPING CART",
+          "THE TEAM ESCAPED ON A SHOPPING CART",
           "THE AGENTS BUILT A TRAP FROM WAFFLES AND STRING",
           "DETECTIVE PANCAKE FOLLOWED THE SYRUP TRAIL"
         ]
@@ -846,8 +892,136 @@
         resolutions: [
           "THE TEAM REPAIRED IT WITH TAPE AND A BANANA",
           "AGENT BEEP CONFUSED THE ALARM BY DANCING",
-          "HECTOR USED A TOY MAGNET TO SAVE THE MISSION",
+          "AGENT NOVA USED A TOY MAGNET TO SAVE THE MISSION",
           "THE AGENTS ESCAPED ON THE EMERGENCY SCOOTER"
+        ]
+      },
+      space: {
+        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "ACTIVATE", "RESCUE"],
+        objects: [
+          "THE STAR MAP",
+          "THE MOON ROCK KEY",
+          "THE GLITTERY COMET CODE",
+          "THE ALIEN LUNCHBOX",
+          "THE SPACE HELMET RADIO",
+          "THE FLOATING MISSION BADGE"
+        ],
+        locations: [
+          "ON THE MOON BASE",
+          "INSIDE THE ROCKET CLOSET",
+          "NEAR THE CRATER LIBRARY",
+          "BEHIND THE SATELLITE GARDEN",
+          "AT THE STARPORT PLAYGROUND",
+          "UNDER THE COMET BRIDGE"
+        ],
+        deadlines: [
+          "BEFORE BLASTOFF",
+          "AT MIDNIGHT ON MARS",
+          "BEFORE THE NEXT METEOR SHOWER",
+          "WHEN THE STARS ALIGN",
+          "BEFORE THE ROCKET DOOR CLOSES"
+        ],
+        twists: [
+          "A FRIENDLY ALIEN ASKED TO TRADE FOR STICKERS",
+          "THE ROCKET WOULD ONLY STEER IN CIRCLES",
+          "ZERO GRAVITY TURNED THE CLUES INTO SOAP BUBBLES",
+          "A SPACE GOAT ATE THE STAR CHART",
+          "THE MOON ROCK STARTED GIGGLING",
+          "THE SATELLITE INSISTED ON SINGING KARAOKE"
+        ],
+        resolutions: [
+          "THE TEAM FIXED IT WITH GLOW STICKS AND TAPE",
+          "AGENT NOVA WAVED A FLASHLIGHT IN MORSE CODE",
+          "AGENT NOVA DISTRACTED EVERYONE WITH MOON CHEESE",
+          "ROBOT AGENT BEEP CALCULATED A SILLY NEW ROUTE"
+        ]
+      },
+      dogman: {
+        characters: [
+          "DOG MAN",
+          "PETEY THE CAT",
+          "LI'L PETEY",
+          "CHIEF",
+          "SARAH HATOFF",
+          "80-HD",
+          "MOLLY",
+          "PIGGY",
+          "THE SUPA BUDDIES"
+        ],
+        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "RESCUE", "CHASE", "GUARD"],
+        objects: [
+          "THE SUPA BUDDY BADGE",
+          "THE SECRET COMIC BOOK",
+          "THE FLIPPY BURGER CODE",
+          "THE CAT JAIL KEY",
+          "THE JUSTICE LEAGUE MAP",
+          "THE DOGGY DONUT BOX",
+          "PETEY'S EVIL INVENTION",
+          "THE POLICE SIREN WHISTLE",
+          "THE FAIRY DOG MOTHER WAND",
+          "THE ROBOT BUTLER BLUEPRINTS",
+          "THE BIG HOT DOG TROPHY",
+          "THE KINDNESS NOTE",
+          "THE CAT JAIL ESCAPE PLAN",
+          "THE SUPA PALS SIGNAL",
+          "THE CHEESY PIZZA CLUE"
+        ],
+        locations: [
+          "AT THE POLICE STATION",
+          "INSIDE CAT JAIL",
+          "NEAR THE FLIPPY BURGER STAND",
+          "BEHIND PETEY'S SECRET LAB",
+          "AT THE CITY PARK",
+          "UNDER THE COMIC BOOK STORE",
+          "ON TOP OF CITY HALL",
+          "INSIDE DOG MAN'S DOGHOUSE",
+          "AT THE SUPERHERO TRAINING YARD",
+          "BEHIND THE NEWS VAN",
+          "IN THE UNDERGROUND SEWER LAB",
+          "AT THE DOGGY DONUT SHOP",
+          "NEAR THE BROKEN ROBOT DUMP",
+          "INSIDE THE GIANT COMIC PANEL"
+        ],
+        deadlines: [
+          "BEFORE PETEY ESCAPES AGAIN",
+          "AT MIDNIGHT",
+          "BEFORE THE NEXT SUPA BUDDY MEETING",
+          "AFTER THE SIRENS START",
+          "BEFORE LUNCH AT FLIPPY",
+          "BEFORE THE NEWS REPORT STARTS",
+          "BEFORE THE EVIL PLAN ACTIVATES",
+          "WHEN DOG MAN'S TAIL STARTS WAGGING",
+          "BEFORE CAT JAIL LOCKDOWN",
+          "BEFORE THE CITY RUNS OUT OF DONUTS"
+        ],
+        twists: [
+          "PETEY SHOWED UP WITH ANOTHER SILLY INVENTION",
+          "A ROBOT CAT DEMANDED BELLY RUBS",
+          "LI'L PETEY WANTED TO SOLVE THE CASE WITH KINDNESS",
+          "CHIEF MADE EVERYONE FILL OUT TEN FORMS",
+          "A GIANT HOT DOG ROLLED THROUGH DOWNTOWN",
+          "THE COMIC BOOK STARTED DRAWING ITSELF",
+          "80-HD BUILT A HELPFUL MACHINE THAT ONLY MADE MORE CHAOS",
+          "SARAH HATOFF ARRIVED WITH A CAMERA AND A LOT OF QUESTIONS",
+          "PIGGY TRIED TO STEAL THE MISSION FOR HIS OWN SHOW",
+          "MOLLY CHALLENGED EVERYONE TO A SUPA BUDDY DANCE OFF",
+          "DOG MAN GOT DISTRACTED BY A SQUEAKY TOY",
+          "PETEY'S CLONE ARMY STARTED ARGUING WITH ITSELF",
+          "THE FLIPPY BURGER STAND RAN OUT OF SECRET SAUCE",
+          "A FAIRY DOG MOTHER GRANTED THE WRONG WISH",
+          "THE BAD GUYS ACCIDENTALLY JOINED THE SUPA BUDDIES"
+        ],
+        resolutions: [
+          "DOG MAN SNIFFED OUT THE TRUTH",
+          "THE TEAM SHARED DONUTS AND FORGAVE EVERYONE",
+          "LI'L PETEY HUGGED THE BAD GUY INTO BEING GOOD",
+          "THE TEAM ESCAPED ON DOG MAN'S BACK",
+          "80-HD BUILT A SILLY FIX OUT OF SCRAP METAL",
+          "CHIEF GAVE EVERYONE A HIGH FIVE AND A NEW BADGE",
+          "SARAH HATOFF BROADCAST THE HAPPY ENDING LIVE",
+          "PETEY DECIDED TO BE GOOD FOR FIVE WHOLE MINUTES",
+          "THE SUPA BUDDIES WON WITH TEAMWORK AND CHEESE",
+          "DOG MAN ATE THE EVIDENCE BY ACCIDENT AND STILL SAVED THE DAY"
         ]
       }
     };
@@ -856,9 +1030,11 @@
     const cipherTypeInput = document.getElementById("cipher-type");
     const messageInput = document.getElementById("secret-message");
     const randomMissionButton = document.getElementById("random-mission");
+    const toggleSecretVisibilityButton = document.getElementById("toggle-secret-visibility");
     const customMissionKeywordInput = document.getElementById("custom-mission-keyword");
     const missionWordCountInput = document.getElementById("mission-word-count");
     const caesarShiftInput = document.getElementById("caesar-shift");
+    const randomShiftButton = document.getElementById("random-shift");
     const affineAInput = document.getElementById("affine-a");
     const affineBInput = document.getElementById("affine-b");
     const keywordInput = document.getElementById("vigenere-keyword");
@@ -929,7 +1105,7 @@
           : `THE ${customKeyword}`
         : "";
       const details = {
-        character: randomItem(missionCharacters),
+        character: randomItem(theme.characters || missionCharacters),
         objective: randomItem(theme.objectives),
         object: customObject || randomItem(theme.objects),
         location: randomItem(theme.locations),
@@ -1204,6 +1380,20 @@
     }
 
     randomMissionButton.addEventListener("click", () => populateRandomMission());
+
+    toggleSecretVisibilityButton.addEventListener("click", () => {
+      const isMasked = messageInput.classList.toggle("is-masked");
+      toggleSecretVisibilityButton.setAttribute("aria-pressed", String(!isMasked));
+      toggleSecretVisibilityButton.textContent = isMasked ? "Show plaintext" : "Hide plaintext";
+    });
+
+    randomShiftButton.addEventListener("click", () => {
+      const currentShift = Number.parseInt(caesarShiftInput.value, 10);
+      const shifts = Array.from({ length: 25 }, (_, index) => index + 1)
+        .filter((shift) => shift !== currentShift);
+      caesarShiftInput.value = randomItem(shifts.length ? shifts : [currentShift || 3]);
+      caesarShiftInput.focus();
+    });
 
     keywordInput.addEventListener("input", () => {
       keywordInput.value = keywordInput.value.toUpperCase().replace(/[^A-Z]/g, "");
