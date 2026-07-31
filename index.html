@@ -488,6 +488,75 @@
         break-inside: avoid;
       }
 
+      .digrafid-section {
+        padding: 4mm 0;
+        break-inside: avoid;
+      }
+
+      .digrafid-keys {
+        margin: 0 0 2mm;
+        font-family: "Courier New", monospace;
+        font-size: 9pt;
+        font-weight: 700;
+      }
+
+      .digrafid-help {
+        margin: 0 0 3mm;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 9pt;
+        line-height: 1.35;
+      }
+
+      .digrafid-tableau {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2mm 4mm;
+        width: fit-content;
+        max-width: 100%;
+        font-family: "Courier New", monospace;
+        font-size: 8pt;
+        font-weight: 700;
+      }
+
+      .digrafid-top-wrap {
+        grid-column: 1;
+        grid-row: 1;
+      }
+
+      .digrafid-mid {
+        grid-column: 2;
+        grid-row: 1;
+        align-self: end;
+      }
+
+      .digrafid-bottom-wrap {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .digrafid-table {
+        border-collapse: collapse;
+      }
+
+      .digrafid-table td {
+        width: 5.2mm;
+        height: 5.2mm;
+        padding: 0;
+        border: 0.35px solid #000;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1;
+      }
+
+      .digrafid-table td.head {
+        border: 0;
+        font-size: 7pt;
+      }
+
+      .digrafid-table td.blank {
+        border: 0;
+      }
+
       .vigenere-table td {
         height: 5.35mm;
         padding: 0;
@@ -612,6 +681,7 @@
             <option value="caesar">Caesar</option>
             <option value="affine">Affine</option>
             <option value="vigenere">Vigenère</option>
+            <option value="digrafid">Digrafid</option>
           </select>
         </div>
 
@@ -691,6 +761,21 @@
           </div>
         </div>
 
+        <div id="digrafid-fields" class="cipher-fields" hidden>
+          <div class="field-row">
+            <div class="field">
+              <label for="digrafid-keyword">Keyword</label>
+              <input id="digrafid-keyword" name="digrafidKeyword" type="text" value="SPY" pattern="[A-Z]+" autocapitalize="characters" autocomplete="off">
+              <p class="field-hint">Builds the Digrafid alphabet (A–Z + #).</p>
+            </div>
+            <div class="field">
+              <label for="digrafid-period">Period</label>
+              <input id="digrafid-period" name="digrafidPeriod" type="number" value="3" min="2" max="8">
+              <p class="field-hint">Digraphs per fractionation group.</p>
+            </div>
+          </div>
+        </div>
+
         <button type="submit">Generate &amp; Print</button>
       </form>
       <p class="privacy">No network. No saved messages. Just print.</p>
@@ -734,6 +819,13 @@
       <table class="vigenere-table" aria-label="Vigenère square">
         <tbody id="vigenere-square"></tbody>
       </table>
+    </section>
+
+    <section id="digrafid-print" class="cipher-aid digrafid-section">
+      <h3 class="aid-title">Digrafid Tableau</h3>
+      <p id="digrafid-print-keys" class="digrafid-keys">Keyword: SPY · Period: 3</p>
+      <p class="digrafid-help">Find each digraph with the top alphabet (first letter), bottom alphabet (second letter), and the center number square. Fractionate by the period, then reverse the steps to decode.</p>
+      <div id="digrafid-tableau" class="digrafid-tableau" aria-label="Digrafid tableau"></div>
     </section>
 
     <section class="message-section">
@@ -1038,6 +1130,8 @@
     const affineAInput = document.getElementById("affine-a");
     const affineBInput = document.getElementById("affine-b");
     const keywordInput = document.getElementById("vigenere-keyword");
+    const digrafidKeywordInput = document.getElementById("digrafid-keyword");
+    const digrafidPeriodInput = document.getElementById("digrafid-period");
     const messageOutput = document.getElementById("cipher-message");
     const printSheet = document.querySelector(".print-sheet");
     const missionType = document.getElementById("mission-type");
@@ -1046,17 +1140,21 @@
     const affineKeys = document.getElementById("affine-keys");
     const affineMapping = document.getElementById("affine-mapping");
     const vigenereSquare = document.getElementById("vigenere-square");
+    const digrafidPrintKeys = document.getElementById("digrafid-print-keys");
+    const digrafidTableau = document.getElementById("digrafid-tableau");
     const wheel = document.getElementById("cipher-wheel");
     const svgNS = "http://www.w3.org/2000/svg";
     const cipherFields = {
       caesar: document.getElementById("caesar-fields"),
       affine: document.getElementById("affine-fields"),
-      vigenere: document.getElementById("vigenere-fields")
+      vigenere: document.getElementById("vigenere-fields"),
+      digrafid: document.getElementById("digrafid-fields")
     };
     const printAids = {
       caesar: document.getElementById("caesar-print"),
       affine: document.getElementById("affine-print"),
-      vigenere: document.getElementById("vigenere-print")
+      vigenere: document.getElementById("vigenere-print"),
+      digrafid: document.getElementById("digrafid-print")
     };
 
     function caesarEncrypt(message, shift) {
@@ -1081,6 +1179,158 @@
         keyIndex += 1;
         return alphabet[(letterIndex + shift) % alphabet.length];
       });
+    }
+
+    function buildDigrafidAlphabet(keyword) {
+      const seen = new Set();
+      let keyed = "";
+      for (const letter of `${keyword.toUpperCase().replace(/[^A-Z]/g, "")}${alphabet}#`) {
+        if (!seen.has(letter)) {
+          seen.add(letter);
+          keyed += letter;
+        }
+      }
+      return keyed.slice(0, 27);
+    }
+
+    function buildDigrafidGrids(keyword) {
+      const keyed = buildDigrafidAlphabet(keyword);
+      const top = [0, 1, 2].map((row) => [...keyed.slice(row * 9, row * 9 + 9)]);
+      const bottom = Array.from({ length: 9 }, (_, row) => [...keyed.slice(row * 3, row * 3 + 3)]);
+      return { keyed, top, bottom };
+    }
+
+    function digrafidTriplet(top, bottom, first, second) {
+      let topRow = -1;
+      let topCol = -1;
+      let bottomRow = -1;
+      let bottomCol = -1;
+
+      top.forEach((row, rowIndex) => {
+        const columnIndex = row.indexOf(first);
+        if (columnIndex >= 0) {
+          topRow = rowIndex;
+          topCol = columnIndex;
+        }
+      });
+      bottom.forEach((row, rowIndex) => {
+        const columnIndex = row.indexOf(second);
+        if (columnIndex >= 0) {
+          bottomRow = rowIndex;
+          bottomCol = columnIndex;
+        }
+      });
+
+      const middle = [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+      ];
+      return [topCol + 1, middle[topRow][bottomCol], bottomRow + 1];
+    }
+
+    function digrafidPairFromTriplet(top, bottom, first, middle, third) {
+      const middlePositions = {
+        1: [0, 0], 2: [0, 1], 3: [0, 2],
+        4: [1, 0], 5: [1, 1], 6: [1, 2],
+        7: [2, 0], 8: [2, 1], 9: [2, 2]
+      };
+      const [topRow, bottomCol] = middlePositions[middle];
+      return `${top[topRow][first - 1]}${bottom[third - 1][bottomCol]}`;
+    }
+
+    function digrafidEncrypt(message, keyword, period) {
+      const { top, bottom } = buildDigrafidGrids(keyword);
+      const chars = [...message.toUpperCase()];
+      const letterIndexes = [];
+      const letters = [];
+
+      chars.forEach((character, index) => {
+        if (/[A-Z]/.test(character)) {
+          letterIndexes.push(index);
+          letters.push(character);
+        }
+      });
+
+      if (letters.length % 2 === 1) letters.push("X");
+
+      const digraphDigits = [];
+      for (let index = 0; index < letters.length; index += 2) {
+        digraphDigits.push(digrafidTriplet(top, bottom, letters[index], letters[index + 1]));
+      }
+
+      const cipherLetters = [];
+      for (let groupStart = 0; groupStart < digraphDigits.length; groupStart += period) {
+        const group = digraphDigits.slice(groupStart, groupStart + period);
+        const stream = [0, 1, 2].flatMap((row) => group.map((triplet) => triplet[row]));
+        for (let index = 0; index < stream.length; index += 3) {
+          const pair = digrafidPairFromTriplet(top, bottom, stream[index], stream[index + 1], stream[index + 2]);
+          cipherLetters.push(pair[0], pair[1]);
+        }
+      }
+
+      const result = [...chars];
+      letterIndexes.forEach((index, letterIndex) => {
+        result[index] = cipherLetters[letterIndex];
+      });
+      if (cipherLetters.length > letterIndexes.length) {
+        result.push(...cipherLetters.slice(letterIndexes.length).map((letter) => (letter === "#" ? "X" : letter)));
+      }
+      return result.join("").replace(/#/g, "X");
+    }
+
+    function renderDigrafidTableau(keyword) {
+      const { top, bottom } = buildDigrafidGrids(keyword);
+      digrafidTableau.replaceChildren();
+
+      const makeCell = (text, className = "") => {
+        const cell = document.createElement("td");
+        if (className) cell.className = className;
+        cell.textContent = text;
+        return cell;
+      };
+
+      const topWrap = document.createElement("div");
+      topWrap.className = "digrafid-top-wrap";
+      const topTable = document.createElement("table");
+      topTable.className = "digrafid-table";
+      const topHead = document.createElement("tr");
+      topHead.appendChild(makeCell("", "blank"));
+      for (let column = 1; column <= 9; column += 1) topHead.appendChild(makeCell(String(column), "head"));
+      topTable.appendChild(topHead);
+      top.forEach((row) => {
+        const tableRow = document.createElement("tr");
+        tableRow.appendChild(makeCell("", "blank"));
+        row.forEach((letter) => tableRow.appendChild(makeCell(letter === "#" ? "#" : letter)));
+        topTable.appendChild(tableRow);
+      });
+      topWrap.appendChild(topTable);
+
+      const midTable = document.createElement("table");
+      midTable.className = "digrafid-table digrafid-mid";
+      [
+        [1, 2, 3],
+        [4, 5, 6],
+        [7, 8, 9]
+      ].forEach((row) => {
+        const tableRow = document.createElement("tr");
+        row.forEach((value) => tableRow.appendChild(makeCell(String(value))));
+        midTable.appendChild(tableRow);
+      });
+
+      const bottomWrap = document.createElement("div");
+      bottomWrap.className = "digrafid-bottom-wrap";
+      const bottomTable = document.createElement("table");
+      bottomTable.className = "digrafid-table";
+      bottom.forEach((row, rowIndex) => {
+        const tableRow = document.createElement("tr");
+        row.forEach((letter) => tableRow.appendChild(makeCell(letter === "#" ? "#" : letter)));
+        tableRow.appendChild(makeCell(String(rowIndex + 1), "head"));
+        bottomTable.appendChild(tableRow);
+      });
+      bottomWrap.appendChild(bottomTable);
+
+      digrafidTableau.append(topWrap, midTable, bottomWrap);
     }
 
     function greatestCommonDivisor(a, b) {
@@ -1350,13 +1600,24 @@
         missionInstructions.textContent = "Complete the mapping table, then decode each letter. Write the decrypted letter on the line beneath it.";
         affineKeys.textContent = `Keys: a = ${a}, b = ${b}`;
         encryptedMessage = affineEncrypt(messageInput.value, a, b);
-      } else {
+      } else if (type === "vigenere") {
         keyword = keywordInput.value.toUpperCase();
         keywordInput.value = keyword;
         missionType.textContent = "Mission: Vigenère Cipher";
         missionKey.textContent = `Keyword: ${keyword}`;
         missionInstructions.textContent = "Use the keyword letters and Tabula Recta to decode the transmission. Write each answer on the line.";
         encryptedMessage = vigenereEncrypt(messageInput.value, keyword);
+      } else {
+        const digrafidKeyword = digrafidKeywordInput.value.toUpperCase().replace(/[^A-Z]/g, "") || "SPY";
+        const period = Math.min(8, Math.max(2, Number.parseInt(digrafidPeriodInput.value, 10) || 3));
+        digrafidKeywordInput.value = digrafidKeyword;
+        digrafidPeriodInput.value = period;
+        missionType.textContent = "Mission: Digrafid Cipher";
+        missionKey.textContent = `Keyword: ${digrafidKeyword} · Period: ${period}`;
+        missionInstructions.textContent = "Use the Digrafid tableau and period fractionation to decode each digraph. Write the decrypted letter on the line beneath it.";
+        digrafidPrintKeys.textContent = `Keyword: ${digrafidKeyword} · Period: ${period}`;
+        renderDigrafidTableau(digrafidKeyword);
+        encryptedMessage = digrafidEncrypt(messageInput.value, digrafidKeyword, period);
       }
 
       renderMessage(encryptedMessage, keyword);
@@ -1397,6 +1658,10 @@
 
     keywordInput.addEventListener("input", () => {
       keywordInput.value = keywordInput.value.toUpperCase().replace(/[^A-Z]/g, "");
+    });
+
+    digrafidKeywordInput.addEventListener("input", () => {
+      digrafidKeywordInput.value = digrafidKeywordInput.value.toUpperCase().replace(/[^A-Z]/g, "");
     });
 
     affineAInput.addEventListener("input", () => {
