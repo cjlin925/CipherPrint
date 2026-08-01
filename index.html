@@ -1100,8 +1100,8 @@
                 </div>
                 <div class="field">
                   <label for="mission-word-count">Target Word Count</label>
-                  <input id="mission-word-count" type="number" value="24" min="12" max="40" step="1" aria-describedby="word-count-hint">
-                  <p id="word-count-hint" class="field-hint">Approximately 12–40 words.</p>
+                  <input id="mission-word-count" type="number" value="24" min="8" max="40" step="1" aria-describedby="word-count-hint">
+                  <p id="word-count-hint" class="field-hint">Approximately 8–40 words.</p>
                 </div>
               </div>
             </fieldset>
@@ -2787,7 +2787,7 @@
       return {
         theme: selectedTheme ? selectedTheme.value : "base",
         customKeyword: customMissionKeywordInput.value.trim().toUpperCase().replace(/\s+/g, " "),
-        wordCount: Math.min(40, Math.max(12, Number.parseInt(missionWordCountInput.value, 10) || 24)),
+        wordCount: Math.min(40, Math.max(8, Number.parseInt(missionWordCountInput.value, 10) || 24)),
         message: messageInput.value
       };
     }
