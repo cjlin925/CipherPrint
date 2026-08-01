@@ -125,6 +125,22 @@
       gap: 1rem;
     }
 
+    #pollux-fields .field-row {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .pollux-key-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    .pollux-key-actions .field-hint {
+      margin: 0;
+    }
+
     .field-hint {
       margin: 0.45rem 0 0;
       color: var(--muted);
@@ -243,6 +259,136 @@
       text-security: disc;
     }
 
+    .mission-tabs {
+      margin-top: 1.5rem;
+      border: 1px solid var(--line);
+      border-radius: 0.85rem;
+      background: #fafcfb;
+      overflow: hidden;
+    }
+
+    .mission-tab-bar {
+      display: flex;
+      align-items: stretch;
+      gap: 0.35rem;
+      padding: 0.55rem;
+      border-bottom: 1px solid var(--line);
+      background: #f3f6f4;
+    }
+
+    #mission-tab-list {
+      display: flex;
+      flex: 1;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      min-width: 0;
+    }
+
+    .mission-tab-item {
+      display: inline-flex;
+      align-items: stretch;
+      max-width: 100%;
+      border: 1px solid transparent;
+      border-radius: 0.55rem;
+      overflow: hidden;
+    }
+
+    .mission-tab-item:has(.mission-tab[aria-selected="true"]) {
+      border-color: var(--line);
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(23, 32, 27, 0.06);
+    }
+
+    .mission-tab {
+      display: inline-flex;
+      align-items: center;
+      width: auto;
+      min-height: 2.4rem;
+      margin: 0;
+      padding: 0.45rem 0.75rem;
+      border: 0;
+      border-radius: 0;
+      color: var(--muted);
+      background: transparent;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mission-tab[aria-selected="true"] {
+      color: var(--accent-dark);
+    }
+
+    .mission-tab-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      min-height: 2.4rem;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      color: var(--muted);
+      background: transparent;
+      font: inherit;
+      font-size: 1rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .mission-tab-close:hover {
+      color: #fff;
+      background: var(--accent);
+    }
+
+    #add-mission-tab {
+      width: auto;
+      min-height: 2.4rem;
+      margin: 0;
+      padding: 0.45rem 0.85rem;
+      border: 1px dashed var(--line);
+      border-radius: 0.55rem;
+      color: var(--accent-dark);
+      background: #fff;
+      font: inherit;
+      font-size: 0.85rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    #add-mission-tab:hover {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .mission-panel {
+      padding: 1.15rem;
+    }
+
+    .mission-panel .mission-builder {
+      margin: 0;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+    }
+
+    .mission-panel .field:first-child {
+      margin-top: 1.15rem;
+    }
+
+    .print-actions {
+      margin-top: 1.75rem;
+    }
+
+    .print-actions button[type="submit"] {
+      margin-top: 0;
+    }
+
     .reveal-button,
     .random-button {
       display: inline-flex;
@@ -288,6 +434,15 @@
         grid-template-columns: 1fr;
       }
 
+      #pollux-fields .field-row {
+        grid-template-columns: 1fr;
+      }
+
+      .pollux-key-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
       .mission-options {
         grid-template-columns: 1fr;
       }
@@ -326,7 +481,8 @@
       text-align: center;
     }
 
-    .print-sheet {
+    .print-sheet,
+    .print-pack {
       display: none;
     }
 
@@ -350,12 +506,50 @@
         display: none !important;
       }
 
+      .print-pack {
+        display: block;
+      }
+
       .print-sheet {
         display: block;
         max-width: 190mm;
         margin: 0 auto;
         color: #000;
         font-family: Arial, Helvetica, sans-serif;
+        break-after: page;
+        page-break-after: always;
+      }
+
+      .print-sheet:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+
+      .print-sheet-scale {
+        display: flex;
+        flex-direction: column;
+        min-height: calc(279.4mm - 24mm);
+        transform-origin: top center;
+      }
+
+      .print-sheet-main {
+        display: flex;
+        flex: 1 1 auto;
+        flex-direction: column;
+        min-height: 0;
+      }
+
+      .sheet-badge {
+        display: none;
+        margin-left: 2mm;
+        padding: 0.4mm 1.5mm;
+        border: 1px solid #000;
+        font-size: 7pt;
+        letter-spacing: 0.08em;
+      }
+
+      .print-pack.multi-mission .sheet-badge {
+        display: inline-block;
       }
 
       .mission-header {
@@ -405,7 +599,7 @@
         break-inside: avoid;
       }
 
-      #cipher-wheel {
+      .cipher-wheel {
         display: block;
         width: 88mm;
         height: 88mm;
@@ -557,6 +751,84 @@
         border: 0;
       }
 
+      .pollux-section {
+        padding: 3mm 0;
+        break-inside: avoid;
+      }
+
+      .pollux-keys {
+        margin: 0 0 1.5mm;
+        font-family: "Courier New", monospace;
+        font-size: 9pt;
+        font-weight: 700;
+      }
+
+      .pollux-help {
+        margin: 0 0 2.5mm;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 8.5pt;
+        line-height: 1.3;
+      }
+
+      .pollux-aid-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 3mm 5mm;
+        align-items: start;
+      }
+
+      .pollux-key-table,
+      .pollux-morse-table {
+        border-collapse: collapse;
+        font-family: "Courier New", monospace;
+        font-weight: 700;
+      }
+
+      .pollux-key-table td {
+        width: 6.5mm;
+        height: 6.5mm;
+        padding: 0;
+        border: 0.5px solid #000;
+        font-size: 9pt;
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .pollux-key-table tr:first-child td {
+        background: #eee;
+        font-size: 8pt;
+      }
+
+      .pollux-morse-table td {
+        padding: 0.5mm 1.3mm;
+        border: 0.35px solid #000;
+        font-size: 7.5pt;
+        line-height: 1.15;
+        white-space: nowrap;
+      }
+
+      .pollux-morse-table td.letter {
+        width: 4.5mm;
+        text-align: center;
+        background: #eee;
+      }
+
+      .cipher-pollux .cipher-character {
+        width: 4.8mm;
+      }
+
+      .cipher-pollux .cipher-letter {
+        font-size: 13pt;
+      }
+
+      .cipher-pollux .cipher-message {
+        gap: 3.5mm 1.2mm;
+      }
+
+      .cipher-pollux .answer-line {
+        margin-top: 2.5mm;
+      }
+
       .vigenere-table td {
         height: 5.35mm;
         padding: 0;
@@ -620,8 +892,20 @@
         display: block;
       }
 
-      .cipher-vigenere .message-section {
+      .cipher-vigenere .print-sheet-scale {
+        min-height: 0;
+      }
+
+      .cipher-vigenere .print-sheet-main {
         break-before: page;
+        page-break-before: always;
+        flex: none;
+        min-height: calc(279.4mm - 24mm);
+      }
+
+      .cipher-vigenere .message-section {
+        break-before: auto;
+        page-break-before: auto;
       }
 
       .keyword-legend {
@@ -664,6 +948,34 @@
         flex: 0 0 5.5mm;
         min-height: 1px;
       }
+
+      .plaintext-key {
+        margin-top: auto;
+        padding-top: 2mm;
+        border-top: 1px dashed #000;
+        text-align: center;
+        transform: rotate(180deg);
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .plaintext-key-label {
+        margin: 0 0 1mm;
+        font-size: 6pt;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .plaintext-key-text {
+        margin: 0;
+        font-family: "Courier New", monospace;
+        font-size: 7pt;
+        font-weight: 700;
+        line-height: 1.35;
+        letter-spacing: 0.04em;
+        word-break: break-word;
+      }
     }
   </style>
 </head>
@@ -682,51 +994,8 @@
             <option value="affine">Affine</option>
             <option value="vigenere">Vigenère</option>
             <option value="digrafid">Digrafid</option>
+            <option value="pollux">Pollux</option>
           </select>
-        </div>
-
-        <fieldset class="mission-builder">
-          <legend>Custom Mission Generator</legend>
-          <p class="theme-label">Mission Theme</p>
-          <div class="theme-pills">
-            <input id="theme-base" name="missionTheme" type="radio" value="base" checked>
-            <label class="theme-pill" for="theme-base" title="Treehouse, headquarters, bunker, and radar missions">🌲 Base &amp; Outpost</label>
-
-            <input id="theme-snacks" name="missionTheme" type="radio" value="snacks">
-            <label class="theme-pill" for="theme-snacks" title="Cookies, secret stash, juice box, and pizza missions">🍪 Snacks &amp; Loot</label>
-
-            <input id="theme-gadgets" name="missionTheme" type="radio" value="gadgets">
-            <label class="theme-pill" for="theme-gadgets" title="Laser grid, invisible ink, jetpack, and decoder missions">🕵️‍♂️ Spy Gadgets</label>
-
-            <input id="theme-space" name="missionTheme" type="radio" value="space">
-            <label class="theme-pill" for="theme-space" title="Rockets, moon bases, aliens, and star maps">🚀 Space &amp; Stars</label>
-
-            <input id="theme-dogman" name="missionTheme" type="radio" value="dogman">
-            <label class="theme-pill" for="theme-dogman" title="Dog Man, Petey, Li'l Petey, 80-HD, Flippy, and Supa Buddy missions">🐶 Dog Man</label>
-          </div>
-
-          <div class="mission-options">
-            <div class="field">
-              <label for="custom-mission-keyword">Custom Keyword (optional)</label>
-              <input id="custom-mission-keyword" type="text" placeholder="Try PIZZA, DRAGON, or MOON" autocomplete="off">
-            </div>
-            <div class="field">
-              <label for="mission-word-count">Target Word Count</label>
-              <input id="mission-word-count" type="number" value="24" min="12" max="40" step="1" aria-describedby="word-count-hint">
-              <p id="word-count-hint" class="field-hint">Approximately 12–40 words.</p>
-            </div>
-          </div>
-        </fieldset>
-
-        <div class="field">
-          <label for="secret-message">Secret Message</label>
-          <div class="message-control">
-            <textarea id="secret-message" class="is-masked" name="message" rows="4" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
-            <div class="message-actions">
-              <button id="random-mission" class="random-button" type="button">🎲 Random Mission</button>
-              <button id="toggle-secret-visibility" class="reveal-button" type="button" aria-pressed="false" aria-controls="secret-message">Show plaintext</button>
-            </div>
-          </div>
         </div>
 
         <div id="caesar-fields" class="cipher-fields">
@@ -776,65 +1045,168 @@
           </div>
         </div>
 
-        <button type="submit">Generate &amp; Print</button>
+        <div id="pollux-fields" class="cipher-fields" hidden>
+          <div class="field-row">
+            <div class="field">
+              <label for="pollux-dots">Dots (●)</label>
+              <input id="pollux-dots" name="polluxDots" type="text" value="123" pattern="[0-9]+" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="pollux-dashes">Dashes (–)</label>
+              <input id="pollux-dashes" name="polluxDashes" type="text" value="456" pattern="[0-9]+" inputmode="numeric" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="pollux-spaces">Spaces (×)</label>
+              <input id="pollux-spaces" name="polluxSpaces" type="text" value="0789" pattern="[0-9]+" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+          <div class="pollux-key-actions">
+            <p class="field-hint">Assign each digit 0–9 exactly once across the three pools.</p>
+            <button id="random-pollux-key" class="random-button" type="button">🎲 Random Key</button>
+          </div>
+        </div>
+
+        <div class="mission-tabs">
+          <div class="mission-tab-bar">
+            <div id="mission-tab-list" role="tablist" aria-label="Missions"></div>
+            <button id="add-mission-tab" type="button">+ Add mission</button>
+          </div>
+
+          <div id="mission-panel" class="mission-panel" role="tabpanel">
+            <fieldset class="mission-builder">
+              <legend>Custom Mission Generator</legend>
+              <p class="theme-label">Mission Theme</p>
+              <div class="theme-pills">
+                <input id="theme-base" name="missionTheme" type="radio" value="base" checked>
+                <label class="theme-pill" for="theme-base" title="Treehouse, headquarters, bunker, and radar missions">🌲 Base &amp; Outpost</label>
+
+                <input id="theme-snacks" name="missionTheme" type="radio" value="snacks">
+                <label class="theme-pill" for="theme-snacks" title="Cookies, secret stash, juice box, and pizza missions">🍪 Snacks &amp; Loot</label>
+
+                <input id="theme-gadgets" name="missionTheme" type="radio" value="gadgets">
+                <label class="theme-pill" for="theme-gadgets" title="Laser grid, invisible ink, jetpack, and decoder missions">🕵️‍♂️ Spy Gadgets</label>
+
+                <input id="theme-space" name="missionTheme" type="radio" value="space">
+                <label class="theme-pill" for="theme-space" title="Rockets, moon bases, aliens, and star maps">🚀 Space &amp; Stars</label>
+
+                <input id="theme-dogman" name="missionTheme" type="radio" value="dogman">
+                <label class="theme-pill" for="theme-dogman" title="Dog Man, Petey, Li'l Petey, 80-HD, Flippy, and Supa Buddy missions">🐶 Dog Man</label>
+              </div>
+
+              <div class="mission-options">
+                <div class="field">
+                  <label for="custom-mission-keyword">Custom Keyword (optional)</label>
+                  <input id="custom-mission-keyword" type="text" placeholder="Try PIZZA, DRAGON, or MOON" autocomplete="off">
+                </div>
+                <div class="field">
+                  <label for="mission-word-count">Target Word Count</label>
+                  <input id="mission-word-count" type="number" value="24" min="12" max="40" step="1" aria-describedby="word-count-hint">
+                  <p id="word-count-hint" class="field-hint">Approximately 12–40 words.</p>
+                </div>
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label for="secret-message">Secret Message</label>
+              <div class="message-control">
+                <textarea id="secret-message" class="is-masked" name="message" rows="4" autocomplete="off" required>MEET ME AT THE OLD OAK TREE</textarea>
+                <div class="message-actions">
+                  <button id="random-mission" class="random-button" type="button">🎲 Random Mission</button>
+                  <button id="toggle-secret-visibility" class="reveal-button" type="button" aria-pressed="false" aria-controls="secret-message">Show plaintext</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="print-actions">
+          <button type="submit">Generate &amp; Print</button>
+        </div>
       </form>
       <p class="privacy">No network. No saved messages. Just print.</p>
     </section>
   </main>
 
-  <article class="print-sheet" aria-label="Printable cryptography mission">
-    <header class="mission-header">
-      <p>CLASSIFIED // EYES ONLY</p>
-      <h2>TOP SECRET MISSION FOR HECTOR</h2>
-    </header>
+  <template id="print-sheet-template">
+    <article class="print-sheet" aria-label="Printable cryptography mission">
+      <div class="print-sheet-scale">
+        <header class="mission-header">
+          <p>CLASSIFIED // EYES ONLY <span class="sheet-badge">MISSION 1</span></p>
+          <h2>TOP SECRET MISSION FOR HECTOR</h2>
+        </header>
 
-    <div class="mission-meta">
-      <span id="mission-type">Mission: Caesar Cipher</span>
-      <span id="mission-key">Shift: 3</span>
-    </div>
+        <div class="mission-meta">
+          <span class="mission-type">Mission: Caesar Cipher</span>
+          <span class="mission-key">Shift: 3</span>
+        </div>
 
-    <section id="caesar-print" class="cipher-aid wheel-section active">
-      <svg id="cipher-wheel" viewBox="0 0 400 400" role="img" aria-label="Cut-out Caesar cipher wheel"></svg>
-      <div class="wheel-notes">
-        <h3>Cipher Wheel</h3>
-        <p>Cut around both dashed circles. Place the smaller wheel over the larger wheel and fasten them together through the center marks.</p>
-        <p><span class="cut-key"></span> Cut line</p>
-        <p>The wheel is already aligned to this mission's shift.</p>
+        <section class="cipher-aid wheel-section caesar-print">
+          <svg class="cipher-wheel" viewBox="0 0 400 400" role="img" aria-label="Cut-out Caesar cipher wheel"></svg>
+          <div class="wheel-notes">
+            <h3>Cipher Wheel</h3>
+            <p>Cut around both dashed circles. Place the smaller wheel over the larger wheel and fasten them together through the center marks.</p>
+            <p><span class="cut-key"></span> Cut line</p>
+            <p>The wheel is already aligned to this mission's shift.</p>
+          </div>
+        </section>
+
+        <section class="cipher-aid calculation-box affine-print">
+          <h3 class="aid-title">Affine Calculation Box</h3>
+          <div class="affine-summary">
+            <p class="affine-keys">Keys: a = 5, b = 8</p>
+            <div class="formula">E(x) = (a × x + b) mod 26</div>
+          </div>
+          <table class="mapping-table" aria-label="Blank Affine alphabet mapping table">
+            <tbody class="affine-mapping"></tbody>
+          </table>
+        </section>
+
+        <section class="cipher-aid vigenere-section vigenere-print">
+          <h3 class="aid-title">Vigenère Square — Tabula Recta</h3>
+          <table class="vigenere-table" aria-label="Vigenère square">
+            <tbody class="vigenere-square"></tbody>
+          </table>
+        </section>
+
+        <section class="cipher-aid digrafid-section digrafid-print">
+          <h3 class="aid-title">Digrafid Tableau</h3>
+          <p class="digrafid-keys digrafid-print-keys">Keyword: SPY · Period: 3</p>
+          <p class="digrafid-help">Find each digraph with the top alphabet (first letter), bottom alphabet (second letter), and the center number square. Fractionate by the period, then reverse the steps to decode.</p>
+          <div class="digrafid-tableau" aria-label="Digrafid tableau"></div>
+        </section>
+
+        <section class="cipher-aid pollux-section pollux-print">
+          <h3 class="aid-title">Pollux Key &amp; Morse Chart</h3>
+          <p class="pollux-keys pollux-print-keys">● = 1 2 3 · – = 4 5 6 · × = 0 7 8 9</p>
+          <p class="pollux-help">Replace each digit with ●, –, or × from the key. A single × ends a letter; ×× ends a word. Then read the Morse chart. Write each Morse mark on the line beneath its digit.</p>
+          <div class="pollux-aid-grid">
+            <table class="pollux-key-table" aria-label="Pollux digit key">
+              <tbody class="pollux-key-mapping"></tbody>
+            </table>
+            <table class="pollux-morse-table" aria-label="Morse code chart">
+              <tbody class="pollux-morse-chart"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="print-sheet-main">
+          <section class="message-section">
+            <h3>Encrypted Transmission</h3>
+            <p class="mission-instructions">Use the cipher aid to decode each letter. Write the decrypted letter on the line beneath it.</p>
+            <div class="keyword-legend">KEYWORD LETTER / ENCRYPTED LETTER / ANSWER</div>
+            <div class="cipher-message" aria-label="Encrypted message"></div>
+          </section>
+
+          <aside class="plaintext-key" aria-label="Answer key">
+            <p class="plaintext-key-label">Answer key — flip to read</p>
+            <p class="plaintext-key-text"></p>
+          </aside>
+        </div>
       </div>
-    </section>
+    </article>
+  </template>
 
-    <section id="affine-print" class="cipher-aid calculation-box">
-      <h3 class="aid-title">Affine Calculation Box</h3>
-      <div class="affine-summary">
-        <p id="affine-keys">Keys: a = 5, b = 8</p>
-        <div class="formula">E(x) = (a × x + b) mod 26</div>
-      </div>
-      <table class="mapping-table" aria-label="Blank Affine alphabet mapping table">
-        <tbody id="affine-mapping"></tbody>
-      </table>
-    </section>
-
-    <section id="vigenere-print" class="cipher-aid vigenere-section">
-      <h3 class="aid-title">Vigenère Square — Tabula Recta</h3>
-      <table class="vigenere-table" aria-label="Vigenère square">
-        <tbody id="vigenere-square"></tbody>
-      </table>
-    </section>
-
-    <section id="digrafid-print" class="cipher-aid digrafid-section">
-      <h3 class="aid-title">Digrafid Tableau</h3>
-      <p id="digrafid-print-keys" class="digrafid-keys">Keyword: SPY · Period: 3</p>
-      <p class="digrafid-help">Find each digraph with the top alphabet (first letter), bottom alphabet (second letter), and the center number square. Fractionate by the period, then reverse the steps to decode.</p>
-      <div id="digrafid-tableau" class="digrafid-tableau" aria-label="Digrafid tableau"></div>
-    </section>
-
-    <section class="message-section">
-      <h3>Encrypted Transmission</h3>
-      <p id="mission-instructions">Use the cipher aid to decode each letter. Write the decrypted letter on the line beneath it.</p>
-      <div class="keyword-legend">KEYWORD LETTER / ENCRYPTED LETTER / ANSWER</div>
-      <div id="cipher-message" class="cipher-message" aria-label="Encrypted message"></div>
-    </section>
-  </article>
+  <div id="print-pack" class="print-pack"></div>
 
   <script>
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -845,7 +1217,20 @@
       "ROBOT AGENT BEEP",
       "JUNIOR AGENT NOVA",
       "A VERY POLITE NINJA",
-      "DETECTIVE PANCAKE"
+      "DETECTIVE PANCAKE",
+      "AGENT MARSHMALLOW",
+      "COMMANDER BISCUIT",
+      "SPY PENGUIN WADDLES",
+      "PRIVATE NOODLE",
+      "CAPTAIN BUBBLEGUM",
+      "A RACCOON IN A TRENCH COAT",
+      "AGENT FUZZY SOCKS",
+      "GENERAL JELLYBEAN",
+      "THE UNDERCOVER LLAMA",
+      "SCOUT TROOPER MAPLE",
+      "INVISIBLE AGENT SHADOW",
+      "CADET CRUMBLE",
+      "SERGEANT SPARKLE"
     ];
     const missionStoryFrames = [
       ({ character, objective, object, location, deadline }) =>
@@ -859,24 +1244,99 @@
       ({ character, objective, object, location, deadline }) =>
         `${character} FOUND A SECRET NOTE ORDERING THE TEAM TO ${objective} ${object} ${location} ${deadline}.`,
       ({ character, objective, object, location, deadline }) =>
-        `THE ALARM RANG WHEN ${character} TRIED TO ${objective} ${object} ${location} ${deadline}.`
+        `THE ALARM RANG WHEN ${character} TRIED TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} RECEIVED A CODED MESSAGE TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `AFTER A QUICK BRIEFING, ${character} RACED OFF TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} SWORE TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, object, location, deadline }) =>
+        `NOBODY EXPECTED ${character} TO FIND ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `A MYSTERIOUS PHONE CALL TOLD ${character} TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} SNUCK PAST THE GUARDS TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `THE MISSION CLOCK STARTED TICKING AS ${character} LEFT TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} VOLUNTEERED AT ONCE TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `A TOP SECRET FOLDER TOLD ${character} TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} WHISPERED THE PLAN AND SET OUT TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, object, location, deadline }) =>
+        `RUMORS SAID ${object} WAS HIDDEN ${location}, SO ${character} INVESTIGATED ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `WITHOUT WAITING FOR BACKUP, ${character} TRIED TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `THE TEAM CHEERED AS ${character} PROMISED TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} PACKED A DISGUISE AND LEFT TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `AN URGENT KNOCK AT THE DOOR SENT ${character} TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, object, location, deadline }) =>
+        `${character} DISCOVERED A MAP LEADING TO ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `DURING A MIDNIGHT MEETING, ${character} AGREED TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} CRAWLED THROUGH THE VENTS TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `THE FINAL ORDERS WERE CLEAR: ${character} MUST ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `${character} PUT ON A BRAVE FACE AND LEFT TO ${objective} ${object} ${location} ${deadline}.`,
+      ({ character, object, location, deadline }) =>
+        `SOMEONE HID ${object} ${location}, AND ${character} HAD TO FIND IT ${deadline}.`,
+      ({ character, objective, object, location, deadline }) =>
+        `A PAPER AIRPLANE NOTE TOLD ${character} TO ${objective} ${object} ${location} ${deadline}.`
     ];
     const missionTwistFrames = [
       (twist) => `UNFORTUNATELY, ${twist}.`,
       (twist) => `THE ONLY PROBLEM WAS THAT ${twist}.`,
       (twist) => `EVERYTHING WENT PERFECTLY UNTIL ${twist}.`,
-      (twist) => `THEN HEADQUARTERS REPORTED THAT ${twist}.`
+      (twist) => `THEN HEADQUARTERS REPORTED THAT ${twist}.`,
+      (twist) => `SUDDENLY, ${twist}.`,
+      (twist) => `NOBODY WARNED THEM THAT ${twist}.`,
+      (twist) => `JUST THEN, ${twist}.`,
+      (twist) => `TO MAKE THINGS WORSE, ${twist}.`,
+      (twist) => `OF COURSE, ${twist}.`,
+      (twist) => `RIGHT ON CUE, ${twist}.`,
+      (twist) => `BEFORE ANYONE COULD CELEBRATE, ${twist}.`,
+      (twist) => `MOMENTS LATER, ${twist}.`,
+      (twist) => `THAT WAS WHEN THEY NOTICED THAT ${twist}.`,
+      (twist) => `WITHOUT WARNING, ${twist}.`,
+      (twist) => `IN A SURPRISING TWIST, ${twist}.`,
+      (twist) => `AT THE WORST POSSIBLE TIME, ${twist}.`,
+      (twist) => `AS LUCK WOULD HAVE IT, ${twist}.`,
+      (twist) => `THEN CAME THE BAD NEWS: ${twist}.`,
+      (twist) => `IT WOULD HAVE WORKED, EXCEPT ${twist}.`,
+      (twist) => `THE PLAN WOBBLED WHEN ${twist}.`
     ];
     const missionThemes = {
       base: {
-        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "INSPECT"],
+        objectives: [
+          "RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "INSPECT",
+          "GUARD", "RESCUE", "SECURE", "TRACK", "SMUGGLE", "RETURN"
+        ],
         objects: [
           "THE SECRET MAP",
           "THE RADAR KEY",
           "THE SUPPLY CRATE",
           "THE HIDDEN BLUEPRINTS",
           "THE COMMAND FLAG",
-          "THE MYSTERY PACKAGE"
+          "THE MYSTERY PACKAGE",
+          "THE OUTPOST BADGE",
+          "THE CODEBOOK",
+          "THE SIGNAL FLARE",
+          "THE BUNKER PASSWORD LIST",
+          "THE TREEHOUSE REMOTE",
+          "THE CAMOUFLAGE NET",
+          "THE FIELD RADIO",
+          "THE LOOKOUT BINOCULARS",
+          "THE MISSION BRIEFCASE",
+          "THE HIDDEN COMPASS",
+          "THE WATCHTOWER WHISTLE",
+          "THE SPARE GATE KEY"
         ],
         locations: [
           "AT THE TREEHOUSE",
@@ -884,14 +1344,31 @@
           "NEAR THE NORTH OUTPOST",
           "BEHIND HEADQUARTERS",
           "BESIDE THE OLD OAK",
-          "UNDER THE RADAR TOWER"
+          "UNDER THE RADAR TOWER",
+          "AT THE ROPE BRIDGE",
+          "INSIDE THE LOOKOUT FORT",
+          "NEAR THE MUDDY TRENCH",
+          "BEHIND THE SAND BAG WALL",
+          "UNDER THE CAMOUFLAGE TENT",
+          "AT THE SECRET HATCH",
+          "BESIDE THE WARNING SIREN",
+          "INSIDE THE MAP ROOM",
+          "NEAR THE BACK GATE",
+          "ON THE WATCHTOWER LADDER"
         ],
         deadlines: [
           "BEFORE SUNSET",
           "AT MIDNIGHT",
           "BEFORE THE NEXT RADAR SWEEP",
           "AT FIRST LIGHT",
-          "BEFORE THE EAGLE LANDS"
+          "BEFORE THE EAGLE LANDS",
+          "BEFORE THE SHIFT CHANGE",
+          "WHEN THE SIREN BLOWS",
+          "BEFORE THE FOG ROLLS IN",
+          "AFTER THE NIGHT PATROL PASSES",
+          "BEFORE THE FLAG IS LOWERED",
+          "WHEN THE OWL HOOTS TWICE",
+          "BEFORE HEADQUARTERS CLOSES"
         ],
         twists: [
           "A PIGEON IN A TINY HAT STOLE THE ONLY CLUE",
@@ -899,24 +1376,102 @@
           "A CONFUSED MOOSE ASKED TO SEE EVERYONE'S BADGES",
           "THE RADAR WAS ACTUALLY TRACKING A RUNAWAY BALLOON",
           "THREE HAMSTERS ARRIVED CLAIMING TO BE BACKUP",
-          "THE TREEHOUSE HAD BEEN TAKEN OVER BY POLITE PIRATES"
+          "THE TREEHOUSE HAD BEEN TAKEN OVER BY POLITE PIRATES",
+          "THE MAP WAS DRAWN ENTIRELY IN INVISIBLE INK",
+          "A FAMILY OF RACCOONS REARRANGED ALL THE SIGNS",
+          "THE OUTPOST RADIO WOULD ONLY PLAY BANJO MUSIC",
+          "SOMEONE REPLACED THE GATE KEY WITH A BANANA",
+          "THE LOOKOUT FELL ASLEEP ON DUTY AGAIN",
+          "A SQUIRREL GENERAL DECLARED THE TREEHOUSE INDEPENDENT",
+          "THE CAMOUFLAGE NET WAS COVERED IN GLITTER",
+          "THE BRIEFCASE WAS FULL OF RUBBER DUCKS",
+          "A LOST TOUR GROUP ASKED FOR DIRECTIONS TO HEADQUARTERS",
+          "THE WARNING SIREN GOT STUCK ON THE ICE CREAM TRUCK SONG",
+          "THE ROPE BRIDGE WAS BEING USED AS A JUMP ROPE",
+          "A FLOCK OF GEESE SALUTED AND BLOCKED THE GATE",
+          "THE PASSWORD LIST HAD BEEN TURNED INTO ORIGAMI",
+          "SOMEONE FILLED THE BUNKER WITH BALLOONS",
+          "THE FIELD RADIO ONLY ACCEPTED KNOCK KNOCK JOKES",
+          "A HEDGEHOG IN SUNGLASSES CLAIMED TO BE THE NEW COMMANDER",
+          "THE COMPASS SPUN IN CIRCLES WHENEVER ANYONE WHISPERED",
+          "THE SAND BAG WALL HAD BEEN REPLACED WITH PILLOWS",
+          "A PARADE OF DUCKLINGS FOLLOWED THE SUPPLY CRATE",
+          "THE WATCHTOWER LADDER WAS COVERED IN SOAP BUBBLES",
+          "THE CODEBOOK WAS WRITTEN IN BACKWARD CRAYON",
+          "AN OVERLY HELPFUL OWL REPEATED EVERY SECRET TWICE",
+          "THE CAMOUFLAGE TENT LOOKED EXACTLY LIKE A GIANT SOCK",
+          "THE SPARE GATE KEY FIT EVERY LOCK EXCEPT THE RIGHT ONE"
         ],
         resolutions: [
           "THE TEAM DISTRACTED EVERYONE WITH A RUBBER CHICKEN",
           "THE TEAM SENT A MESSAGE USING SOCK PUPPETS",
           "THE AGENTS HID BEHIND A SUSPICIOUSLY SMALL PLANT",
-          "PROFESSOR PICKLE SOLVED THE PROBLEM WITH A KAZOO"
+          "PROFESSOR PICKLE SOLVED THE PROBLEM WITH A KAZOO",
+          "THE TEAM BUILT A DECOY OUTPOST FROM CARDBOARD",
+          "AGENT NOVA WHISTLED THE SECRET ALL CLEAR SIGNAL",
+          "THE AGENTS WON WITH A SURPRISE PILLOW AMBUSH",
+          "COMMANDER BISCUIT CALMED EVERYONE WITH SNACKS",
+          "THE TEAM FOLLOWED THE PIGEON AND FOUND THE CLUE",
+          "ROBOT AGENT BEEP REBOOTED THE RADAR JUST IN TIME",
+          "THE AGENTS WON BY PRETENDING TO BE A BUSH",
+          "SCOUT TROOPER MAPLE BLUFFED WITH A PAPER BADGE",
+          "THE TEAM TUNNELED OUT USING PLASTIC SPOONS",
+          "GENERAL JELLYBEAN CALLED A VERY OFFICIAL TIMEOUT",
+          "THE AGENTS BRIBED THE PIRATES WITH STICKERS",
+          "INVISIBLE AGENT SHADOW SNUCK THE CRATE PAST EVERYONE",
+          "THE TEAM REDREW THE MAP IN GLOW IN THE DARK INK",
+          "CAPTAIN WHISKERS STARED UNTIL THE MOOSE LEFT",
+          "THE AGENTS FIXED THE SIREN WITH A BANANA AND TAPE",
+          "SERGEANT SPARKLE SIGNALED VICTORY WITH SPARKLERS"
         ]
       },
       snacks: {
-        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "RESCUE"],
+        objectives: [
+          "RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "RESCUE",
+          "GUARD", "SWAP", "SECURE", "SNEAK", "RETURN", "SMUGGLE",
+          "TRADE", "SHARE", "SNATCH", "UNLOCK", "DEFEND", "FETCH"
+        ],
         objects: [
           "THE COOKIE TIN",
           "THE SECRET STASH",
           "THE LAST JUICE BOX",
           "THE MIDNIGHT PIZZA",
           "THE GOLDEN CUPCAKE",
-          "THE EMERGENCY POPCORN"
+          "THE EMERGENCY POPCORN",
+          "THE CHOCOLATE VAULT KEY",
+          "THE CRISPY CHIP CRATE",
+          "THE FROZEN POPSICLE MAP",
+          "THE MARSHMALLOW CODE",
+          "THE BANANA BREAD BRIEFCASE",
+          "THE DONUT DECODER RING",
+          "THE PRETZEL PASSWORD LIST",
+          "THE WAFFLE BLUEPRINTS",
+          "THE CANDY SIGNAL FLARE",
+          "THE ICE CREAM REMOTE",
+          "THE BROWNIE BADGE",
+          "THE PEANUT BUTTER PLAN",
+          "THE GUMMY BEAR ARMY",
+          "THE CINNAMON ROLL SCROLL",
+          "THE TACO TUESDAY TREASURE",
+          "THE MACARONI MAP",
+          "THE HOT COCOA THERMOS",
+          "THE BAGEL BADGE",
+          "THE CHEESE PUFF CRATE",
+          "THE LOLLIPOP LASER POINTER",
+          "THE GRANOLA BAR CODEBOOK",
+          "THE CUPCAKE SPRINKLE KEY",
+          "THE PICKLE JAR PASSWORD",
+          "THE SMOOTHIE SECRET FORMULA",
+          "THE TRAIL MIX TREASURE CHEST",
+          "THE PANCAKE STACK BLUEPRINTS",
+          "THE JELLY BEAN COMPASS",
+          "THE CHOCOLATE CHIP CLUE",
+          "THE APPLE PIE BRIEFCASE",
+          "THE NACHO CHEESE REMOTE",
+          "THE COTTON CANDY CAPE",
+          "THE ROOT BEER FLOAT RADIO",
+          "THE SUGAR COOKIE SEAL",
+          "THE MUFFIN TIN MESSAGE"
         ],
         locations: [
           "BEHIND THE BOOKS",
@@ -924,14 +1479,57 @@
           "AT THE TREEHOUSE",
           "UNDER THE PICNIC TABLE",
           "NEAR THE KITCHEN DOOR",
-          "BESIDE THE SECRET COOLER"
+          "BESIDE THE SECRET COOLER",
+          "INSIDE THE PANTRY FORT",
+          "AT THE LUNCHBOX LOCKER",
+          "UNDER THE CEREAL BOXES",
+          "NEAR THE COOKIE JAR SHELF",
+          "BEHIND THE FRIDGE MAGNETS",
+          "AT THE PICNIC BLANKET BASE",
+          "INSIDE THE CANDY CABINET",
+          "BESIDE THE TOASTER STATION",
+          "UNDER THE CUPCAKE DOME",
+          "NEAR THE JUICE BOX DEPOT",
+          "AT THE BAKE SALE TABLE",
+          "INSIDE THE LUNCHROOM FORT",
+          "BEHIND THE VENDING MACHINE",
+          "UNDER THE ICE CREAM TRUCK",
+          "AT THE CANDY AISLE LOOKOUT",
+          "NEAR THE HOT DOG CART",
+          "INSIDE THE COOKIE FACTORY",
+          "BESIDE THE LEMONADE STAND",
+          "ON TOP OF THE PANCAKE STACK",
+          "UNDER THE PICNIC BASKET",
+          "AT THE MIDNIGHT SNACK CORNER",
+          "BEHIND THE SUGAR BIN",
+          "INSIDE THE FROZEN TREAT FREEZER",
+          "NEAR THE CHOCOLATE FOUNTAIN",
+          "AT THE CRUMB TRAIL CROSSING",
+          "UNDER THE DONUT DISPLAY"
         ],
         deadlines: [
           "BEFORE LUNCH",
           "AT MIDNIGHT",
           "BEFORE THE SNACK BELL RINGS",
           "AFTER THE GUARDS LEAVE",
-          "BEFORE THE CRUMBS DISAPPEAR"
+          "BEFORE THE CRUMBS DISAPPEAR",
+          "BEFORE RECESS ENDS",
+          "WHEN THE OVEN TIMER DINGS",
+          "BEFORE THE ICE CREAM MELTS",
+          "AFTER THE COOKIES COOL",
+          "BEFORE THE PANTRY LOCKS",
+          "WHEN THE MICROWAVE BEEPS",
+          "BEFORE BREAKFAST IS SERVED",
+          "BEFORE THE BAKE SALE STARTS",
+          "WHEN THE CANDY AISLE OPENS",
+          "BEFORE THE LAST SLICE IS GONE",
+          "AFTER THE SUGAR RUSH HITS",
+          "BEFORE THE MILK EXPIRES",
+          "WHEN THE POPCORN FINISHES POPPING",
+          "BEFORE THE LUNCH LINE CLOSES",
+          "AFTER THE DESSERT CART ROLLS BY",
+          "BEFORE THE SPRINKLES RUN OUT",
+          "WHEN THE HOT COCOA IS READY"
         ],
         twists: [
           "A GOAT WEARING ROLLER SKATES ATE THE MISSION NOTES",
@@ -939,24 +1537,103 @@
           "A SLEEPY PANDA WAS GUARDING THE LAST COOKIE",
           "THE JUICE BOX INSISTED THAT IT WAS THE TEAM LEADER",
           "A TRAIL OF CRUMBS LED DIRECTLY TO A DANCING LLAMA",
-          "THE COOKIE JAR DEMANDED THE SECRET PASSWORD"
+          "THE COOKIE JAR DEMANDED THE SECRET PASSWORD",
+          "THE POPCORN STARTED POPPING OUT SECRET CODES",
+          "A HUNGRY RACCOON OPENED THE SNACK VAULT FIRST",
+          "THE CUPCAKE FROSTING SPELLED THE WRONG ADDRESS",
+          "SOMEONE SWITCHED THE MAP WITH A NAPKIN DOODLE",
+          "THE CHIP BAG WAS LOUDER THAN THE ALARM",
+          "A PARADE OF ANTS CARRIED AWAY THE CLUES",
+          "THE BROWNIES WERE ACTUALLY VERY CONVINCING ROCKS",
+          "THE DONUT DECODER ONLY WORKED WHILE SPINNING",
+          "A SQUIRREL NINJA CLAIMED THE ACORNS WERE CLASSIFIED",
+          "THE SECRET STASH HAD BEEN REPLACED WITH CELERY",
+          "THE GUMMY BEARS DECLARED THEMSELVES IN CHARGE",
+          "A MELTING POPSICLE ERASED HALF THE MAP",
+          "THE VENDING MACHINE ATE THE ONLY BADGE",
+          "A SUGAR RUSH SENT THE GUARDS INTO A DANCE OFF",
+          "THE MARSHMALLOWS EXPANDED AND BLOCKED THE DOOR",
+          "SOMEONE ICED THE WRONG CAKE WITH THE CLUES",
+          "THE PEANUT BUTTER GOT STUCK TO THE BRIEFCASE",
+          "A FLOCK OF SEAGULLS SWOOPED IN FOR THE FRIES",
+          "THE HOT COCOA THERMOS WAS ACTUALLY FULL OF SOUP",
+          "THE LOLLIPOP GOT STUCK TO THE SECRET PLANS",
+          "A SENTIENT BANANA DEMANDED A TRADE FOR THE KEY",
+          "THE CHEESE PUFFS LEFT AN ORANGE TRAIL EVERYWHERE",
+          "THE WAFFLES ABSORBED THE INVISIBLE INK MESSAGE",
+          "THE ICE CREAM TRUCK PLAYED THE WRONG SECRET SONG",
+          "A PICKY GOAT REFUSED EVERYTHING EXCEPT THE MAP",
+          "THE CUPCAKE DOME FOGGED UP AND HID THE CLUES",
+          "THE BAGELS FORMED A BARRICADE ACROSS THE AISLE",
+          "A VANILLA PUDDING SPILL ERASED THE FOOTPRINTS",
+          "THE TACO SHELLS CRACKED AND WOKE THE GUARDS",
+          "SOMEONE DUSTED THE PLANS WITH TOO MUCH CINNAMON",
+          "THE SMOOTHIE BLENDER DROWNED OUT THE BRIEFING",
+          "A CHOCOLATE FOUNTAIN FLOODED THE LOOKOUT",
+          "THE PRETZELS WERE TWISTED INTO THE WRONG CODE",
+          "THE MUFFIN TIN MESSAGE GOT BAKED INTO MUFFINS",
+          "A HUNGRY HIPPO JOINED THE PICNIC WITHOUT ASKING",
+          "THE ROOT BEER FLOAT OVERFLOWED ON THE RADIO",
+          "THE GRANOLA BAR CODEBOOK WAS MISSING HALF ITS OATS",
+          "A STICKY TRAIL OF HONEY LED TO THE WRONG VAULT"
         ],
         resolutions: [
           "THE TEAM OFFERED THE GUARD A DECOY SANDWICH",
           "THE TEAM ESCAPED ON A SHOPPING CART",
           "THE AGENTS BUILT A TRAP FROM WAFFLES AND STRING",
-          "DETECTIVE PANCAKE FOLLOWED THE SYRUP TRAIL"
+          "DETECTIVE PANCAKE FOLLOWED THE SYRUP TRAIL",
+          "THE TEAM SHARED THE LAST COOKIE AND MADE PEACE",
+          "AGENT MARSHMALLOW DISTRACTED EVERYONE WITH SPRINKLES",
+          "THE AGENTS HID INSIDE A GIANT CEREAL BOX",
+          "PRIVATE NOODLE DECODED THE RECIPE JUST IN TIME",
+          "THE TEAM WON WITH A SURPRISE ICE CREAM DELIVERY",
+          "CAPTAIN BUBBLEGUM SEALED THE VAULT WITH GUM",
+          "THE TEAM BRIBED THE GUARDS WITH WARM COOKIES",
+          "AGENT FUZZY SOCKS SLID HOME ON A BANANA PEEL",
+          "THE AGENTS BUILT A FORT FROM EMPTY PIZZA BOXES",
+          "COMMANDER BISCUIT HOSTED A VICTORY BAKE SALE",
+          "THE TEAM FOLLOWED THE CHEESE PUFF TRAIL TO SAFETY",
+          "PROFESSOR PICKLE PICKLED THE EVIDENCE FOR LATER",
+          "THE AGENTS ESCAPED INSIDE A HOLLOWED OUT CAKE",
+          "JUNIOR AGENT NOVA ICED A DECOY CUPCAKE MAP",
+          "THE TEAM WON BY SHARING THE LAST JUICE BOX",
+          "DETECTIVE PANCAKE FLIPPED THE CASE WIDE OPEN",
+          "THE TEAM ROLLED TO SAFETY INSIDE A BURRITO WRAPPER",
+          "AGENT MARSHMALLOW TOASTED A PERFECT DISTRACTION",
+          "THE AGENTS LEFT A TRAIL OF DECOY CRUMBS AND HID",
+          "CAPTAIN BUBBLEGUM BLEW A BUBBLE BIG ENOUGH TO HIDE IN",
+          "THE TEAM TRADED STICKERS FOR THE FINAL CLUE",
+          "PRIVATE NOODLE STIRRED UP A CLEVER NEW PLAN",
+          "THE AGENTS WON WITH A MIDNIGHT COOKIE EXCHANGE",
+          "COMMANDER BISCUIT DECLARED A CEASEFIRE SNACK BREAK",
+          "THE TEAM STACKED PANCAKES INTO AN ESCAPE RAMP",
+          "DETECTIVE PANCAKE POURED SYRUP ON THE FALSE LEADS"
         ]
       },
       gadgets: {
-        objectives: ["ACTIVATE", "RECOVER", "TEST", "DELIVER", "LOCATE", "PROTECT"],
+        objectives: [
+          "ACTIVATE", "RECOVER", "TEST", "DELIVER", "LOCATE", "PROTECT",
+          "REPAIR", "DISABLE", "INSTALL", "CALIBRATE", "HIDE", "RESCUE"
+        ],
         objects: [
           "THE POCKET DECODER",
           "THE INVISIBLE INK PEN",
           "THE MINI JETPACK",
           "THE LASER MAP",
           "THE SECRET SIGNAL WATCH",
-          "THE MAGNETIC GRAPPLING HOOK"
+          "THE MAGNETIC GRAPPLING HOOK",
+          "THE SPY CAMERA BUTTON",
+          "THE VOICE CHANGER TIE",
+          "THE SHRINK RAY REMOTE",
+          "THE HOLOGRAM PROJECTOR",
+          "THE SMOKE BOMB MARBLES",
+          "THE X RAY GOGGLES",
+          "THE TRACKING BEACON SOCK",
+          "THE NIGHT VISION HAT",
+          "THE PORTABLE FORCE FIELD",
+          "THE ROBO SPIDER LISTENER",
+          "THE DISGUISE BRIEFCASE",
+          "THE EMERGENCY GLIDER CAPE"
         ],
         locations: [
           "BEYOND THE LASER GRID",
@@ -964,14 +1641,31 @@
           "AT THE HIDDEN DROP POINT",
           "UNDER THE CONTROL PANEL",
           "NEAR THE SATELLITE DISH",
-          "BEHIND THE SECRET SCREEN"
+          "BEHIND THE SECRET SCREEN",
+          "INSIDE THE INVENTION CLOSET",
+          "AT THE TESTING CHAMBER",
+          "UNDER THE TRAPDOOR DESK",
+          "NEAR THE POWER GENERATOR",
+          "BEHIND THE MIRROR PANEL",
+          "AT THE ROBOT CHARGING DOCK",
+          "INSIDE THE WIRE MAZE",
+          "BESIDE THE RED BUTTON WALL",
+          "ON THE VENTILATION CATWALK",
+          "NEAR THE SPARE PARTS LOCKER"
         ],
         deadlines: [
           "BEFORE THE BATTERY RUNS OUT",
           "AT MIDNIGHT",
           "BEFORE THE NEXT RADAR SCAN",
           "WHEN THE BLUE LIGHT FLASHES",
-          "BEFORE THE SIGNAL DISAPPEARS"
+          "BEFORE THE SIGNAL DISAPPEARS",
+          "BEFORE THE SYSTEM REBOOTS",
+          "WHEN THE COUNTDOWN HITS ZERO",
+          "BEFORE THE LASERS RESET",
+          "AFTER THE NIGHT SHIFT STARTS",
+          "BEFORE THE PROTOTYPE OVERHEATS",
+          "WHEN THE GREEN LIGHT BLINKS",
+          "BEFORE THE LAB LOCKS DOWN"
         ],
         twists: [
           "THE JETPACK WOULD ONLY FLY BACKWARD",
@@ -979,24 +1673,79 @@
           "THE INVISIBLE INK REVEALED A RECIPE FOR PICKLE SOUP",
           "THE ROBOT GUARD KEPT STOPPING TO TELL BAD JOKES",
           "THE DECODER TRANSLATED EVERY MESSAGE INTO DUCK NOISES",
-          "A CURIOUS OCTOPUS WAS PRESSING ALL THE CONTROL BUTTONS"
+          "A CURIOUS OCTOPUS WAS PRESSING ALL THE CONTROL BUTTONS",
+          "THE SHRINK RAY ACCIDENTALLY ENLARGED THE MAP",
+          "THE VOICE CHANGER ONLY SPOKE IN OPERA",
+          "THE GRAPPLING HOOK ATTACHED ITSELF TO A CHANDELIER",
+          "THE HOLOGRAM PROJECTOR SHOWED DANCING BANANAS",
+          "THE X RAY GOGGLES ONLY WORKED UPSIDE DOWN",
+          "A GLITCH MADE EVERY GADGET PLAY HAPPY BIRTHDAY",
+          "THE FORCE FIELD TRAPPED THE TEAM WITH A SNACK CART",
+          "THE ROBO SPIDER GOT STUCK IN A WEB OF CABLES",
+          "SOMEONE LABELED ALL THE BUTTONS IN INVISIBLE INK",
+          "THE DISGUISE BRIEFCASE OPENED INTO A FULL PICNIC",
+          "THE SMOKE BOMB MARBLES ROLLED UNDER THE FRIDGE",
+          "THE TRACKING BEACON SOCK GOT LOST IN THE LAUNDRY",
+          "A ROGUE VACUUM CLEANER ATE THE BLUEPRINTS",
+          "THE NIGHT VISION HAT ONLY SHOWED CARTOONS",
+          "THE PORTABLE FORCE FIELD KEPT OUT THE TEAM TOO",
+          "SOMEONE REPLACED THE BATTERIES WITH GUM WRAPPERS",
+          "THE SPY CAMERA BUTTON TOOK ONLY SELFIES",
+          "THE EMERGENCY GLIDER CAPE INFLATED INDOORS",
+          "A HELPFUL ROBOT REARRANGED ALL THE WIRES BY COLOR",
+          "THE RED BUTTON WALL HAD NO ACTUAL RED BUTTONS",
+          "THE LASER MAP PROJECTED ONTO THE CEILING FAN",
+          "THE SECRET SIGNAL WATCH BEEPED THE WRONG CODE",
+          "A MAGNETIC STORM STUCK EVERYONE TO THE LOCKER",
+          "THE INVENTION CLOSET DOOR LOCKED FROM THE INSIDE"
         ],
         resolutions: [
           "THE TEAM REPAIRED IT WITH TAPE AND A BANANA",
           "AGENT BEEP CONFUSED THE ALARM BY DANCING",
           "AGENT NOVA USED A TOY MAGNET TO SAVE THE MISSION",
-          "THE AGENTS ESCAPED ON THE EMERGENCY SCOOTER"
+          "THE AGENTS ESCAPED ON THE EMERGENCY SCOOTER",
+          "THE TEAM REWIRED THE PANEL WITH BUBBLEGUM",
+          "SERGEANT SPARKLE RESET EVERYTHING WITH ONE CLICK",
+          "THE AGENTS FOOLED THE SENSORS WITH CARDBOARD CUTOUTS",
+          "ROBOT AGENT BEEP CALCULATED THE PERFECT BUTTON ORDER",
+          "THE TEAM USED THE GLIDER CAPE FOR A DRAMATIC EXIT",
+          "CADET CRUMBLE DISTRACTED THE GUARD WITH CONFETTI",
+          "THE TEAM REBOOTED THE LAB USING A RUBBER CHICKEN",
+          "AGENT FUZZY SOCKS SHORT CIRCUITED THE LASER GRID",
+          "THE AGENTS WON BY PRESSING EVERY BUTTON AT ONCE",
+          "SERGEANT SPARKLE DAZZLED THE CAMERAS WITH GLITTER",
+          "THE TEAM ESCAPED THROUGH THE VENTILATION CATWALK",
+          "ROBOT AGENT BEEP TRANSLATED THE DUCK NOISES IN TIME",
+          "THE AGENTS BUILT A DECOY GADGET FROM PAPER CLIPS",
+          "CADET CRUMBLE UNSTUCK THE FORCE FIELD WITH SYRUP",
+          "THE TEAM TURNED THE HOLOGRAM INTO A DISTRACTION PARADE",
+          "INVISIBLE AGENT SHADOW SWAPPED THE FAKE BATTERIES"
         ]
       },
       space: {
-        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "ACTIVATE", "RESCUE"],
+        objectives: [
+          "RECOVER", "DELIVER", "PROTECT", "LOCATE", "ACTIVATE", "RESCUE",
+          "LAUNCH", "REPAIR", "TRACK", "SECURE", "RETURN", "SCAN"
+        ],
         objects: [
           "THE STAR MAP",
           "THE MOON ROCK KEY",
           "THE GLITTERY COMET CODE",
           "THE ALIEN LUNCHBOX",
           "THE SPACE HELMET RADIO",
-          "THE FLOATING MISSION BADGE"
+          "THE FLOATING MISSION BADGE",
+          "THE ORBITAL FLASHLIGHT",
+          "THE ROCKET FUEL RECIPE",
+          "THE METEOR SAMPLE CASE",
+          "THE ZERO GRAVITY BOOTS",
+          "THE PLANET SCANNER WATCH",
+          "THE NEBULA PASSWORD LIST",
+          "THE ASTRONAUT PATCH KIT",
+          "THE SATELLITE REMOTE",
+          "THE CRATER COMPASS",
+          "THE GALAXY SIGNAL FLARE",
+          "THE SPACEWALK TETHER",
+          "THE COSMIC CODEBOOK"
         ],
         locations: [
           "ON THE MOON BASE",
@@ -1004,14 +1753,31 @@
           "NEAR THE CRATER LIBRARY",
           "BEHIND THE SATELLITE GARDEN",
           "AT THE STARPORT PLAYGROUND",
-          "UNDER THE COMET BRIDGE"
+          "UNDER THE COMET BRIDGE",
+          "INSIDE THE AIRLOCK LOCKER",
+          "AT THE OBSERVATORY DOME",
+          "NEAR THE ASTEROID SLIDE",
+          "BEHIND THE LAUNCH PAD FENCE",
+          "ON THE SPACE STATION ROOF",
+          "UNDER THE METEOR SHELTER",
+          "AT THE ALIEN GIFT SHOP",
+          "INSIDE THE GRAVITY LAB",
+          "BESIDE THE TELESCOPE TOWER",
+          "NEAR THE FLOATING LUNCH DECK"
         ],
         deadlines: [
           "BEFORE BLASTOFF",
           "AT MIDNIGHT ON MARS",
           "BEFORE THE NEXT METEOR SHOWER",
           "WHEN THE STARS ALIGN",
-          "BEFORE THE ROCKET DOOR CLOSES"
+          "BEFORE THE ROCKET DOOR CLOSES",
+          "BEFORE ORBIT IS REACHED",
+          "WHEN THE RED ALERT SOUNDS",
+          "BEFORE THE COMET PASSES",
+          "AFTER THE MOONRISE BELL",
+          "BEFORE THE AIRLOCK CYCLES",
+          "WHEN THE CONSTELLATION APPEARS",
+          "BEFORE THE SPACE BUS LEAVES"
         ],
         twists: [
           "A FRIENDLY ALIEN ASKED TO TRADE FOR STICKERS",
@@ -1019,13 +1785,53 @@
           "ZERO GRAVITY TURNED THE CLUES INTO SOAP BUBBLES",
           "A SPACE GOAT ATE THE STAR CHART",
           "THE MOON ROCK STARTED GIGGLING",
-          "THE SATELLITE INSISTED ON SINGING KARAOKE"
+          "THE SATELLITE INSISTED ON SINGING KARAOKE",
+          "THE HELMET RADIO ONLY PLAYED SPACE WHALES",
+          "AN ASTEROID BLOCKED THE ONLY SHORTCUT",
+          "THE BOOTS KEPT FLOATING AWAY DURING BRIEFINGS",
+          "A CLUSTER OF FIREFLIES WAS MISTAKEN FOR A GALAXY",
+          "THE LAUNCH BUTTON WAS COVERED IN SPACE GLITTER",
+          "THE ALIEN LUNCHBOX CONTAINED ONLY EARTH CRACKERS",
+          "THE TELESCOPE WAS AIMED AT A NEIGHBOR'S BBQ",
+          "A METEOR TURNED OUT TO BE A LOST BEACH BALL",
+          "THE SPACEWALK TETHER GOT TIED IN A GIANT BOW",
+          "THE COMET CODE WAS WRITTEN IN BACKWARD ALIEN",
+          "THE AIRLOCK PLAYED ELEVATOR MUSIC ON LOOP",
+          "A CONSTELLATION LOOKED EXACTLY LIKE A PIZZA",
+          "THE ORBITAL FLASHLIGHT ATTRACTED SPACE MOTHS",
+          "SOMEONE LEFT THE ROCKET KEYS ON MARS",
+          "THE FLOATING LUNCH DECK DRIFTED INTO A CRATER",
+          "A NEBULA FOG MADE EVERYONE LOSE THEIR PLACE",
+          "THE PLANET SCANNER WATCH THOUGHT EARTH WAS LOST",
+          "THE ASTRONAUT PATCH KIT ONLY HAD GLITTER LEFT",
+          "A FRIENDLY COMET ASKED FOR DIRECTIONS TO SATURN",
+          "THE METEOR SHELTER WAS FULL OF BEANBAG CHAIRS",
+          "THE SPACE BUS LEFT WITHOUT THE MISSION BADGE",
+          "ZERO GRAVITY TURNED THE BRIEFING INTO A FOOD FIGHT",
+          "THE CRATER LIBRARY BOOKS KEPT FLOATING OFF SHELVES",
+          "AN ALIEN TOUR GROUP BLOCKED THE LAUNCH PAD"
         ],
         resolutions: [
           "THE TEAM FIXED IT WITH GLOW STICKS AND TAPE",
           "AGENT NOVA WAVED A FLASHLIGHT IN MORSE CODE",
           "AGENT NOVA DISTRACTED EVERYONE WITH MOON CHEESE",
-          "ROBOT AGENT BEEP CALCULATED A SILLY NEW ROUTE"
+          "ROBOT AGENT BEEP CALCULATED A SILLY NEW ROUTE",
+          "THE TEAM MADE PEACE WITH STICKERS AND HIGH FIVES",
+          "SPY PENGUIN WADDLES NAVIGATED BY THE SOUTHERN CROSS",
+          "THE AGENTS CAUGHT A RIDE ON A FRIENDLY COMET",
+          "GENERAL JELLYBEAN REBOOTED THE SATELLITE WITH A JOKE",
+          "THE TEAM USED THE FLOATING BADGE AS A HOMING BEACON",
+          "CADET CRUMBLE FIXED THE AIRLOCK WITH CHEWING GUM",
+          "THE TEAM REDREW THE STAR MAP USING GLOW PAINT",
+          "AGENT NOVA HAILED THE ALIEN BUS AND GOT A RIDE HOME",
+          "THE AGENTS TRADED MOON ROCKS FOR THE RIGHT CODE",
+          "SPY PENGUIN WADDLES SLID ACROSS THE ICE TO VICTORY",
+          "THE TEAM AIMED THE TELESCOPE AT THE REAL TARGET",
+          "ROBOT AGENT BEEP SANG THE KARAOKE PASSWORD PERFECTLY",
+          "THE AGENTS FOLLOWED THE SPACE MOTHS TO THE CLUE",
+          "CADET CRUMBLE INFLATED AN EMERGENCY BEACH BALL RAFT",
+          "THE TEAM WON BY SHARING EARTH CRACKERS WITH THE ALIENS",
+          "GENERAL JELLYBEAN DECLARED A SUCCESSFUL SOFT LANDING"
         ]
       },
       dogman: {
@@ -1035,12 +1841,32 @@
           "LI'L PETEY",
           "CHIEF",
           "SARAH HATOFF",
-          "80-HD",
+          "ROBOT BUDDY",
           "MOLLY",
           "PIGGY",
-          "THE SUPA BUDDIES"
+          "THE SUPA BUDDIES",
+          "FLIPPY",
+          "NURSE LADY",
+          "THE FAIRY DOG MOTHER",
+          "BIG JIM",
+          "THE CAT JAIL WARDEN",
+          "CLERK",
+          "THE SUPA PALS",
+          "THE DOCTOR",
+          "MOMMA",
+          "GRANDPA",
+          "THE MAYOR",
+          "OFFICER LADY",
+          "THE NEWSPAPER EDITOR",
+          "A FRIENDLY ROBOT DOG",
+          "THE CAT CRIME CLUB",
+          "THE JUSTICE LEAGUE OF DOGS"
         ],
-        objectives: ["RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "RESCUE", "CHASE", "GUARD"],
+        objectives: [
+          "RECOVER", "DELIVER", "PROTECT", "LOCATE", "HIDE", "RESCUE",
+          "CHASE", "GUARD", "STOP", "RETURN", "CAPTURE", "HELP",
+          "SAVE", "FIND", "SHARE", "FIX", "FREE", "DEFEND", "CATCH", "FETCH"
+        ],
         objects: [
           "THE SUPA BUDDY BADGE",
           "THE SECRET COMIC BOOK",
@@ -1056,7 +1882,34 @@
           "THE KINDNESS NOTE",
           "THE CAT JAIL ESCAPE PLAN",
           "THE SUPA PALS SIGNAL",
-          "THE CHEESY PIZZA CLUE"
+          "THE CHEESY PIZZA CLUE",
+          "THE SQUEAKY TOY EVIDENCE",
+          "THE NEWSPAPER SCOOP",
+          "THE SUPERHERO CAPE",
+          "THE POLICE STATION COFFEE MUG",
+          "THE ROBOT REPAIR MANUAL",
+          "THE UNDERGROUND LAB PASS",
+          "THE CITY HALL PERMISSION SLIP",
+          "THE BARKING BURGLAR ALARM",
+          "THE TAIL WAGGING TRACKER",
+          "THE SUPA BUDDY HANDSHAKE GUIDE",
+          "THE CAT DISGUISE KIT",
+          "THE GIANT BONE BATON",
+          "THE DOGHOUSE BLUEPRINTS",
+          "THE FRIENDSHIP BRACELET CODE",
+          "THE EVIL LASER POINTER",
+          "THE POLICE SKETCH PAD",
+          "THE LOST PUPPY FLYER",
+          "THE COMIC BOOK INK BOTTLE",
+          "THE HERO MASK COLLECTION",
+          "THE SECRET HANDSHAKE SCROLL",
+          "THE BARK TRANSLATOR COLLAR",
+          "THE DONUT SPRINKLE MAP",
+          "THE CATNIP DECOY BAG",
+          "THE ROBOT REMOTE CONTROL",
+          "THE CITY PARADE BANNER",
+          "THE SUPA BUDDY YEARBOOK",
+          "THE KINDNESS TROPHY"
         ],
         locations: [
           "AT THE POLICE STATION",
@@ -1072,7 +1925,29 @@
           "IN THE UNDERGROUND SEWER LAB",
           "AT THE DOGGY DONUT SHOP",
           "NEAR THE BROKEN ROBOT DUMP",
-          "INSIDE THE GIANT COMIC PANEL"
+          "INSIDE THE GIANT COMIC PANEL",
+          "AT THE CITY ZOO GATES",
+          "BEHIND THE FIRE HYDRANT FORT",
+          "ON THE SKATE PARK RAMP",
+          "INSIDE THE LIBRARY FORT",
+          "NEAR THE BUS STOP BENCH",
+          "AT THE HOSPITAL LOBBY",
+          "ON THE ROOFTOP PATROL ROUTE",
+          "INSIDE THE MAYOR'S OFFICE",
+          "AT THE DOG PARK OBSTACLE COURSE",
+          "BEHIND THE MOVIE THEATER",
+          "NEAR THE SCHOOL PLAYGROUND",
+          "INSIDE THE SUPA BUDDY CLUBHOUSE",
+          "AT THE CITY MUSEUM LOBBY",
+          "UNDER THE BRIDGE HIDEOUT",
+          "ON THE PARADE FLOAT",
+          "AT THE PET STORE WINDOW",
+          "INSIDE THE RADIO STATION",
+          "NEAR THE FOUNTAIN IN THE SQUARE",
+          "BEHIND THE BAKERY DOOR",
+          "AT THE FIRE STATION POLE",
+          "INSIDE THE TREEHOUSE FORT",
+          "ON THE CITY BUS ROOF"
         ],
         deadlines: [
           "BEFORE PETEY ESCAPES AGAIN",
@@ -1084,7 +1959,23 @@
           "BEFORE THE EVIL PLAN ACTIVATES",
           "WHEN DOG MAN'S TAIL STARTS WAGGING",
           "BEFORE CAT JAIL LOCKDOWN",
-          "BEFORE THE CITY RUNS OUT OF DONUTS"
+          "BEFORE THE CITY RUNS OUT OF DONUTS",
+          "BEFORE THE COMIC DEADLINE",
+          "WHEN THE SCHOOL BELL RINGS",
+          "BEFORE THE PARADE BEGINS",
+          "AFTER THE POWER GOES OUT",
+          "BEFORE CHIEF CALLS ANOTHER MEETING",
+          "WHEN THE FULL MOON RISES",
+          "BEFORE THE MAYOR GIVES A SPEECH",
+          "AFTER THE ROBOTS MALFUNCTION",
+          "BEFORE THE BAKERY CLOSES",
+          "WHEN THE SUPA BUDDY ALARM SOUNDS",
+          "BEFORE THE BIG GAME STARTS",
+          "AFTER THE CAT CRIME CLUB MEETS",
+          "BEFORE THE NEWSPAPER GOES TO PRINT",
+          "WHEN THE STREETLIGHTS FLICKER",
+          "BEFORE BEDTIME STORY HOUR",
+          "AFTER THE FIRE DRILL ENDS"
         ],
         twists: [
           "PETEY SHOWED UP WITH ANOTHER SILLY INVENTION",
@@ -1093,7 +1984,7 @@
           "CHIEF MADE EVERYONE FILL OUT TEN FORMS",
           "A GIANT HOT DOG ROLLED THROUGH DOWNTOWN",
           "THE COMIC BOOK STARTED DRAWING ITSELF",
-          "80-HD BUILT A HELPFUL MACHINE THAT ONLY MADE MORE CHAOS",
+          "ROBOT BUDDY BUILT A HELPFUL MACHINE THAT ONLY MADE MORE CHAOS",
           "SARAH HATOFF ARRIVED WITH A CAMERA AND A LOT OF QUESTIONS",
           "PIGGY TRIED TO STEAL THE MISSION FOR HIS OWN SHOW",
           "MOLLY CHALLENGED EVERYONE TO A SUPA BUDDY DANCE OFF",
@@ -1101,19 +1992,82 @@
           "PETEY'S CLONE ARMY STARTED ARGUING WITH ITSELF",
           "THE FLIPPY BURGER STAND RAN OUT OF SECRET SAUCE",
           "A FAIRY DOG MOTHER GRANTED THE WRONG WISH",
-          "THE BAD GUYS ACCIDENTALLY JOINED THE SUPA BUDDIES"
+          "THE BAD GUYS ACCIDENTALLY JOINED THE SUPA BUDDIES",
+          "THE POLICE SIREN GOT STUCK ON ICE CREAM TRUCK MODE",
+          "NURSE LADY MADE EVERYONE TAKE A NAP FIRST",
+          "BIG JIM TRIED TO FIX IT WITH WAY TOO MUCH TAPE",
+          "THE CAT JAIL WARDEN LOST THE ONLY MASTER KEY",
+          "A PARADE OF DOGS FOLLOWED THE DONUT BOX DOWNTOWN",
+          "THE NEWSPAPER PRINTED THE SECRET PLAN ON PAGE ONE",
+          "FLIPPY ACCIDENTALLY SERVED THE EVIDENCE AS A COMBO MEAL",
+          "THE MAYOR DECLARED A CITYWIDE BELLY RUB DAY",
+          "A LOST PUPPY LED EVERYONE THE WRONG WAY",
+          "PETEY'S INVENTION ONLY WORKED WHILE SOMEONE WAS SINGING",
+          "THE SUPA BUDDIES GOT STUCK IN A GROUP HUG",
+          "DOG MAN BURIED THE CLUE AND FORGOT WHERE",
+          "THE CAT CRIME CLUB BOOKED THE SAME HIDEOUT",
+          "A ROBOT DOG KEPT FETCHING THE WRONG EVIDENCE",
+          "CHIEF'S MUSTACHE GOT STUCK IN THE BADGE PRINTER",
+          "MOLLY'S JETPACK LEFT GLITTER ALL OVER CITY HALL",
+          "THE COMIC PANEL TRAPPED EVERYONE IN A SPEECH BUBBLE",
+          "SARAH HATOFF'S CAMERA REVEALED THE WRONG SUSPECT",
+          "THE DONUT SHOP SPRINKLES SPELLED A FAKE ADDRESS",
+          "PIGGY LIVE STREAMED THE SECRET MEETING BY ACCIDENT",
+          "THE FAIRY DOG MOTHER TURNED THE MAP INTO A BONE",
+          "LI'L PETEY ADOPTED THE BAD GUY AS A NEW FRIEND",
+          "THE PARADE FLOAT DROVE OFF WITH THE TROPHY",
+          "THE DOCTOR PRESCRIBED MORE FETCH BREAKS FOR EVERYONE",
+          "MOMMA SHOWED UP WITH SNACKS AND A LOT OF QUESTIONS",
+          "THE JUSTICE LEAGUE OF DOGS ARRIVED LATE BUT LOUD",
+          "A FIRE HYDRANT FORT COLLAPSED INTO A PUDDLE",
+          "THE BARK TRANSLATOR COLLAR ONLY SAID WHO'S A GOOD DOG",
+          "PETEY'S LASER POINTER DISTRACTED THE ENTIRE POLICE FORCE",
+          "THE SCHOOL PLAYGROUND BELL SET OFF EVERY SIREN",
+          "CLERK MISFILED THE ESCAPE PLAN UNDER PICNIC IDEAS",
+          "THE CAT JAIL ALARM WAS JUST A VERY LOUD HAIRBALL",
+          "DOG MAN TRIED TO READ THE MAP UPSIDE DOWN AND BACKWARDS",
+          "THE SUPA BUDDY YEARBOOK HAD THE WRONG SECRET HANDSHAKE",
+          "A GIANT SPEECH BUBBLE BLOCKED THE ONLY EXIT"
         ],
         resolutions: [
           "DOG MAN SNIFFED OUT THE TRUTH",
           "THE TEAM SHARED DONUTS AND FORGAVE EVERYONE",
           "LI'L PETEY HUGGED THE BAD GUY INTO BEING GOOD",
           "THE TEAM ESCAPED ON DOG MAN'S BACK",
-          "80-HD BUILT A SILLY FIX OUT OF SCRAP METAL",
+          "ROBOT BUDDY BUILT A SILLY FIX OUT OF SCRAP METAL",
           "CHIEF GAVE EVERYONE A HIGH FIVE AND A NEW BADGE",
           "SARAH HATOFF BROADCAST THE HAPPY ENDING LIVE",
           "PETEY DECIDED TO BE GOOD FOR FIVE WHOLE MINUTES",
           "THE SUPA BUDDIES WON WITH TEAMWORK AND CHEESE",
-          "DOG MAN ATE THE EVIDENCE BY ACCIDENT AND STILL SAVED THE DAY"
+          "DOG MAN ATE THE EVIDENCE BY ACCIDENT AND STILL SAVED THE DAY",
+          "MOLLY LED A SUPA BUDDY VICTORY DANCE",
+          "FLIPPY CELEBRATED WITH FREE BURGERS FOR EVERYONE",
+          "THE FAIRY DOG MOTHER FIXED THE WISH THIS TIME",
+          "ROBOT BUDDY AND DOG MAN HIGH FIVED HARD ENOUGH TO RING THE SIREN",
+          "THE CITY THANKED THE HEROES WITH A DONUT PARADE",
+          "LI'L PETEY WROTE A KINDNESS COMIC ABOUT THE WHOLE MISSION",
+          "THE MAYOR GAVE DOG MAN THE KEY TO THE CITY",
+          "PETEY AND LI'L PETEY OPENED A FRIENDSHIP LEMONADE STAND",
+          "THE SUPA PALS FORMED A VICTORY CONGA LINE",
+          "CHIEF CANCELED THE FORMS AND ORDERED EXTRA DONUTS",
+          "DOG MAN RETURNED EVERY LOST TOY IN TOWN",
+          "MOLLY TAUGHT THE BAD GUYS A BETTER HOBBY",
+          "SARAH HATOFF RAN THE HEADLINE HEROES WIN AGAIN",
+          "THE TEAM PLANTED A KINDNESS TREE IN THE PARK",
+          "FLIPPY NAMED A NEW BURGER AFTER THE MISSION",
+          "ROBOT BUDDY REBUILT THE LAB INTO A PLAYGROUND",
+          "THE CAT JAIL WARDEN THREW A THANK YOU PARTY",
+          "EVERYONE WENT TO THE DOG PARK FOR A VICTORY FETCH",
+          "DOG MAN AND PETEY SHOOK PAWS AND CALLED A TRUCE",
+          "LI'L PETEY HANDED OUT FRIENDSHIP BRACELETS TO EVERYONE",
+          "THE JUSTICE LEAGUE OF DOGS GAVE A GROUP HOWL OF VICTORY",
+          "CHIEF FRAMED THE COMIC PANEL IN THE STATION LOBBY",
+          "SARAH HATOFF GOT THE EXCLUSIVE BELLY RUB INTERVIEW",
+          "THE TEAM TURNED THE HIDEOUT INTO A READING FORT",
+          "MOLLY FLEW A VICTORY LAP OVER CITY HALL",
+          "FLIPPY GAVE THE HEROES A LIFETIME SUPPLY OF FRIES",
+          "ROBOT BUDDY PROJECTED A THANK YOU MESSAGE ON THE MOON",
+          "EVERYONE AGREED THE REAL TREASURE WAS TEAMWORK AND DONUTS"
         ]
       }
     };
@@ -1125,6 +2079,9 @@
     const toggleSecretVisibilityButton = document.getElementById("toggle-secret-visibility");
     const customMissionKeywordInput = document.getElementById("custom-mission-keyword");
     const missionWordCountInput = document.getElementById("mission-word-count");
+    const missionTabList = document.getElementById("mission-tab-list");
+    const addMissionTabButton = document.getElementById("add-mission-tab");
+    const missionPanel = document.getElementById("mission-panel");
     const caesarShiftInput = document.getElementById("caesar-shift");
     const randomShiftButton = document.getElementById("random-shift");
     const affineAInput = document.getElementById("affine-a");
@@ -1132,30 +2089,36 @@
     const keywordInput = document.getElementById("vigenere-keyword");
     const digrafidKeywordInput = document.getElementById("digrafid-keyword");
     const digrafidPeriodInput = document.getElementById("digrafid-period");
-    const messageOutput = document.getElementById("cipher-message");
-    const printSheet = document.querySelector(".print-sheet");
-    const missionType = document.getElementById("mission-type");
-    const missionKey = document.getElementById("mission-key");
-    const missionInstructions = document.getElementById("mission-instructions");
-    const affineKeys = document.getElementById("affine-keys");
-    const affineMapping = document.getElementById("affine-mapping");
-    const vigenereSquare = document.getElementById("vigenere-square");
-    const digrafidPrintKeys = document.getElementById("digrafid-print-keys");
-    const digrafidTableau = document.getElementById("digrafid-tableau");
-    const wheel = document.getElementById("cipher-wheel");
+    const polluxDotsInput = document.getElementById("pollux-dots");
+    const polluxDashesInput = document.getElementById("pollux-dashes");
+    const polluxSpacesInput = document.getElementById("pollux-spaces");
+    const randomPolluxKeyButton = document.getElementById("random-pollux-key");
+    const printPack = document.getElementById("print-pack");
+    const printSheetTemplate = document.getElementById("print-sheet-template");
     const svgNS = "http://www.w3.org/2000/svg";
+    const morseCode = {
+      A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.",
+      G: "--.", H: "....", I: "..", J: ".---", K: "-.-", L: ".-..",
+      M: "--", N: "-.", O: "---", P: ".--.", Q: "--.-", R: ".-.",
+      S: "...", T: "-", U: "..-", V: "...-", W: ".--", X: "-..-",
+      Y: "-.--", Z: "--.."
+    };
     const cipherFields = {
       caesar: document.getElementById("caesar-fields"),
       affine: document.getElementById("affine-fields"),
       vigenere: document.getElementById("vigenere-fields"),
-      digrafid: document.getElementById("digrafid-fields")
+      digrafid: document.getElementById("digrafid-fields"),
+      pollux: document.getElementById("pollux-fields")
     };
-    const printAids = {
-      caesar: document.getElementById("caesar-print"),
-      affine: document.getElementById("affine-print"),
-      vigenere: document.getElementById("vigenere-print"),
-      digrafid: document.getElementById("digrafid-print")
-    };
+    const missionTabs = [
+      {
+        theme: "base",
+        customKeyword: "",
+        wordCount: 24,
+        message: messageInput.value
+      }
+    ];
+    let activeMissionIndex = 0;
 
     function caesarEncrypt(message, shift) {
       return message.toUpperCase().replace(/[A-Z]/g, (letter) => {
@@ -1274,12 +2237,12 @@
         result[index] = cipherLetters[letterIndex];
       });
       if (cipherLetters.length > letterIndexes.length) {
-        result.push(...cipherLetters.slice(letterIndexes.length).map((letter) => (letter === "#" ? "X" : letter)));
+        result.push(...cipherLetters.slice(letterIndexes.length));
       }
-      return result.join("").replace(/#/g, "X");
+      return result.join("");
     }
 
-    function renderDigrafidTableau(keyword) {
+    function renderDigrafidTableau(keyword, digrafidTableau) {
       const { top, bottom } = buildDigrafidGrids(keyword);
       digrafidTableau.replaceChildren();
 
@@ -1331,6 +2294,175 @@
       bottomWrap.appendChild(bottomTable);
 
       digrafidTableau.append(topWrap, midTable, bottomWrap);
+    }
+
+    function uniqueDigits(value) {
+      const seen = new Set();
+      let digits = "";
+      for (const character of String(value).replace(/\D/g, "")) {
+        if (!seen.has(character)) {
+          seen.add(character);
+          digits += character;
+        }
+      }
+      return digits;
+    }
+
+    function formatPolluxPool(digits) {
+      return [...digits].join(" ");
+    }
+
+    function polluxKeySummary(dots, dashes, spaces) {
+      return `● = ${formatPolluxPool(dots)} · – = ${formatPolluxPool(dashes)} · × = ${formatPolluxPool(spaces)}`;
+    }
+
+    function getPolluxKey() {
+      const dots = uniqueDigits(polluxDotsInput.value);
+      const dashes = uniqueDigits(polluxDashesInput.value);
+      const spaces = uniqueDigits(polluxSpacesInput.value);
+      polluxDotsInput.value = dots;
+      polluxDashesInput.value = dashes;
+      polluxSpacesInput.value = spaces;
+
+      const combined = `${dots}${dashes}${spaces}`;
+      const sorted = [...combined].sort().join("");
+      const hasEachPool = dots.length > 0 && dashes.length > 0 && spaces.length > 0;
+      const isValid = hasEachPool && sorted === "0123456789";
+
+      return { dots, dashes, spaces, isValid };
+    }
+
+    function setPolluxKeyValidity() {
+      const { isValid } = getPolluxKey();
+      const message = isValid
+        ? ""
+        : "Assign each digit 0–9 exactly once across dots, dashes, and spaces.";
+      polluxDotsInput.setCustomValidity(message);
+      polluxDashesInput.setCustomValidity(message);
+      polluxSpacesInput.setCustomValidity(message);
+    }
+
+    function randomizePolluxKey() {
+      const digits = [..."0123456789"];
+      for (let index = digits.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [digits[index], digits[swapIndex]] = [digits[swapIndex], digits[index]];
+      }
+      const splits = [
+        [3, 3, 4],
+        [3, 4, 3],
+        [4, 3, 3],
+        [4, 4, 2],
+        [2, 4, 4]
+      ];
+      const [dotCount, dashCount] = randomItem(splits);
+      polluxDotsInput.value = digits.slice(0, dotCount).join("");
+      polluxDashesInput.value = digits.slice(dotCount, dotCount + dashCount).join("");
+      polluxSpacesInput.value = digits.slice(dotCount + dashCount).join("");
+      setPolluxKeyValidity();
+    }
+
+    function toMorseStream(message) {
+      const words = message
+        .toUpperCase()
+        .split(/\s+/)
+        .map((word) => word.replace(/[^A-Z]/g, ""))
+        .filter(Boolean);
+
+      return words
+        .map((word) => [...word].map((letter) => morseCode[letter]).join("x"))
+        .join("xx");
+    }
+
+    function polluxPlaintext(message) {
+      return message
+        .toUpperCase()
+        .split(/\s+/)
+        .map((word) => word.replace(/[^A-Z]/g, ""))
+        .filter(Boolean)
+        .join(" ");
+    }
+
+    function polluxEncrypt(message, dots, dashes, spaces) {
+      const pools = {
+        ".": [...dots],
+        "-": [...dashes],
+        x: [...spaces]
+      };
+      return [...toMorseStream(message)]
+        .map((symbol) => randomItem(pools[symbol]))
+        .join("");
+    }
+
+    function renderPolluxKey(dots, dashes, spaces, polluxKeyMapping) {
+      const mapping = {};
+      [...dots].forEach((digit) => {
+        mapping[digit] = "●";
+      });
+      [...dashes].forEach((digit) => {
+        mapping[digit] = "–";
+      });
+      [...spaces].forEach((digit) => {
+        mapping[digit] = "×";
+      });
+
+      polluxKeyMapping.replaceChildren();
+      const header = document.createElement("tr");
+      const values = document.createElement("tr");
+      for (let digit = 0; digit <= 9; digit += 1) {
+        const headerCell = document.createElement("td");
+        headerCell.textContent = String(digit);
+        header.appendChild(headerCell);
+
+        const valueCell = document.createElement("td");
+        valueCell.textContent = mapping[String(digit)] || "";
+        values.appendChild(valueCell);
+      }
+      polluxKeyMapping.append(header, values);
+    }
+
+    function renderPolluxMorseChart(polluxMorseChart) {
+      polluxMorseChart.replaceChildren();
+      const letters = [...alphabet];
+      const columns = 3;
+      const rows = Math.ceil(letters.length / columns);
+      for (let rowIndex = 0; rowIndex < rows; rowIndex += 1) {
+        const row = document.createElement("tr");
+        for (let columnIndex = 0; columnIndex < columns; columnIndex += 1) {
+          const letterIndex = rowIndex + columnIndex * rows;
+          if (letterIndex >= letters.length) continue;
+          const letter = letters[letterIndex];
+          const letterCell = document.createElement("td");
+          letterCell.className = "letter";
+          letterCell.textContent = letter;
+          const codeCell = document.createElement("td");
+          codeCell.textContent = morseCode[letter].replace(/\./g, "●").replace(/-/g, "–");
+          row.append(letterCell, codeCell);
+        }
+        polluxMorseChart.appendChild(row);
+      }
+    }
+
+    function renderPolluxMessage(encryptedMessage, target) {
+      target.replaceChildren();
+
+      [...encryptedMessage].forEach((digit) => {
+        const character = document.createElement("span");
+        character.className = "cipher-character";
+
+        const keyLetter = document.createElement("span");
+        keyLetter.className = "keyword-letter";
+
+        const encrypted = document.createElement("span");
+        encrypted.className = "cipher-letter";
+        encrypted.textContent = digit;
+
+        const line = document.createElement("span");
+        line.className = "answer-line";
+
+        character.append(keyLetter, encrypted, line);
+        target.appendChild(character);
+      });
     }
 
     function greatestCommonDivisor(a, b) {
@@ -1404,7 +2536,7 @@
       return element;
     }
 
-    function addRing(radius, letterRadius, letters, fontSize) {
+    function addRing(wheel, radius, letterRadius, letters, fontSize) {
       wheel.appendChild(svgElement("circle", {
         cx: 200,
         cy: 200,
@@ -1432,7 +2564,7 @@
       });
     }
 
-    function renderWheel(shift) {
+    function renderWheel(shift, wheel) {
       wheel.replaceChildren();
       wheel.appendChild(svgElement("circle", {
         cx: 200,
@@ -1453,9 +2585,9 @@
         "stroke-dasharray": "5 4"
       }));
 
-      addRing(167, 151, [...alphabet], 15);
+      addRing(wheel, 167, 151, [...alphabet], 15);
       const shiftedAlphabet = [...alphabet].map((_, index) => alphabet[(index + shift) % 26]);
-      addRing(108, 93, shiftedAlphabet, 13);
+      addRing(wheel, 108, 93, shiftedAlphabet, 13);
 
       wheel.appendChild(svgElement("circle", {
         cx: 200,
@@ -1483,7 +2615,7 @@
       }));
     }
 
-    function renderAffineMapping() {
+    function renderAffineMapping(affineMapping) {
       affineMapping.replaceChildren();
       const letters = document.createElement("tr");
       const blanks = document.createElement("tr");
@@ -1498,7 +2630,7 @@
       affineMapping.append(letters, blanks);
     }
 
-    function renderVigenereSquare() {
+    function renderVigenereSquare(vigenereSquare) {
       vigenereSquare.replaceChildren();
       for (let rowIndex = 0; rowIndex < 26; rowIndex += 1) {
         const row = document.createElement("tr");
@@ -1511,13 +2643,13 @@
       }
     }
 
-    function renderMessage(encryptedMessage, keyword = "") {
-      messageOutput.replaceChildren();
-      const parts = encryptedMessage.match(/[A-Z]+|\s+|[^A-Z\s]+/g) || [];
+    function renderMessage(encryptedMessage, keyword = "", target) {
+      target.replaceChildren();
+      const parts = encryptedMessage.match(/[A-Z#]+|\s+|[^A-Z#\s]+/g) || [];
       let keyIndex = 0;
 
       parts.forEach((part) => {
-        if (/^[A-Z]+$/.test(part)) {
+        if (/^[A-Z#]+$/.test(part)) {
           const word = document.createElement("span");
           word.className = "cipher-word";
 
@@ -1527,7 +2659,7 @@
 
             const keyLetter = document.createElement("span");
             keyLetter.className = "keyword-letter";
-            if (keyword) {
+            if (keyword && /[A-Z]/.test(letter)) {
               keyLetter.textContent = keyword[keyIndex % keyword.length];
               keyIndex += 1;
             }
@@ -1543,21 +2675,96 @@
             word.appendChild(character);
           });
 
-          messageOutput.appendChild(word);
+          target.appendChild(word);
         } else if (/^\s+$/.test(part)) {
           [...part].forEach(() => {
             const space = document.createElement("span");
             space.className = "cipher-space";
             space.setAttribute("aria-hidden", "true");
-            messageOutput.appendChild(space);
+            target.appendChild(space);
           });
         } else {
           const punctuation = document.createElement("span");
           punctuation.className = "punctuation";
           punctuation.textContent = part;
-          messageOutput.appendChild(punctuation);
+          target.appendChild(punctuation);
         }
       });
+    }
+
+    function encryptWithCurrentSettings(plaintext) {
+      const type = cipherTypeInput.value;
+
+      if (type === "caesar") {
+        const shift = Number.parseInt(caesarShiftInput.value, 10);
+        return {
+          type,
+          keyword: "",
+          missionType: "Mission: Caesar Cipher",
+          missionKey: `Shift: ${shift}`,
+          instructions: "Use the cipher wheel to decode each letter. Write the decrypted letter on the line beneath it.",
+          encryptedMessage: caesarEncrypt(plaintext, shift)
+        };
+      }
+
+      if (type === "affine") {
+        const a = Number.parseInt(affineAInput.value, 10);
+        const b = Number.parseInt(affineBInput.value, 10);
+        return {
+          type,
+          keyword: "",
+          missionType: "Mission: Affine Cipher",
+          missionKey: `Keys: a = ${a}, b = ${b}`,
+          instructions: "Complete the mapping table, then decode each letter. Write the decrypted letter on the line beneath it.",
+          encryptedMessage: affineEncrypt(plaintext, a, b),
+          affineKeyText: `Keys: a = ${a}, b = ${b}`
+        };
+      }
+
+      if (type === "vigenere") {
+        const keyword = keywordInput.value.toUpperCase().replace(/[^A-Z]/g, "") || "LEMON";
+        keywordInput.value = keyword;
+        return {
+          type,
+          keyword,
+          missionType: "Mission: Vigenère Cipher",
+          missionKey: `Keyword: ${keyword}`,
+          instructions: "Use the keyword letters and Tabula Recta to decode the transmission. Write each answer on the line.",
+          encryptedMessage: vigenereEncrypt(plaintext, keyword)
+        };
+      }
+
+      if (type === "digrafid") {
+        const digrafidKeyword = digrafidKeywordInput.value.toUpperCase().replace(/[^A-Z]/g, "") || "SPY";
+        const period = Math.min(8, Math.max(2, Number.parseInt(digrafidPeriodInput.value, 10) || 3));
+        digrafidKeywordInput.value = digrafidKeyword;
+        digrafidPeriodInput.value = period;
+        return {
+          type,
+          keyword: "",
+          missionType: "Mission: Digrafid Cipher",
+          missionKey: `Keyword: ${digrafidKeyword} · Period: ${period}`,
+          instructions: "Use the Digrafid tableau and period fractionation to decode each digraph. Write the decrypted letter on the line beneath it.",
+          encryptedMessage: digrafidEncrypt(plaintext, digrafidKeyword, period),
+          digrafidKeyText: `Keyword: ${digrafidKeyword} · Period: ${period}`,
+          digrafidKeyword
+        };
+      }
+
+      const { dots, dashes, spaces } = getPolluxKey();
+      return {
+        type,
+        keyword: "",
+        missionType: "Mission: Pollux Cipher",
+        missionKey: polluxKeySummary(dots, dashes, spaces),
+        instructions: "Convert each digit to ●, –, or × with the key. Single × ends a letter; ×× ends a word. Decode with the Morse chart.",
+        encryptedMessage: polluxEncrypt(plaintext, dots, dashes, spaces),
+        answerPlaintext: polluxPlaintext(plaintext),
+        polluxKeyText: polluxKeySummary(dots, dashes, spaces),
+        polluxDots: dots,
+        polluxDashes: dashes,
+        polluxSpaces: spaces
+      };
     }
 
     function updateDynamicForm() {
@@ -1575,68 +2782,222 @@
       affineAInput.setCustomValidity("");
     }
 
-    function generateMission() {
-      const type = cipherTypeInput.value;
-      let encryptedMessage = "";
-      let keyword = "";
+    function readMissionPanel() {
+      const selectedTheme = document.querySelector('input[name="missionTheme"]:checked');
+      return {
+        theme: selectedTheme ? selectedTheme.value : "base",
+        customKeyword: customMissionKeywordInput.value.trim().toUpperCase().replace(/\s+/g, " "),
+        wordCount: Math.min(40, Math.max(12, Number.parseInt(missionWordCountInput.value, 10) || 24)),
+        message: messageInput.value
+      };
+    }
 
-      Object.entries(printAids).forEach(([aidType, aid]) => {
-        aid.classList.toggle("active", aidType === type);
+    function writeMissionPanel(mission) {
+      const themeInput = document.querySelector(`input[name="missionTheme"][value="${mission.theme}"]`)
+        || document.querySelector('input[name="missionTheme"][value="base"]');
+      if (themeInput) themeInput.checked = true;
+      customMissionKeywordInput.value = mission.customKeyword || "";
+      missionWordCountInput.value = mission.wordCount || 24;
+      messageInput.value = mission.message || "";
+    }
+
+    function saveActiveMission() {
+      missionTabs[activeMissionIndex] = readMissionPanel();
+    }
+
+    function renderMissionTabs() {
+      missionTabList.replaceChildren();
+      missionTabs.forEach((mission, index) => {
+        const item = document.createElement("div");
+        item.className = "mission-tab-item";
+
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = "mission-tab";
+        tab.setAttribute("role", "tab");
+        tab.setAttribute("aria-selected", String(index === activeMissionIndex));
+        tab.dataset.index = String(index);
+        tab.textContent = `Mission ${index + 1}`;
+        item.appendChild(tab);
+
+        if (missionTabs.length > 1) {
+          const close = document.createElement("button");
+          close.type = "button";
+          close.className = "mission-tab-close";
+          close.setAttribute("aria-label", `Remove mission ${index + 1}`);
+          close.dataset.index = String(index);
+          close.textContent = "×";
+          item.appendChild(close);
+        }
+
+        missionTabList.appendChild(item);
       });
-      printSheet.className = `print-sheet cipher-${type}`;
+      missionPanel.setAttribute("aria-label", `Mission ${activeMissionIndex + 1}`);
+    }
+
+    function switchMission(index) {
+      if (index === activeMissionIndex || index < 0 || index >= missionTabs.length) return;
+      saveActiveMission();
+      activeMissionIndex = index;
+      writeMissionPanel(missionTabs[activeMissionIndex]);
+      renderMissionTabs();
+    }
+
+    function addMission() {
+      saveActiveMission();
+      const draft = readMissionPanel();
+      const message = generateRandomMission(
+        missionThemes[draft.theme] || missionThemes.base,
+        draft.customKeyword,
+        draft.wordCount
+      );
+      missionTabs.push({
+        theme: draft.theme,
+        customKeyword: draft.customKeyword,
+        wordCount: draft.wordCount,
+        message
+      });
+      activeMissionIndex = missionTabs.length - 1;
+      writeMissionPanel(missionTabs[activeMissionIndex]);
+      renderMissionTabs();
+      messageInput.focus();
+    }
+
+    function removeMission(index) {
+      if (missionTabs.length <= 1) return;
+      saveActiveMission();
+      missionTabs.splice(index, 1);
+      if (activeMissionIndex >= missionTabs.length) {
+        activeMissionIndex = missionTabs.length - 1;
+      } else if (activeMissionIndex > index) {
+        activeMissionIndex -= 1;
+      }
+      writeMissionPanel(missionTabs[activeMissionIndex]);
+      renderMissionTabs();
+    }
+
+    function fillPrintSheet(sheet, missionNumber, encrypted, plaintext) {
+      const type = encrypted.type;
+      sheet.querySelector(".sheet-badge").textContent = `MISSION ${missionNumber}`;
+      sheet.querySelector(".mission-type").textContent = encrypted.missionType;
+      sheet.querySelector(".mission-key").textContent = encrypted.missionKey;
+      sheet.querySelector(".mission-instructions").textContent = encrypted.instructions;
+      sheet.querySelector(".plaintext-key-text").textContent =
+        (encrypted.answerPlaintext || plaintext).toUpperCase();
+
+      sheet.querySelectorAll(".cipher-aid").forEach((aid) => {
+        aid.classList.toggle("active", aid.classList.contains(`${type}-print`));
+      });
 
       if (type === "caesar") {
-        const shift = Number.parseInt(caesarShiftInput.value, 10);
-        missionType.textContent = "Mission: Caesar Cipher";
-        missionKey.textContent = `Shift: ${shift}`;
-        missionInstructions.textContent = "Use the cipher wheel to decode each letter. Write the decrypted letter on the line beneath it.";
-        renderWheel(shift);
-        encryptedMessage = caesarEncrypt(messageInput.value, shift);
+        renderWheel(Number.parseInt(caesarShiftInput.value, 10), sheet.querySelector(".cipher-wheel"));
       } else if (type === "affine") {
-        const a = Number.parseInt(affineAInput.value, 10);
-        const b = Number.parseInt(affineBInput.value, 10);
-        missionType.textContent = "Mission: Affine Cipher";
-        missionKey.textContent = `Keys: a = ${a}, b = ${b}`;
-        missionInstructions.textContent = "Complete the mapping table, then decode each letter. Write the decrypted letter on the line beneath it.";
-        affineKeys.textContent = `Keys: a = ${a}, b = ${b}`;
-        encryptedMessage = affineEncrypt(messageInput.value, a, b);
+        sheet.querySelector(".affine-keys").textContent = encrypted.affineKeyText;
+        renderAffineMapping(sheet.querySelector(".affine-mapping"));
       } else if (type === "vigenere") {
-        keyword = keywordInput.value.toUpperCase();
-        keywordInput.value = keyword;
-        missionType.textContent = "Mission: Vigenère Cipher";
-        missionKey.textContent = `Keyword: ${keyword}`;
-        missionInstructions.textContent = "Use the keyword letters and Tabula Recta to decode the transmission. Write each answer on the line.";
-        encryptedMessage = vigenereEncrypt(messageInput.value, keyword);
-      } else {
-        const digrafidKeyword = digrafidKeywordInput.value.toUpperCase().replace(/[^A-Z]/g, "") || "SPY";
-        const period = Math.min(8, Math.max(2, Number.parseInt(digrafidPeriodInput.value, 10) || 3));
-        digrafidKeywordInput.value = digrafidKeyword;
-        digrafidPeriodInput.value = period;
-        missionType.textContent = "Mission: Digrafid Cipher";
-        missionKey.textContent = `Keyword: ${digrafidKeyword} · Period: ${period}`;
-        missionInstructions.textContent = "Use the Digrafid tableau and period fractionation to decode each digraph. Write the decrypted letter on the line beneath it.";
-        digrafidPrintKeys.textContent = `Keyword: ${digrafidKeyword} · Period: ${period}`;
-        renderDigrafidTableau(digrafidKeyword);
-        encryptedMessage = digrafidEncrypt(messageInput.value, digrafidKeyword, period);
+        renderVigenereSquare(sheet.querySelector(".vigenere-square"));
+      } else if (type === "digrafid") {
+        sheet.querySelector(".digrafid-print-keys").textContent = encrypted.digrafidKeyText;
+        renderDigrafidTableau(encrypted.digrafidKeyword, sheet.querySelector(".digrafid-tableau"));
+      } else if (type === "pollux") {
+        sheet.querySelector(".pollux-print-keys").textContent = encrypted.polluxKeyText;
+        renderPolluxKey(
+          encrypted.polluxDots,
+          encrypted.polluxDashes,
+          encrypted.polluxSpaces,
+          sheet.querySelector(".pollux-key-mapping")
+        );
+        renderPolluxMorseChart(sheet.querySelector(".pollux-morse-chart"));
       }
 
-      renderMessage(encryptedMessage, keyword);
+      const messageTarget = sheet.querySelector(".cipher-message");
+      if (type === "pollux") {
+        renderPolluxMessage(encrypted.encryptedMessage, messageTarget);
+      } else {
+        renderMessage(encrypted.encryptedMessage, encrypted.keyword, messageTarget);
+      }
     }
+
+    function generateMission() {
+      saveActiveMission();
+      const type = cipherTypeInput.value;
+      printPack.replaceChildren();
+      printPack.className = missionTabs.length > 1
+        ? `print-pack multi-mission cipher-${type}`
+        : `print-pack cipher-${type}`;
+
+      missionTabs.forEach((mission, index) => {
+        const sheet = printSheetTemplate.content.firstElementChild.cloneNode(true);
+        const encrypted = encryptWithCurrentSettings(mission.message);
+        fillPrintSheet(sheet, index + 1, encrypted, mission.message);
+        printPack.appendChild(sheet);
+      });
+    }
+
+    function resetPrintSheetScaling() {
+      printPack.querySelectorAll(".print-sheet").forEach((sheet) => {
+        const scaleRoot = sheet.querySelector(".print-sheet-scale");
+        scaleRoot.style.transform = "";
+        scaleRoot.style.transformOrigin = "";
+        scaleRoot.style.minHeight = "";
+        sheet.style.height = "";
+        sheet.style.overflow = "";
+      });
+    }
+
+    function fitPrintSheets() {
+      resetPrintSheetScaling();
+      // Vigenère already puts the message page (+ bottom answer) on its own sheet page.
+      if (cipherTypeInput.value === "vigenere") return;
+
+      // Letter printable height with 12mm page margins; also fits A4.
+      const printableHeightPx = (279.4 - 24) * (96 / 25.4);
+
+      printPack.querySelectorAll(".print-sheet").forEach((sheet) => {
+        const scaleRoot = sheet.querySelector(".print-sheet-scale");
+        const contentHeight = scaleRoot.scrollHeight;
+        if (contentHeight <= printableHeightPx + 1) return;
+
+        const scale = Math.max(0.72, printableHeightPx / contentHeight);
+        scaleRoot.style.minHeight = "0";
+        scaleRoot.style.transformOrigin = "top center";
+        scaleRoot.style.transform = `scale(${scale})`;
+        sheet.style.height = `${contentHeight * scale}px`;
+        sheet.style.overflow = "hidden";
+      });
+    }
+
+    window.addEventListener("beforeprint", fitPrintSheets);
+    window.addEventListener("afterprint", resetPrintSheetScaling);
 
     cipherTypeInput.addEventListener("change", updateDynamicForm);
 
-    function populateRandomMission(shouldFocus = true) {
-      const selectedTheme = document.querySelector('input[name="missionTheme"]:checked').value;
-      const theme = missionThemes[selectedTheme];
-      const customKeyword = customMissionKeywordInput.value.trim().toUpperCase().replace(/\s+/g, " ");
-      const targetWordCount = Math.min(
-        40,
-        Math.max(12, Number.parseInt(missionWordCountInput.value, 10) || 24)
-      );
+    missionTabList.addEventListener("click", (event) => {
+      const close = event.target.closest(".mission-tab-close");
+      if (close) {
+        removeMission(Number.parseInt(close.dataset.index, 10));
+        return;
+      }
+      const tab = event.target.closest(".mission-tab");
+      if (!tab) return;
+      switchMission(Number.parseInt(tab.dataset.index, 10));
+    });
 
-      customMissionKeywordInput.value = customKeyword;
-      missionWordCountInput.value = targetWordCount;
-      messageInput.value = generateRandomMission(theme, customKeyword, targetWordCount);
+    addMissionTabButton.addEventListener("click", addMission);
+
+    function populateRandomMission(shouldFocus = true) {
+      const draft = readMissionPanel();
+      const theme = missionThemes[draft.theme] || missionThemes.base;
+      const message = generateRandomMission(theme, draft.customKeyword, draft.wordCount);
+      customMissionKeywordInput.value = draft.customKeyword;
+      missionWordCountInput.value = draft.wordCount;
+      messageInput.value = message;
+      missionTabs[activeMissionIndex] = {
+        theme: draft.theme,
+        customKeyword: draft.customKeyword,
+        wordCount: draft.wordCount,
+        message
+      };
       if (shouldFocus) messageInput.focus();
     }
 
@@ -1664,6 +3025,18 @@
       digrafidKeywordInput.value = digrafidKeywordInput.value.toUpperCase().replace(/[^A-Z]/g, "");
     });
 
+    [polluxDotsInput, polluxDashesInput, polluxSpacesInput].forEach((input) => {
+      input.addEventListener("input", () => {
+        input.value = uniqueDigits(input.value);
+        setPolluxKeyValidity();
+      });
+    });
+
+    randomPolluxKeyButton.addEventListener("click", () => {
+      randomizePolluxKey();
+      polluxDotsInput.focus();
+    });
+
     affineAInput.addEventListener("input", () => {
       const a = Number.parseInt(affineAInput.value, 10);
       affineAInput.setCustomValidity(
@@ -1675,8 +3048,20 @@
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      saveActiveMission();
       if (cipherTypeInput.value === "affine") {
         affineAInput.dispatchEvent(new Event("input"));
+      }
+      if (cipherTypeInput.value === "pollux") {
+        setPolluxKeyValidity();
+      }
+      const emptyMission = missionTabs.findIndex((mission) => !mission.message.trim());
+      if (emptyMission >= 0) {
+        switchMission(emptyMission);
+        messageInput.setCustomValidity("Enter a secret message for this mission.");
+        form.reportValidity();
+        messageInput.setCustomValidity("");
+        return;
       }
       if (!form.reportValidity()) return;
       generateMission();
@@ -1684,9 +3069,9 @@
     });
 
     updateDynamicForm();
-    renderAffineMapping();
-    renderVigenereSquare();
+    setPolluxKeyValidity();
     populateRandomMission(false);
+    renderMissionTabs();
     generateMission();
   </script>
 </body>
