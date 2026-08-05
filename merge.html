@@ -911,7 +911,6 @@
         canDrop = false;
         removePreview();
         unlockedCipher = makeCipherCode();
-        setScore(score + ITEMS[MAX_TIER].score);
 
         overlayTitle.textContent = "Briefcase Secured";
         overlayMessage.textContent = "Top-Secret Golden Briefcase assembled. Cipher code unlocked for your printable worksheets.";
@@ -922,7 +921,6 @@
         overlay.classList.add("show");
         Runner.stop(runner);
 
-        // Gentle celebrate bounce on the briefcase
         if (briefcaseBody && !briefcaseBody.isStatic) {
           Body.setVelocity(briefcaseBody, { x: 0, y: -2 });
         }
@@ -1131,10 +1129,17 @@
       function resetGame() {
         overlay.classList.remove("show");
         gameOver = false;
+        missionWon = false;
         canDrop = true;
         dangerSince = null;
         mergeLock.clear();
         bombLock.clear();
+        unlockedCipher = null;
+        cipherCodeEl.hidden = true;
+        cipherHintEl.hidden = true;
+        cipherCodeEl.textContent = "";
+        overlayTitle.textContent = "Mission Failed";
+        overlayMessage.textContent = "The gear pile crossed the danger line.";
         setScore(0);
         pointerX = WIDTH / 2;
         lastDropAt = 0;
