@@ -498,6 +498,7 @@
       font-size: 0.85rem;
       font-weight: 700;
       cursor: pointer;
+      white-space: nowrap;
     }
 
     .mission-tab[aria-selected="true"] {
@@ -541,6 +542,8 @@
       font-weight: 700;
       white-space: nowrap;
       cursor: pointer;
+      flex: 0 0 auto;
+      align-self: center;
     }
 
     #add-mission-tab:hover {
@@ -630,13 +633,42 @@
       .mission-options {
         grid-template-columns: 1fr;
       }
+
+      .mission-tab-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.5rem;
+      }
+
+      #mission-tab-list {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 0.15rem;
+      }
+
+      #mission-tab-list::-webkit-scrollbar {
+        display: none;
+      }
+
+      .mission-tab-item {
+        flex: 0 0 auto;
+      }
+
+      #add-mission-tab {
+        width: 100%;
+        min-height: 2.75rem;
+        align-self: stretch;
+      }
     }
 
     [hidden] {
       display: none !important;
     }
 
-    button:not(.nav-toggle) {
+    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab) {
       width: 100%;
       margin-top: 1.75rem;
       padding: 0.9rem 1.2rem;
@@ -650,11 +682,11 @@
       transition: background 150ms ease, transform 150ms ease;
     }
 
-    button:not(.nav-toggle):hover {
+    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):hover {
       background: var(--accent-dark);
     }
 
-    button:not(.nav-toggle):active {
+    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):active {
       transform: translateY(1px);
     }
 
