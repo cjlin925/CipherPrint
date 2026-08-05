@@ -309,6 +309,10 @@
       gap: 1rem;
     }
 
+    #affine-fields .field-row {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
     #pollux-fields .field-row {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
@@ -427,7 +431,17 @@
     }
 
     .shift-control input {
-      max-width: 8rem;
+      flex: 0 0 5.5rem;
+      width: 5.5rem;
+      max-width: none;
+      min-width: 0;
+    }
+
+    .shift-control .random-button {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+      margin: 0;
     }
 
     .message-control textarea {
@@ -612,8 +626,9 @@
       }
 
       .message-actions,
-      .random-button,
-      .reveal-button {
+      .message-actions .random-button,
+      .message-actions .reveal-button,
+      .pollux-key-actions .random-button {
         width: 100%;
       }
 
@@ -621,8 +636,27 @@
         grid-template-columns: 1fr;
       }
 
+      #affine-fields .field-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+      }
+
       #pollux-fields .field-row {
         grid-template-columns: 1fr;
+      }
+
+      .shift-control {
+        flex-wrap: nowrap;
+      }
+
+      .shift-control input {
+        flex: 0 0 4.75rem;
+        width: 4.75rem;
+      }
+
+      .shift-control .random-button {
+        width: auto;
+        flex: 1 1 auto;
       }
 
       .pollux-key-actions {
@@ -668,7 +702,7 @@
       display: none !important;
     }
 
-    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab) {
+    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):not(.random-button):not(.reveal-button) {
       width: 100%;
       margin-top: 1.75rem;
       padding: 0.9rem 1.2rem;
@@ -682,11 +716,11 @@
       transition: background 150ms ease, transform 150ms ease;
     }
 
-    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):hover {
+    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):not(.random-button):not(.reveal-button):hover {
       background: var(--accent-dark);
     }
 
-    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):active {
+    button:not(.nav-toggle):not(.mission-tab):not(.mission-tab-close):not(#add-mission-tab):not(.random-button):not(.reveal-button):active {
       transform: translateY(1px);
     }
 
