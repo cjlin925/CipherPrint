@@ -538,7 +538,7 @@
       <p class="intro">
         Drop agent gear into the mission box. Merge matching tools to climb the 8-stage equipment chain.
         Build the Top-Secret Golden Briefcase to unlock a 4-digit cipher code for your printable worksheets.
-        Bombs clear crowded gear — keep the stack below the danger line.
+        Watch the circular security posts, and use bombs to clear crowded gear — keep the stack below the danger line.
       </p>
 
       <div class="hud">
@@ -1039,6 +1039,27 @@
         ctx.fillText("DANGER", WALL + 8, DANGER_Y - 8);
         ctx.restore();
 
+        // Circular obstacles
+        for (const body of Composite.allBodies(world)) {
+          if (body.label !== "obstacle") continue;
+          const r = body.circleRadius;
+          ctx.save();
+          ctx.translate(body.position.x, body.position.y);
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fillStyle = "#5b6b60";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.62, 0, Math.PI * 2);
+          ctx.fillStyle = "#3f4c44";
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2);
+          ctx.fillStyle = "#c9b897";
+          ctx.fill();
+          ctx.restore();
+        }
+
         const bodies = Composite.allBodies(world);
         for (const body of bodies) {
           if (body.label !== "item" && body.label !== "bomb") continue;
@@ -1088,7 +1109,24 @@
           friction: 0.85,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
-        Composite.add(world, [floor, left, right]);
+
+        // Two fixed circular obstacles in the mission box
+        const obstacleA = Bodies.circle(128, 360, 30, {
+          isStatic: true,
+          label: "obstacle",
+          friction: 0.7,
+          restitution: 0.05,
+          render: { visible: false }
+        });
+        const obstacleB = Bodies.circle(292, 470, 36, {
+          isStatic: true,
+          label: "obstacle",
+          friction: 0.7,
+          restitution: 0.05,
+          render: { visible: false }
+        });
+
+        Composite.add(world, [floor, left, right, obstacleA, obstacleB]);
 
         render = Render.create({
           canvas,
