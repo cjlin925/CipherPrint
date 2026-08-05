@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Merge Game — CipherPrint</title>
+  <meta name="description" content="Play a fruit merge game in your browser. Drop fruits, merge matches, and chase a high score.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#215c42">
+  <link rel="canonical" href="https://cjlin925.github.io/CipherPrint/merge.html">
+  <link rel="icon" href="/CipherPrint/favicon.ico" sizes="any">
+  <link rel="icon" href="/CipherPrint/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/CipherPrint/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/CipherPrint/apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="/CipherPrint/site.webmanifest">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CipherPrint">
+  <meta property="og:title" content="Merge Game — CipherPrint">
+  <meta property="og:description" content="Drop fruits, merge matches, and chase a high score in this browser merge game.">
+  <meta property="og:url" content="https://cjlin925.github.io/CipherPrint/merge.html">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Merge Game — CipherPrint">
+  <meta name="twitter:description" content="Drop fruits, merge matches, and chase a high score in this browser merge game.">
+  <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17201b;
+      --muted: #69736d;
+      --paper: #ffffff;
+      --accent: #215c42;
+      --accent-dark: #17412f;
+      --line: #dfe5e1;
+      --danger: #c0392b;
+      --board: #f7f1e4;
+      --board-edge: #c9b897;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(33, 92, 66, 0.08), transparent 28rem),
+        radial-gradient(circle at 88% 18%, rgba(201, 184, 151, 0.22), transparent 24rem),
+        #f4f6f4;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      touch-action: manipulation;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem 1rem;
+      padding: 0.85rem clamp(1rem, 4vw, 2rem);
+      border-bottom: 1px solid rgba(23, 32, 27, 0.08);
+      background: rgba(244, 246, 244, 0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .site-nav-brand {
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      text-decoration: none;
+    }
+
+    .nav-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: 1px solid rgba(23, 32, 27, 0.12);
+      border-radius: 0.65rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .nav-toggle-bars,
+    .nav-toggle-bars::before,
+    .nav-toggle-bars::after {
+      display: block;
+      width: 1.1rem;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .nav-toggle-bars { position: relative; }
+
+    .nav-toggle-bars::before,
+    .nav-toggle-bars::after {
+      content: "";
+      position: absolute;
+      left: 0;
+    }
+
+    .nav-toggle-bars::before { top: -6px; }
+    .nav-toggle-bars::after { top: 6px; }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars { background: transparent; }
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::before {
+      top: 0;
+      transform: rotate(45deg);
+    }
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::after {
+      top: 0;
+      transform: rotate(-45deg);
+    }
+
+    .site-nav-menu { margin-left: auto; }
+
+    .site-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.35rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .site-nav-links a {
+      display: inline-block;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.55rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+      text-decoration: none;
+      transition: color 150ms ease, background-color 150ms ease;
+    }
+
+    .site-nav-links a:hover {
+      color: var(--ink);
+      background: rgba(33, 92, 66, 0.08);
+    }
+
+    .site-nav-links a[aria-current="page"] {
+      color: var(--accent-dark);
+      background: rgba(33, 92, 66, 0.12);
+    }
+
+    .screen {
+      width: min(100%, 52rem);
+      margin: 0 auto;
+      padding: 0.85rem clamp(0.75rem, 3vw, 1.5rem) 1.5rem;
+    }
+
+    .panel {
+      padding: clamp(0.95rem, 2.5vw, 1.5rem);
+      border: 1px solid rgba(23, 32, 27, 0.08);
+      border-radius: 1.25rem;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 1.5rem 4rem rgba(23, 32, 27, 0.09);
+    }
+
+    .eyebrow {
+      margin: 0 0 0.5rem;
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.75rem, 5vw, 2.75rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.98;
+    }
+
+    .intro {
+      max-width: 38rem;
+      margin: 0.65rem 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 0.95rem;
+    }
+
+    .hud {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.6rem;
+      align-items: stretch;
+      margin-top: 0.9rem;
+    }
+
+    .score-card,
+    .next-card,
+    .hint-card {
+      padding: 0.6rem 0.75rem;
+      border: 1px solid var(--line);
+      border-radius: 0.9rem;
+      background: #fafcfb;
+    }
+
+    .score-card,
+    .next-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 5.5rem;
+      box-sizing: border-box;
+    }
+
+    .score-card { text-align: left; }
+    .next-card {
+      text-align: center;
+      align-items: center;
+      min-width: 5.75rem;
+    }
+    .hint-card {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 5.5rem;
+      box-sizing: border-box;
+    }
+
+    .hud-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .hud-value {
+      margin: 0;
+      min-height: 2.75rem;
+      display: flex;
+      align-items: center;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.25rem, 4vw, 1.7rem);
+      font-weight: 500;
+      letter-spacing: -0.03em;
+    }
+
+    .next-fruit {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      margin: 0;
+      border-radius: 999px;
+      font-size: 1.4rem;
+      line-height: 1;
+      background: transparent;
+    }
+
+    .hint-card p {
+      margin: 0.2rem 0 0;
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+
+    .stage-wrap {
+      --stage-max-height: min(640px, calc(100dvh - 13.5rem));
+      position: relative;
+      box-sizing: border-box;
+      width: min(100%, 420px, calc(var(--stage-max-height) * 420 / 640));
+      max-width: 100%;
+      aspect-ratio: 420 / 640;
+      max-height: var(--stage-max-height);
+      margin: 0.85rem auto 0;
+      border-radius: 0.85rem;
+      border: 3px solid var(--board-edge);
+      background: linear-gradient(180deg, #fff8ea 0%, var(--board) 48%, #efe4cf 100%);
+      overflow: hidden;
+      touch-action: none;
+      user-select: none;
+    }
+
+    #game-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      cursor: pointer;
+      vertical-align: top;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 1.25rem;
+      background: rgba(23, 32, 27, 0.48);
+      backdrop-filter: blur(4px);
+      text-align: center;
+      z-index: 5;
+    }
+
+    .overlay.show { display: grid; }
+
+    .overlay-card {
+      width: min(100%, 18rem);
+      padding: 1.35rem 1.25rem;
+      border-radius: 1rem;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.18);
+    }
+
+    .overlay-card h2 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.85rem;
+      font-weight: 500;
+    }
+
+    .overlay-card p {
+      margin: 0.65rem 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .overlay-score {
+      margin-top: 0.85rem !important;
+      color: var(--accent-dark) !important;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.45rem;
+      font-weight: 500;
+    }
+
+    .overlay-actions {
+      display: grid;
+      gap: 0.55rem;
+      margin-top: 1.15rem;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 0.75rem;
+      padding: 0.85rem 1.15rem;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 150ms ease, transform 150ms ease;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      color: var(--ink);
+      background: rgba(33, 92, 66, 0.1);
+    }
+
+    .nav-toggle {
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: 1px solid rgba(23, 32, 27, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      box-shadow: none;
+      transform: none;
+    }
+
+    .nav-toggle:hover {
+      background: rgba(33, 92, 66, 0.08);
+      color: var(--ink);
+      transform: none;
+    }
+
+    .evolution {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.3rem;
+      margin-top: 0.75rem;
+    }
+
+    .evo-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      background: #f3f6f4;
+      border: 1px solid var(--line);
+    }
+
+    .disclaimer {
+      margin: 0.75rem 0 0;
+      color: var(--muted);
+      font-size: 0.72rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .nav-toggle { display: inline-flex; }
+
+      .site-nav-menu {
+        display: none;
+        width: 100%;
+        margin-left: 0;
+        padding-top: 0.35rem;
+      }
+
+      .site-nav-menu.is-open { display: block; }
+
+      .site-nav-links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+      }
+
+      .site-nav-links a {
+        width: 100%;
+        padding: 0.75rem 0.85rem;
+      }
+
+      .intro {
+        display: none;
+      }
+
+      .stage-wrap {
+        --stage-max-height: min(640px, calc(100dvh - 10.5rem));
+      }
+
+      .hud {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .hint-card {
+        display: none;
+      }
+    }
+
+    @media (max-height: 760px) {
+      .intro { display: none; }
+      .evolution { display: none; }
+      .disclaimer { display: none; }
+      .hint-card { display: none; }
+      .stage-wrap {
+        --stage-max-height: min(640px, calc(100dvh - 9.5rem));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <a class="site-nav-brand" href="/CipherPrint/">CipherPrint</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Open menu">
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav id="site-menu" class="site-nav-menu" aria-label="Primary">
+      <ul class="site-nav-links">
+        <li><a href="/CipherPrint/">CipherPrint</a></li>
+        <li><a href="/CipherPrint/flag-map.html">Flag Map</a></li>
+        <li><a href="/CipherPrint/merge.html" aria-current="page">Merge</a></li>
+        <li><a href="/CipherPrint/story.html">Story</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="screen">
+    <section class="panel" aria-labelledby="merge-title">
+      <p class="eyebrow">Kitchen table arcade</p>
+      <h1 id="merge-title">Merge Game</h1>
+      <p class="intro">
+        Drop fruits into the box. When two of the same kind touch, they merge into the next fruit.
+        Keep the stack below the danger line — and chase the watermelon.
+      </p>
+
+      <div class="hud">
+        <div class="score-card">
+          <p class="hud-label">Score</p>
+          <p class="hud-value" id="score-value">0</p>
+        </div>
+        <div class="next-card">
+          <p class="hud-label">Next</p>
+          <div class="next-fruit" id="next-fruit" aria-live="polite">🍒</div>
+        </div>
+        <div class="hint-card">
+          <p class="hud-label">Controls</p>
+          <p>Move to aim · Click / tap to drop</p>
+        </div>
+      </div>
+
+      <div class="stage-wrap" id="stage-wrap">
+        <canvas id="game-canvas" width="420" height="640" aria-label="Merge game board"></canvas>
+        <div class="overlay" id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
+          <div class="overlay-card">
+            <h2 id="game-over-title">Game Over</h2>
+            <p>The fruit pile crossed the danger line.</p>
+            <p class="overlay-score" id="final-score">Score: 0</p>
+            <div class="overlay-actions">
+              <button type="button" id="restart-btn">Restart</button>
+              <a class="secondary" href="/CipherPrint/" style="display:block;text-align:center;text-decoration:none;padding:0.85rem 1.15rem;border-radius:0.75rem;background:rgba(33,92,66,0.1);color:var(--ink);font-weight:700;">Back to CipherPrint</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="evolution" aria-label="Fruit evolution order">
+        <span class="evo-chip" title="Cherry">🍒</span>
+        <span class="evo-chip" title="Strawberry">🍓</span>
+        <span class="evo-chip" title="Grape">🍇</span>
+        <span class="evo-chip" title="Orange">🍊</span>
+        <span class="evo-chip" title="Persimmon">🍎</span>
+        <span class="evo-chip" title="Apple">🍏</span>
+        <span class="evo-chip" title="Pear">🍐</span>
+        <span class="evo-chip" title="Peach">🍑</span>
+        <span class="evo-chip" title="Pineapple">🍍</span>
+        <span class="evo-chip" title="Melon">🍈</span>
+        <span class="evo-chip" title="Watermelon">🍉</span>
+      </div>
+
+      <p class="disclaimer">
+        CipherPrint © 2026. Original fruit merge game for offline fun.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    (function initMobileNav() {
+      const toggle = document.querySelector(".nav-toggle");
+      const menu = document.getElementById("site-menu");
+      if (!toggle || !menu) return;
+
+      const setOpen = (open) => {
+        menu.classList.toggle("is-open", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      };
+
+      toggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setOpen(toggle.getAttribute("aria-expanded") !== "true");
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".site-nav")) setOpen(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") setOpen(false);
+      });
+
+      window.matchMedia("(max-width: 720px)").addEventListener("change", (event) => {
+        if (!event.matches) setOpen(false);
+      });
+    })();
+  </script>
+
+  <script>
+    (() => {
+      const { Engine, Render, Runner, Bodies, Body, Composite, Events, Common } = Matter;
+
+      const WIDTH = 420;
+      const HEIGHT = 640;
+      const WALL = 18;
+      const DROP_Y = 72;
+      const DANGER_Y = 118;
+      const GAME_OVER_MS = 2000;
+      const DROP_COOLDOWN_MS = 420;
+      const MAX_SPAWN_TIER = 4;
+
+      // Step 2: fruit definitions (smallest → largest)
+      const FRUITS = [
+        { name: "Cherry",     emoji: "🍒", radius: 14, color: "#e85d6b", score: 1  },
+        { name: "Strawberry", emoji: "🍓", radius: 18, color: "#ff6b81", score: 3  },
+        { name: "Grape",      emoji: "🍇", radius: 24, color: "#8e6bc9", score: 6  },
+        { name: "Orange",     emoji: "🍊", radius: 30, color: "#ff9f43", score: 10 },
+        { name: "Persimmon",  emoji: "🍎", radius: 36, color: "#e17055", score: 15 },
+        { name: "Apple",      emoji: "🍏", radius: 42, color: "#6ab04c", score: 21 },
+        { name: "Pear",       emoji: "🍐", radius: 50, color: "#badc58", score: 28 },
+        { name: "Peach",      emoji: "🍑", radius: 58, color: "#ffb8b8", score: 36 },
+        { name: "Pineapple",  emoji: "🍍", radius: 66, color: "#f6e58d", score: 45 },
+        { name: "Melon",      emoji: "🍈", radius: 76, color: "#7bed9f", score: 55 },
+        { name: "Watermelon", emoji: "🍉", radius: 88, color: "#2ed573", score: 70 }
+      ];
+
+      const canvas = document.getElementById("game-canvas");
+      const scoreEl = document.getElementById("score-value");
+      const nextFruitEl = document.getElementById("next-fruit");
+      const overlay = document.getElementById("game-over-overlay");
+      const finalScoreEl = document.getElementById("final-score");
+      const restartBtn = document.getElementById("restart-btn");
+
+      let engine, world, render, runner;
+      let score = 0;
+      let nextTier = 0;
+      let currentTier = 0;
+      let previewBody = null;
+      let canDrop = true;
+      let gameOver = false;
+      let mergeLock = new Set();
+      let dangerSince = null;
+      let pointerX = WIDTH / 2;
+      let lastDropAt = 0;
+
+      function randomSpawnTier() {
+        return Math.floor(Common.random(0, MAX_SPAWN_TIER + 1));
+      }
+
+      function fruitOptions(tier) {
+        return {
+          label: "fruit",
+          restitution: 0.08,
+          friction: 0.35,
+          frictionStatic: 0.55,
+          frictionAir: 0.01,
+          density: 0.0018 + tier * 0.00012,
+          slop: 0.01,
+          render: {
+            visible: false
+          }
+        };
+      }
+
+      function createFruit(tier, x, y, options = {}) {
+        const def = FRUITS[tier];
+        const body = Bodies.circle(x, y, def.radius, {
+          ...fruitOptions(tier),
+          ...options
+        });
+        body.fruitTier = tier;
+        return body;
+      }
+
+      function clampDropX(x, tier) {
+        const r = FRUITS[tier].radius;
+        return Math.max(WALL + r + 2, Math.min(WIDTH - WALL - r - 2, x));
+      }
+
+      function updateNextPreview() {
+        const def = FRUITS[nextTier];
+        nextFruitEl.textContent = def.emoji;
+        nextFruitEl.style.background = "transparent";
+        nextFruitEl.title = def.name;
+      }
+
+      function setScore(value) {
+        score = value;
+        scoreEl.textContent = String(score);
+      }
+
+      function removePreview() {
+        if (!previewBody) return;
+        Composite.remove(world, previewBody);
+        previewBody = null;
+      }
+
+      function spawnPreview() {
+        removePreview();
+        if (gameOver) return;
+        currentTier = nextTier;
+        nextTier = randomSpawnTier();
+        updateNextPreview();
+
+        const x = clampDropX(pointerX, currentTier);
+        previewBody = createFruit(currentTier, x, DROP_Y, {
+          isStatic: true,
+          isSensor: true,
+          collisionFilter: { mask: 0 }
+        });
+        previewBody.isPreview = true;
+        Composite.add(world, previewBody);
+        canDrop = true;
+      }
+
+      function pointerToWorldX(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        const scale = WIDTH / rect.width;
+        return (clientX - rect.left) * scale;
+      }
+
+      function movePreview(clientX) {
+        if (!previewBody || gameOver || !canDrop) return;
+        pointerX = pointerToWorldX(clientX);
+        Body.setPosition(previewBody, {
+          x: clampDropX(pointerX, currentTier),
+          y: DROP_Y
+        });
+      }
+
+      function dropFruit() {
+        if (!previewBody || gameOver || !canDrop) return;
+        const now = performance.now();
+        if (now - lastDropAt < DROP_COOLDOWN_MS) return;
+        lastDropAt = now;
+        canDrop = false;
+
+        const x = previewBody.position.x;
+        const tier = currentTier;
+        removePreview();
+
+        const body = createFruit(tier, x, DROP_Y);
+        Body.setVelocity(body, { x: 0, y: 2.2 });
+        Body.applyForce(body, body.position, { x: 0, y: 0.004 });
+        Composite.add(world, body);
+
+        window.setTimeout(() => {
+          if (!gameOver) spawnPreview();
+        }, DROP_COOLDOWN_MS);
+      }
+
+      function tryMerge(bodyA, bodyB) {
+        if (gameOver) return;
+        if (!bodyA || !bodyB) return;
+        if (bodyA.isPreview || bodyB.isPreview) return;
+        if (bodyA.label !== "fruit" || bodyB.label !== "fruit") return;
+
+        const tierA = bodyA.fruitTier;
+        const tierB = bodyB.fruitTier;
+        if (tierA !== tierB) return;
+        if (tierA >= FRUITS.length - 1) return;
+        if (mergeLock.has(bodyA.id) || mergeLock.has(bodyB.id)) return;
+
+        mergeLock.add(bodyA.id);
+        mergeLock.add(bodyB.id);
+
+        const next = tierA + 1;
+        const midX = (bodyA.position.x + bodyB.position.x) / 2;
+        const midY = (bodyA.position.y + bodyB.position.y) / 2;
+
+        Composite.remove(world, [bodyA, bodyB]);
+
+        const merged = createFruit(next, midX, midY);
+        Body.setVelocity(merged, { x: 0, y: -1.4 });
+        Composite.add(world, merged);
+        setScore(score + FRUITS[next].score);
+
+        window.setTimeout(() => {
+          mergeLock.delete(bodyA.id);
+          mergeLock.delete(bodyB.id);
+        }, 120);
+      }
+
+      function checkGameOver(timestamp) {
+        if (gameOver) return;
+
+        const fruits = Composite.allBodies(world).filter(
+          (b) => b.label === "fruit" && !b.isPreview && !b.isStatic
+        );
+
+        const overLine = fruits.some((body) => {
+          const top = body.position.y - body.circleRadius;
+          return top < DANGER_Y;
+        });
+
+        if (overLine) {
+          if (dangerSince == null) dangerSince = timestamp;
+          else if (timestamp - dangerSince >= GAME_OVER_MS) endGame();
+        } else {
+          dangerSince = null;
+        }
+      }
+
+      function endGame() {
+        if (gameOver) return;
+        gameOver = true;
+        canDrop = false;
+        removePreview();
+        finalScoreEl.textContent = `Score: ${score}`;
+        overlay.classList.add("show");
+        Runner.stop(runner);
+      }
+
+      function drawExtras() {
+        const ctx = render.context;
+
+        // Danger line
+        ctx.save();
+        ctx.strokeStyle = dangerSince ? "rgba(192, 57, 43, 0.95)" : "rgba(192, 57, 43, 0.45)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 7]);
+        ctx.beginPath();
+        ctx.moveTo(WALL, DANGER_Y);
+        ctx.lineTo(WIDTH - WALL, DANGER_Y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = dangerSince ? "rgba(192, 57, 43, 0.9)" : "rgba(192, 57, 43, 0.55)";
+        ctx.font = "700 11px Inter, system-ui, sans-serif";
+        ctx.fillText("DANGER", WALL + 8, DANGER_Y - 8);
+        ctx.restore();
+
+        // Draw only the emoji at the physics body size (no colored halo circle)
+        const bodies = Composite.allBodies(world);
+        for (const body of bodies) {
+          if (body.label !== "fruit") continue;
+          const tier = body.fruitTier;
+          const def = FRUITS[tier];
+          const size = body.circleRadius * 2;
+          ctx.save();
+          ctx.translate(body.position.x, body.position.y);
+          ctx.rotate(body.angle);
+          ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(def.emoji, 0, 0);
+          ctx.restore();
+        }
+      }
+
+      function clearFruits() {
+        const bodies = Composite.allBodies(world).filter((b) => b.label === "fruit");
+        if (bodies.length) Composite.remove(world, bodies);
+        previewBody = null;
+      }
+
+      function buildWorld() {
+        engine = Engine.create({
+          gravity: { x: 0, y: 1.05 },
+          enableSleeping: true
+        });
+        world = engine.world;
+
+        const floor = Bodies.rectangle(WIDTH / 2, HEIGHT - WALL / 2, WIDTH - WALL * 2, WALL, {
+          isStatic: true,
+          friction: 0.9,
+          render: { fillStyle: "#c9b897", strokeStyle: "#c9b897", lineWidth: 0 }
+        });
+        const left = Bodies.rectangle(WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
+          isStatic: true,
+          friction: 0.85,
+          render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
+        });
+        const right = Bodies.rectangle(WIDTH - WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
+          isStatic: true,
+          friction: 0.85,
+          render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
+        });
+        Composite.add(world, [floor, left, right]);
+
+        render = Render.create({
+          canvas,
+          engine,
+          options: {
+            width: WIDTH,
+            height: HEIGHT,
+            wireframes: false,
+            background: "transparent",
+            pixelRatio: 1,
+            hasBounds: false
+          }
+        });
+
+        // Keep CSS size in sync so the full board (right wall + floor) stays visible
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+
+        Events.on(engine, "collisionStart", (event) => {
+          for (const pair of event.pairs) {
+            tryMerge(pair.bodyA, pair.bodyB);
+          }
+        });
+
+        Events.on(render, "afterRender", drawExtras);
+        Events.on(engine, "afterUpdate", () => {
+          checkGameOver(performance.now());
+        });
+
+        runner = Runner.create();
+        Render.run(render);
+        Runner.run(runner, engine);
+      }
+
+      function resetGame() {
+        overlay.classList.remove("show");
+        gameOver = false;
+        canDrop = true;
+        dangerSince = null;
+        mergeLock.clear();
+        setScore(0);
+        pointerX = WIDTH / 2;
+        lastDropAt = 0;
+        nextTier = randomSpawnTier();
+
+        clearFruits();
+        if (runner && runner.enabled === false) {
+          Runner.run(runner, engine);
+        } else if (runner) {
+          Runner.stop(runner);
+          Runner.run(runner, engine);
+        }
+        spawnPreview();
+      }
+
+      // Pointer / mouse / touch controls
+      canvas.addEventListener("pointermove", (event) => {
+        movePreview(event.clientX);
+      });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        canvas.setPointerCapture?.(event.pointerId);
+        movePreview(event.clientX);
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        movePreview(event.clientX);
+        dropFruit();
+      });
+
+      window.addEventListener("pointermove", (event) => {
+        if (!previewBody || gameOver) return;
+        const rect = canvas.getBoundingClientRect();
+        if (event.clientY < rect.top - 40 || event.clientY > rect.bottom + 20) return;
+        if (event.clientX < rect.left - 40 || event.clientX > rect.right + 40) return;
+        movePreview(event.clientX);
+      });
+
+      restartBtn.addEventListener("click", resetGame);
+
+      nextTier = randomSpawnTier();
+      buildWorld();
+      spawnPreview();
+    })();
+  </script>
+</body>
+</html>
