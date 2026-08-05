@@ -1,0 +1,1224 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flag Map Cipher — CipherPrint</title>
+  <meta name="description" content="Spy mission game: match flags to map zones, unlock cipher clues, and print an offline Flag & Map worksheet.">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#215c42">
+  <link rel="canonical" href="https://cjlin925.github.io/CipherPrint/flag-map.html">
+  <link rel="icon" href="/CipherPrint/favicon.ico" sizes="any">
+  <link rel="icon" href="/CipherPrint/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/CipherPrint/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="/CipherPrint/apple-touch-icon.png" sizes="180x180">
+  <link rel="manifest" href="/CipherPrint/site.webmanifest">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="CipherPrint">
+  <meta property="og:title" content="Flag Map Cipher — CipherPrint">
+  <meta property="og:description" content="Match flags to map zones, unlock cipher clues, and print an offline Flag & Map worksheet.">
+  <meta property="og:url" content="https://cjlin925.github.io/CipherPrint/flag-map.html">
+  <meta property="og:locale" content="en_US">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Flag Map Cipher — CipherPrint">
+  <meta name="twitter:description" content="Match flags to map zones, unlock cipher clues, and print an offline Flag & Map worksheet.">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17201b;
+      --muted: #69736d;
+      --paper: #ffffff;
+      --accent: #215c42;
+      --accent-dark: #17412f;
+      --line: #dfe5e1;
+      --good: #1f7a4d;
+      --bad: #9b3b32;
+      --glow: rgba(33, 92, 66, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(33, 92, 66, 0.08), transparent 28rem),
+        radial-gradient(circle at 88% 12%, rgba(23, 65, 47, 0.06), transparent 22rem),
+        #f4f6f4;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.85rem clamp(1rem, 4vw, 2rem);
+      border-bottom: 1px solid rgba(23, 32, 27, 0.08);
+      background: rgba(244, 246, 244, 0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .site-nav-brand {
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      text-decoration: none;
+    }
+
+    .site-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.35rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .site-nav-links a {
+      display: inline-block;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.55rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+      text-decoration: none;
+      transition: color 150ms ease, background-color 150ms ease;
+    }
+
+    .site-nav-links a:hover {
+      color: var(--ink);
+      background: rgba(33, 92, 66, 0.08);
+    }
+
+    .site-nav-links a[aria-current="page"] {
+      color: var(--accent-dark);
+      background: rgba(33, 92, 66, 0.12);
+    }
+
+    .screen {
+      width: min(100%, 58rem);
+      margin: 0 auto;
+      padding: 1.5rem clamp(1rem, 4vw, 2rem) 3rem;
+    }
+
+    .panel {
+      padding: clamp(1.5rem, 4vw, 2.5rem);
+      border: 1px solid rgba(23, 32, 27, 0.08);
+      border-radius: 1.25rem;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 1.5rem 4rem rgba(23, 32, 27, 0.09);
+    }
+
+    .eyebrow {
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.2rem, 6vw, 3.6rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.98;
+    }
+
+    .intro {
+      max-width: 42rem;
+      margin: 1rem 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    button,
+    .button {
+      appearance: none;
+      border: 0;
+      border-radius: 0.75rem;
+      padding: 0.85rem 1.15rem;
+      background: var(--accent);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    button:hover,
+    .button:hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+    }
+
+    button.secondary,
+    .button.secondary {
+      color: var(--ink);
+      background: rgba(33, 92, 66, 0.1);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+      margin-top: 1.5rem;
+    }
+
+    .mode-card {
+      text-align: left;
+      padding: 1.1rem 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      background: #fff;
+      color: var(--ink);
+      box-shadow: none;
+    }
+
+    .mode-card strong {
+      display: block;
+      margin-bottom: 0.35rem;
+      font-size: 1.05rem;
+    }
+
+    .mode-card span {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
+    .mode-card[aria-pressed="true"] {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow);
+    }
+
+    .status-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+      padding: 0.9rem 1rem;
+      border-radius: 0.9rem;
+      background: rgba(33, 92, 66, 0.07);
+    }
+
+    .status-bar p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+    }
+
+    .cipher-track {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 1.25rem;
+    }
+
+    .cipher-slot {
+      display: grid;
+      place-items: center;
+      width: 2.35rem;
+      height: 2.7rem;
+      border: 1px dashed rgba(33, 92, 66, 0.35);
+      border-radius: 0.45rem;
+      background: #f8faf8;
+      font-family: "Courier New", monospace;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .cipher-slot.unlocked {
+      border-style: solid;
+      border-color: var(--accent);
+      background: #fff;
+      color: var(--accent-dark);
+      animation: unlock-pop 420ms ease;
+    }
+
+    .cipher-slot.space {
+      width: 1rem;
+      border: 0;
+      background: transparent;
+    }
+
+    @keyframes unlock-pop {
+      0% { transform: scale(0.7); opacity: 0.2; }
+      60% { transform: scale(1.12); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    .mission-stage {
+      margin-top: 1.5rem;
+      display: grid;
+      gap: 1.25rem;
+    }
+
+    .prompt-card {
+      display: grid;
+      gap: 0.85rem;
+      justify-items: center;
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(33, 92, 66, 0.05), transparent 55%),
+        #fff;
+      text-align: center;
+    }
+
+    .prompt-label {
+      margin: 0;
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .prompt-title {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.4rem, 4vw, 1.9rem);
+      font-weight: 500;
+    }
+
+    .flag-hero {
+      width: min(100%, 14rem);
+      aspect-ratio: 4 / 3;
+      border-radius: 0.65rem;
+      border: 1px solid rgba(23, 32, 27, 0.12);
+      overflow: hidden;
+      box-shadow: 0 0.75rem 1.75rem rgba(23, 32, 27, 0.12);
+      background: #eee;
+    }
+
+    .flag-hero img,
+    .choice-flag img,
+    .print-flag img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .map-hero,
+    .map-choice-visual {
+      width: min(100%, 16rem);
+      aspect-ratio: 16 / 10;
+      border-radius: 0.65rem;
+      border: 1px solid rgba(23, 32, 27, 0.12);
+      overflow: hidden;
+      background: #e8eee9;
+    }
+
+    .map-hero svg,
+    .map-choice-visual svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .choice {
+      display: grid;
+      gap: 0.65rem;
+      justify-items: center;
+      padding: 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: 0.95rem;
+      background: #fff;
+      color: var(--ink);
+      text-align: center;
+      box-shadow: none;
+    }
+
+    .choice:hover {
+      border-color: rgba(33, 92, 66, 0.45);
+      background: #fbfcfb;
+    }
+
+    .choice.correct {
+      border-color: var(--good);
+      box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.18);
+      animation: unlock-pop 420ms ease;
+    }
+
+    .choice.wrong {
+      border-color: var(--bad);
+      box-shadow: 0 0 0 3px rgba(155, 59, 50, 0.15);
+    }
+
+    .choice-flag {
+      width: 100%;
+      max-width: 8.5rem;
+      aspect-ratio: 4 / 3;
+      border-radius: 0.45rem;
+      border: 1px solid rgba(23, 32, 27, 0.1);
+      overflow: hidden;
+      background: #eee;
+    }
+
+    .choice-meta {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+
+    .choice-sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .feedback {
+      min-height: 1.5rem;
+      margin: 0.25rem 0 0;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .feedback.good { color: var(--good); }
+    .feedback.bad { color: var(--bad); }
+
+    .unlock-banner {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.95rem 1rem;
+      border-radius: 0.85rem;
+      background: linear-gradient(120deg, rgba(33, 92, 66, 0.14), rgba(33, 92, 66, 0.04));
+      border: 1px solid rgba(33, 92, 66, 0.2);
+      text-align: center;
+    }
+
+    .unlock-banner.show {
+      display: block;
+      animation: unlock-pop 480ms ease;
+    }
+
+    .unlock-banner strong {
+      display: block;
+      margin-bottom: 0.2rem;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.2rem;
+      font-weight: 500;
+    }
+
+    .complete-panel {
+      display: none;
+      margin-top: 1.25rem;
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(33, 92, 66, 0.25);
+      background: #f7faf8;
+      text-align: center;
+    }
+
+    .complete-panel.show { display: block; }
+
+    .complete-panel h2 {
+      margin: 0 0 0.5rem;
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 500;
+      font-size: 1.8rem;
+    }
+
+    .secret-reveal {
+      margin: 0.75rem 0 0;
+      font-family: "Courier New", monospace;
+      font-size: clamp(1.3rem, 4vw, 1.8rem);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--accent-dark);
+    }
+
+    .disclaimer {
+      margin: 1.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
+    .print-pack {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .mode-grid,
+      .choices {
+        grid-template-columns: 1fr;
+      }
+
+      .site-nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+    @media print {
+      @page {
+        margin: 12mm;
+      }
+
+      html, body {
+        background: #fff !important;
+        color: #000 !important;
+      }
+
+      .site-nav,
+      .screen {
+        display: none !important;
+      }
+
+      .print-pack {
+        display: block !important;
+      }
+
+      .print-sheet {
+        break-after: page;
+        page-break-after: always;
+        color: #000;
+        font-family: Georgia, "Times New Roman", serif;
+      }
+
+      .print-sheet:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+
+      .print-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 1rem;
+        margin-bottom: 8mm;
+        padding-bottom: 3mm;
+        border-bottom: 2px solid #000;
+      }
+
+      .print-header h1 {
+        margin: 0;
+        font-size: 18pt;
+        letter-spacing: -0.02em;
+      }
+
+      .print-header p {
+        margin: 0;
+        font-family: Inter, Arial, sans-serif;
+        font-size: 9pt;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .print-brief {
+        margin: 0 0 6mm;
+        font-family: Inter, Arial, sans-serif;
+        font-size: 10.5pt;
+        line-height: 1.45;
+      }
+
+      .print-mission {
+        display: grid;
+        grid-template-columns: 42mm 1fr;
+        gap: 5mm;
+        align-items: start;
+        margin-bottom: 5.5mm;
+        padding-bottom: 4.5mm;
+        border-bottom: 1px solid #bbb;
+      }
+
+      .print-flag,
+      .print-map {
+        width: 42mm;
+        aspect-ratio: 4 / 3;
+        border: 1px solid #000;
+        overflow: hidden;
+      }
+
+      .print-map svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .print-q {
+        margin: 0 0 2mm;
+        font-family: Inter, Arial, sans-serif;
+        font-size: 11pt;
+        font-weight: 700;
+      }
+
+      .print-options {
+        margin: 0;
+        padding-left: 4.5mm;
+        font-family: Inter, Arial, sans-serif;
+        font-size: 10pt;
+        line-height: 1.55;
+      }
+
+      .print-answer-line {
+        margin-top: 3mm;
+        border-bottom: 1px solid #000;
+        height: 7mm;
+      }
+
+      .print-cipher-box {
+        margin-top: 7mm;
+        padding: 4mm;
+        border: 2px solid #000;
+      }
+
+      .print-cipher-box h2 {
+        margin: 0 0 2mm;
+        font-size: 13pt;
+      }
+
+      .print-cipher-box p {
+        margin: 0 0 3mm;
+        font-family: Inter, Arial, sans-serif;
+        font-size: 10pt;
+      }
+
+      .print-slots {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2mm;
+      }
+
+      .print-slot {
+        width: 9mm;
+        height: 11mm;
+        border: 1px solid #000;
+        text-align: center;
+        line-height: 11mm;
+        font-family: "Courier New", monospace;
+        font-size: 12pt;
+        font-weight: 700;
+      }
+
+      .print-slot.space {
+        width: 4mm;
+        border: 0;
+      }
+
+      .print-key {
+        margin-top: 10mm;
+        transform: rotate(180deg);
+        font-family: Inter, Arial, sans-serif;
+        font-size: 9pt;
+        line-height: 1.5;
+      }
+
+      .print-key h2 {
+        margin: 0 0 2mm;
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 12pt;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <a class="site-nav-brand" href="/CipherPrint/">CipherPrint</a>
+    <nav aria-label="Primary">
+      <ul class="site-nav-links">
+        <li><a href="/CipherPrint/">CipherPrint</a></li>
+        <li><a href="/CipherPrint/flag-map.html" aria-current="page">Flag Map</a></li>
+        <li><a href="/CipherPrint/story.html">Story</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="screen">
+    <section class="panel" aria-labelledby="flag-map-title">
+      <p class="eyebrow">Spy geography unit</p>
+      <h1 id="flag-map-title">Flag &amp; Map Cipher</h1>
+      <p class="intro">
+        Decode the world’s secret zones. Match each mission flag to its map card (or the map to its flag),
+        unlock cipher letters one by one, then print a paper worksheet for offline HQ time.
+      </p>
+
+      <div class="mode-grid" role="group" aria-label="Mission mode">
+        <button type="button" class="mode-card" id="mode-flag-map" aria-pressed="true">
+          <strong>Flag → Map</strong>
+          <span>See a national flag. Pick the correct mission map zone.</span>
+        </button>
+        <button type="button" class="mode-card" id="mode-map-flag" aria-pressed="false">
+          <strong>Map → Flag</strong>
+          <span>See a map zone. Pick the matching national flag.</span>
+        </button>
+      </div>
+
+      <div class="toolbar">
+        <button type="button" id="start-mission">Start mission</button>
+        <button type="button" class="secondary" id="print-worksheet">Print worksheet</button>
+        <button type="button" class="secondary" id="new-briefing" hidden>New briefing</button>
+      </div>
+
+      <div class="status-bar" id="status-bar" hidden>
+        <p id="progress-text">Mission 0 / 0</p>
+        <p id="score-text">Unlocked 0 letters</p>
+      </div>
+
+      <div class="cipher-track" id="cipher-track" aria-label="Cipher clue track" hidden></div>
+
+      <div class="mission-stage" id="mission-stage" hidden>
+        <div class="prompt-card" id="prompt-card"></div>
+        <div class="choices" id="choices" role="list"></div>
+        <p class="feedback" id="feedback" aria-live="polite"></p>
+        <div class="unlock-banner" id="unlock-banner" role="status">
+          <strong>Agent clearance granted</strong>
+          <span id="unlock-detail">Cipher letter unlocked.</span>
+        </div>
+      </div>
+
+      <div class="complete-panel" id="complete-panel">
+        <h2>Mission complete</h2>
+        <p>All map zones verified. Your decoded HQ clue is:</p>
+        <p class="secret-reveal" id="secret-reveal"></p>
+        <div class="toolbar" style="justify-content:center">
+          <button type="button" id="replay-mission">Play again</button>
+          <button type="button" class="secondary" id="print-after">Print worksheet</button>
+        </div>
+      </div>
+
+      <p class="disclaimer">
+        CipherPrint © 2026. For personal and educational use.
+        Flag artwork adapted from the open-source flag-icons set (MIT).
+      </p>
+    </section>
+  </main>
+
+  <div id="print-pack" class="print-pack" aria-hidden="true"></div>
+
+  <script>
+    const FLAG_BASE = "/CipherPrint/flags";
+
+    const COUNTRIES = [
+      {
+        id: "jp",
+        name: "Japan",
+        code: "JP-91",
+        region: "East Asia",
+        coords: "N35° / E139°",
+        mapTone: "#d9ebe3",
+        mapInk: "#215c42",
+        shape: "island"
+      },
+      {
+        id: "ca",
+        name: "Canada",
+        code: "CA-07",
+        region: "North America",
+        coords: "N56° / W106°",
+        mapTone: "#e7eef5",
+        mapInk: "#2c4c6e",
+        shape: "wide"
+      },
+      {
+        id: "br",
+        name: "Brazil",
+        code: "BR-44",
+        region: "South America",
+        coords: "S14° / W51°",
+        mapTone: "#e8f3e4",
+        mapInk: "#2f6b3a",
+        shape: "long"
+      },
+      {
+        id: "fr",
+        name: "France",
+        code: "FR-18",
+        region: "Western Europe",
+        coords: "N46° / E2°",
+        mapTone: "#ece8f5",
+        mapInk: "#4a3f78",
+        shape: "hex"
+      },
+      {
+        id: "eg",
+        name: "Egypt",
+        code: "EG-33",
+        region: "North Africa",
+        coords: "N26° / E30°",
+        mapTone: "#f5ecdf",
+        mapInk: "#8a5a22",
+        shape: "wedge"
+      },
+      {
+        id: "au",
+        name: "Australia",
+        code: "AU-22",
+        region: "Oceania",
+        coords: "S25° / E134°",
+        mapTone: "#f3e9df",
+        mapInk: "#7a4e28",
+        shape: "island"
+      },
+      {
+        id: "in",
+        name: "India",
+        code: "IN-55",
+        region: "South Asia",
+        coords: "N22° / E79°",
+        mapTone: "#f6eedf",
+        mapInk: "#9a5b16",
+        shape: "long"
+      },
+      {
+        id: "mx",
+        name: "Mexico",
+        code: "MX-12",
+        region: "North America",
+        coords: "N23° / W102°",
+        mapTone: "#e9f2ea",
+        mapInk: "#2f6a45",
+        shape: "wedge"
+      },
+      {
+        id: "kr",
+        name: "South Korea",
+        code: "KR-28",
+        region: "East Asia",
+        coords: "N36° / E128°",
+        mapTone: "#e7eef8",
+        mapInk: "#2d4f86",
+        shape: "island"
+      },
+      {
+        id: "it",
+        name: "Italy",
+        code: "IT-61",
+        region: "Southern Europe",
+        coords: "N42° / E12°",
+        mapTone: "#eaf4ea",
+        mapInk: "#2f6b3f",
+        shape: "boot"
+      },
+      {
+        id: "ke",
+        name: "Kenya",
+        code: "KE-39",
+        region: "East Africa",
+        coords: "S1° / E38°",
+        mapTone: "#f4e9df",
+        mapInk: "#7a4424",
+        shape: "hex"
+      },
+      {
+        id: "gb",
+        name: "United Kingdom",
+        code: "GB-03",
+        region: "Northern Europe",
+        coords: "N54° / W2°",
+        mapTone: "#e8eef7",
+        mapInk: "#314f7c",
+        shape: "island"
+      },
+      {
+        id: "tw",
+        name: "Taiwan",
+        code: "TW-16",
+        region: "East Asia",
+        coords: "N24° / E121°",
+        mapTone: "#e7eef8",
+        mapInk: "#2d4f86",
+        shape: "island"
+      },
+      {
+        id: "us",
+        name: "United States",
+        code: "US-01",
+        region: "North America",
+        coords: "N39° / W98°",
+        mapTone: "#e7eef5",
+        mapInk: "#2c4c6e",
+        shape: "wide"
+      },
+      {
+        id: "de",
+        name: "Germany",
+        code: "DE-47",
+        region: "Central Europe",
+        coords: "N51° / E10°",
+        mapTone: "#ece8f5",
+        mapInk: "#4a3f78",
+        shape: "hex"
+      },
+      {
+        id: "th",
+        name: "Thailand",
+        code: "TH-74",
+        region: "Southeast Asia",
+        coords: "N15° / E101°",
+        mapTone: "#f5e9ef",
+        mapInk: "#7a3355",
+        shape: "long"
+      }
+    ];
+
+    const SECRET_POOL = [
+      "TREEHOUSE",
+      "COOKIE JAR",
+      "RADAR BASE",
+      "JUICE BOX",
+      "SPY GADGET"
+    ];
+
+    const state = {
+      mode: "flag-map",
+      deck: [],
+      index: 0,
+      secret: "",
+      unlocked: 0,
+      locked: false
+    };
+
+    const els = {
+      modeFlagMap: document.getElementById("mode-flag-map"),
+      modeMapFlag: document.getElementById("mode-map-flag"),
+      start: document.getElementById("start-mission"),
+      printBtn: document.getElementById("print-worksheet"),
+      printAfter: document.getElementById("print-after"),
+      newBriefing: document.getElementById("new-briefing"),
+      replay: document.getElementById("replay-mission"),
+      statusBar: document.getElementById("status-bar"),
+      progress: document.getElementById("progress-text"),
+      score: document.getElementById("score-text"),
+      cipherTrack: document.getElementById("cipher-track"),
+      stage: document.getElementById("mission-stage"),
+      prompt: document.getElementById("prompt-card"),
+      choices: document.getElementById("choices"),
+      feedback: document.getElementById("feedback"),
+      unlock: document.getElementById("unlock-banner"),
+      unlockDetail: document.getElementById("unlock-detail"),
+      complete: document.getElementById("complete-panel"),
+      secretReveal: document.getElementById("secret-reveal"),
+      printPack: document.getElementById("print-pack")
+    };
+
+    function shuffle(list) {
+      const arr = [...list];
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function pickSecret() {
+      return SECRET_POOL[Math.floor(Math.random() * SECRET_POOL.length)];
+    }
+
+    function letterSlots(secret) {
+      return secret.split("").map((ch) => (ch === " " ? " " : ch));
+    }
+
+    function missionCountFor(secret) {
+      return letterSlots(secret).filter((ch) => ch !== " ").length;
+    }
+
+    function mapSvg(country, compact = false) {
+      const shapes = {
+        island: "M62 54c18-22 54-28 78-14 20 12 34 18 52 10 18-8 40-2 48 18 10 24-2 48-22 60-16 10-30 8-46 18-22 14-50 12-68-4-20-18-28-28-34-48-4-14 0-28-8-40z",
+        wide: "M34 70c28-30 70-38 118-28 36 8 70 4 96 22 18 12 28 34 18 54-12 24-40 28-66 34-34 8-62 20-96 12-28-6-52-20-64-44-8-16-4-36-6-50z",
+        long: "M88 28c22-8 40 4 48 24 8 18 22 28 22 50 0 26-14 48-36 58-24 12-50 4-62-18-10-18-8-34-2-52 6-18 10-50 30-62z",
+        hex: "M70 36l46-16 52 20 18 48-28 46-58 10-48-30-10-46z",
+        wedge: "M48 42l92-20 46 36-8 58-54 40-70-18-18-48z",
+        boot: "M86 24c18-6 34 8 38 26 4 16 16 24 14 42-2 20-18 30-18 48 0 16 10 28 4 40-8 14-28 10-40-2-14-14-8-30-4-46 4-18-8-28-10-44-2-18 8-40 16-64z"
+      };
+      const path = shapes[country.shape] || shapes.island;
+      const labelSize = compact ? 13 : 15;
+      return `
+        <svg viewBox="0 0 240 150" role="img" aria-label="${country.region} map card">
+          <rect width="240" height="150" fill="${country.mapTone}"/>
+          <g fill="none" stroke="${country.mapInk}" stroke-opacity="0.18" stroke-width="1">
+            <path d="M0 30h240M0 60h240M0 90h240M0 120h240"/>
+            <path d="M40 0v150M80 0v150M120 0v150M160 0v150M200 0v150"/>
+          </g>
+          <path d="${path}" fill="${country.mapInk}" fill-opacity="0.88"/>
+          <circle cx="196" cy="28" r="5" fill="#fff" stroke="${country.mapInk}" stroke-width="2"/>
+          <text x="14" y="24" fill="${country.mapInk}" font-family="Georgia, serif" font-size="${labelSize}" font-weight="700">${country.code}</text>
+          <text x="14" y="136" fill="${country.mapInk}" font-family="Inter, Arial, sans-serif" font-size="11" font-weight="700">${country.coords}</text>
+        </svg>
+      `;
+    }
+
+    function flagImg(country, className = "") {
+      return `<div class="${className}"><img src="${FLAG_BASE}/${country.id}.svg" alt="Flag of ${country.name}" width="160" height="120" loading="lazy"></div>`;
+    }
+
+    function renderCipherTrack() {
+      const slots = letterSlots(state.secret);
+      let unlockedLetters = 0;
+      els.cipherTrack.innerHTML = slots.map((ch) => {
+        if (ch === " ") return `<div class="cipher-slot space" aria-hidden="true"></div>`;
+        const open = unlockedLetters < state.unlocked;
+        unlockedLetters += 1;
+        return `<div class="cipher-slot${open ? " unlocked" : ""}">${open ? ch : "·"}</div>`;
+      }).join("");
+    }
+
+    function updateStatus() {
+      els.progress.textContent = `Mission ${Math.min(state.index + 1, state.deck.length)} / ${state.deck.length}`;
+      els.score.textContent = `Unlocked ${state.unlocked} / ${missionCountFor(state.secret)} letters`;
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      els.modeFlagMap.setAttribute("aria-pressed", mode === "flag-map" ? "true" : "false");
+      els.modeMapFlag.setAttribute("aria-pressed", mode === "map-flag" ? "true" : "false");
+    }
+
+    function currentCountry() {
+      return state.deck[state.index];
+    }
+
+    function choiceCountries(correct) {
+      const others = shuffle(COUNTRIES.filter((c) => c.id !== correct.id)).slice(0, 3);
+      return shuffle([correct, ...others]);
+    }
+
+    function renderPrompt(country) {
+      if (state.mode === "flag-map") {
+        els.prompt.innerHTML = `
+          <p class="prompt-label">Intercepted flag</p>
+          ${flagImg(country, "flag-hero")}
+          <h2 class="prompt-title">Which map zone matches this flag?</h2>
+        `;
+        return;
+      }
+      els.prompt.innerHTML = `
+        <p class="prompt-label">Mission map zone ${country.code}</p>
+        <div class="map-hero">${mapSvg(country)}</div>
+        <h2 class="prompt-title">Which flag belongs to this zone?</h2>
+      `;
+    }
+
+    function renderChoices(correct) {
+      const options = choiceCountries(correct);
+      els.choices.innerHTML = options.map((country) => {
+        if (state.mode === "flag-map") {
+          return `
+            <button type="button" class="choice" data-id="${country.id}" role="listitem">
+              <div class="map-choice-visual">${mapSvg(country, true)}</div>
+              <p class="choice-meta">${country.region}</p>
+              <p class="choice-sub">${country.code} · ${country.coords}</p>
+            </button>
+          `;
+        }
+        return `
+          <button type="button" class="choice" data-id="${country.id}" role="listitem">
+            ${flagImg(country, "choice-flag")}
+            <p class="choice-meta">${country.name}</p>
+            <p class="choice-sub">${country.code}</p>
+          </button>
+        `;
+      }).join("");
+    }
+
+    function showFeedback(kind, text) {
+      els.feedback.className = `feedback ${kind}`;
+      els.feedback.textContent = text;
+    }
+
+    function finishMission() {
+      els.stage.hidden = true;
+      els.complete.classList.add("show");
+      els.secretReveal.textContent = state.secret;
+      els.newBriefing.hidden = false;
+    }
+
+    function advanceAfterCorrect() {
+      state.unlocked += 1;
+      renderCipherTrack();
+      updateStatus();
+      els.unlockDetail.textContent = `Cipher letter ${state.unlocked} unlocked. Next transmission standing by…`;
+      els.unlock.classList.add("show");
+
+      window.setTimeout(() => {
+        els.unlock.classList.remove("show");
+        state.index += 1;
+        state.locked = false;
+        if (state.index >= state.deck.length) {
+          finishMission();
+          return;
+        }
+        renderRound();
+      }, 900);
+    }
+
+    function onChoice(event) {
+      const button = event.target.closest(".choice");
+      if (!button || state.locked) return;
+      const correct = currentCountry();
+      const picked = button.getAttribute("data-id");
+      const all = [...els.choices.querySelectorAll(".choice")];
+
+      if (picked === correct.id) {
+        state.locked = true;
+        button.classList.add("correct");
+        all.forEach((btn) => { btn.disabled = true; });
+        showFeedback("good", `Clearance granted: ${correct.name}.`);
+        advanceAfterCorrect();
+        return;
+      }
+
+      button.classList.add("wrong");
+      button.disabled = true;
+      showFeedback("bad", "Wrong zone. Try another map signal.");
+    }
+
+    function renderRound() {
+      const country = currentCountry();
+      els.feedback.textContent = "";
+      els.feedback.className = "feedback";
+      els.unlock.classList.remove("show");
+      renderPrompt(country);
+      renderChoices(country);
+      updateStatus();
+    }
+
+    function startMission() {
+      state.secret = pickSecret();
+      const count = missionCountFor(state.secret);
+      state.deck = shuffle(COUNTRIES).slice(0, count);
+      state.index = 0;
+      state.unlocked = 0;
+      state.locked = false;
+
+      els.statusBar.hidden = false;
+      els.cipherTrack.hidden = false;
+      els.stage.hidden = false;
+      els.complete.classList.remove("show");
+      els.newBriefing.hidden = false;
+      renderCipherTrack();
+      renderRound();
+      els.stage.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function buildPrintSheet() {
+      const secret = pickSecret();
+      const count = missionCountFor(secret);
+      const missions = shuffle(COUNTRIES).slice(0, count).map((correct) => {
+        const options = choiceCountries(correct).map((c) =>
+          state.mode === "flag-map"
+            ? `${c.region} (${c.code})`
+            : `${c.name} (${c.code})`
+        );
+        return { correct, options };
+      });
+
+      const slots = letterSlots(secret).map((ch) =>
+        ch === " "
+          ? `<div class="print-slot space"></div>`
+          : `<div class="print-slot"></div>`
+      ).join("");
+
+      const missionBlocks = missions.map((item, idx) => {
+        const visual = state.mode === "flag-map"
+          ? `<div class="print-flag"><img src="${FLAG_BASE}/${item.correct.id}.svg" alt="Flag of ${item.correct.name}"></div>`
+          : `<div class="print-map">${mapSvg(item.correct, true)}</div>`;
+        const question = state.mode === "flag-map"
+          ? `${idx + 1}. Which map zone matches this flag?`
+          : `${idx + 1}. Which flag matches map zone ${item.correct.code}?`;
+        return `
+          <section class="print-mission">
+            ${visual}
+            <div>
+              <p class="print-q">${question}</p>
+              <ol class="print-options" type="A">
+                ${item.options.map((opt) => `<li>${opt}</li>`).join("")}
+              </ol>
+              <div class="print-answer-line"></div>
+            </div>
+          </section>
+        `;
+      }).join("");
+
+      const answerLines = missions.map((item, idx) => {
+        const answer = state.mode === "flag-map"
+          ? `${item.correct.region} / ${item.correct.code}`
+          : `${item.correct.name} / ${item.correct.code}`;
+        return `${idx + 1}. ${answer}`;
+      }).join(" · ");
+
+      els.printPack.innerHTML = `
+        <article class="print-sheet">
+          <header class="print-header">
+            <h1>Flag &amp; Map Cipher Worksheet</h1>
+            <p>CipherPrint HQ</p>
+          </header>
+          <p class="print-brief">
+            Agent briefing: solve each geography signal, then write the unlocked cipher letters below.
+            Mode: ${state.mode === "flag-map" ? "Flag → Map" : "Map → Flag"}.
+          </p>
+          ${missionBlocks}
+          <section class="print-cipher-box">
+            <h2>Cipher clue track</h2>
+            <p>Fill one letter after each correct answer. Spaces stay blank.</p>
+            <div class="print-slots">${slots}</div>
+          </section>
+          <section class="print-key">
+            <h2>Answer key — flip to read</h2>
+            <p>${answerLines}</p>
+            <p>Secret message: ${secret}</p>
+          </section>
+        </article>
+      `;
+    }
+
+    function printWorksheet() {
+      buildPrintSheet();
+      document.body.offsetHeight;
+      window.print();
+    }
+
+    els.modeFlagMap.addEventListener("click", () => setMode("flag-map"));
+    els.modeMapFlag.addEventListener("click", () => setMode("map-flag"));
+    els.start.addEventListener("click", startMission);
+    els.newBriefing.addEventListener("click", startMission);
+    els.replay.addEventListener("click", startMission);
+    els.printBtn.addEventListener("click", printWorksheet);
+    els.printAfter.addEventListener("click", printWorksheet);
+    els.choices.addEventListener("click", onChoice);
+  </script>
+</body>
+</html>
