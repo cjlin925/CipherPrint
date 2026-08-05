@@ -278,7 +278,7 @@
     }
 
     .stage-wrap {
-      --stage-max-height: min(640px, calc(100dvh - 13.5rem));
+      --stage-max-height: min(640px, calc(100svh - 13.5rem));
       position: relative;
       box-sizing: border-box;
       width: min(100%, 420px, calc(var(--stage-max-height) * 420 / 640));
@@ -292,6 +292,7 @@
       overflow: hidden;
       touch-action: none;
       user-select: none;
+      flex: 0 0 auto;
     }
 
     #game-canvas {
@@ -491,7 +492,7 @@
       }
 
       .stage-wrap {
-        --stage-max-height: min(640px, calc(100dvh - 10.5rem));
+        --stage-max-height: min(640px, calc(100svh - 10.5rem));
       }
 
       .hud {
@@ -503,16 +504,14 @@
       }
     }
 
-    @media (max-height: 760px) {
-      .intro { display: none; }
-      .disclaimer { display: none; }
-      .hint-card { display: none; }
-      .stage-wrap {
-        --stage-max-height: min(640px, calc(100dvh - 12.5rem));
-      }
-
-      .evo-chip .evo-name { display: none; }
-      .evo-chip { min-height: 2.6rem; }
+    /* Applied once via JS so scroll/chrome show-hide doesn't reflow the board */
+    html.compact-ui .intro { display: none; }
+    html.compact-ui .disclaimer { display: none; }
+    html.compact-ui .hint-card { display: none; }
+    html.compact-ui .evo-chip .evo-name { display: none; }
+    html.compact-ui .evo-chip { min-height: 2.6rem; }
+    html.compact-ui .stage-wrap {
+      --stage-max-height: min(640px, calc(100svh - 12.5rem));
     }
   </style>
 </head>
@@ -1179,6 +1178,51 @@
       });
 
       restartBtn.addEventListener("click", resetGame);
+
+      // Lock board size so mobile browser chrome show/hide on scroll
+      // cannot shrink/expand the playfield mid-game.
+      const stageWrap = document.getElementById("stage-wrap");
+      let lockedViewportWidth = 0;
+
+      function lockStageSize(force = false) {
+        const viewportWidth = window.innerWidth;
+        if (!force && lockedViewportWidth && Math.abs(viewportWidth - lockedViewportWidth) < 40) {
+          return;
+        }
+        lockedViewportWidth = viewportWidth;
+
+        document.documentElement.classList.toggle("compact-ui", window.innerHeight < 760);
+
+        // Clear lock to measure natural CSS size, then freeze pixel dimensions.
+        stageWrap.style.width = "";
+        stageWrap.style.height = "";
+        stageWrap.style.maxHeight = "";
+        stageWrap.style.aspectRatio = "";
+
+        const parentWidth = stageWrap.parentElement.getBoundingClientRect().width;
+        const chromeBudget = document.documentElement.classList.contains("compact-ui") ? 210 : 250;
+        // Use stable small-viewport height; fall back to innerHeight at lock time.
+        const stableH = Math.min(
+          640,
+          (window.innerHeight || 640) - chromeBudget
+        );
+        const width = Math.max(
+          220,
+          Math.min(420, parentWidth, stableH * (420 / 640))
+        );
+        const height = width * (640 / 420);
+
+        stageWrap.style.width = `${Math.round(width)}px`;
+        stageWrap.style.height = `${Math.round(height)}px`;
+        stageWrap.style.maxHeight = "none";
+        stageWrap.style.aspectRatio = "auto";
+      }
+
+      lockStageSize(true);
+      window.addEventListener("orientationchange", () => {
+        window.setTimeout(() => lockStageSize(true), 250);
+      });
+      window.addEventListener("resize", () => lockStageSize(false));
 
       nextPiece = randomNextPiece();
       buildWorld();
