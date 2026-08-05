@@ -1,0 +1,21 @@
+{
+  "name": "CipherPrint",
+  "short_name": "CipherPrint",
+  "description": "Printable offline cryptography mission generator",
+  "start_url": "/CipherPrint/",
+  "display": "standalone",
+  "background_color": "#f4f6f4",
+  "theme_color": "#215c42",
+  "icons": [
+    {
+      "src": "/CipherPrint/favicon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/CipherPrint/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
