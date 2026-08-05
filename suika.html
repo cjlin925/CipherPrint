@@ -243,6 +243,7 @@
       border-radius: 999px;
       font-size: 1.4rem;
       line-height: 1;
+      background: transparent;
     }
 
     .hint-card p {
@@ -256,16 +257,16 @@
     .stage-wrap {
       --stage-max-height: min(640px, calc(100dvh - 13.5rem));
       position: relative;
-      box-sizing: content-box;
+      box-sizing: border-box;
       width: min(100%, 420px, calc(var(--stage-max-height) * 420 / 640));
-      height: auto;
+      max-width: 100%;
       aspect-ratio: 420 / 640;
       max-height: var(--stage-max-height);
       margin: 0.85rem auto 0;
       border-radius: 0.85rem;
-      overflow: hidden;
       border: 3px solid var(--board-edge);
       background: linear-gradient(180deg, #fff8ea 0%, var(--board) 48%, #efe4cf 100%);
+      overflow: hidden;
       touch-action: none;
       user-select: none;
     }
@@ -274,6 +275,8 @@
       display: block;
       width: 100%;
       height: 100%;
+      max-width: 100%;
+      max-height: 100%;
       cursor: pointer;
       vertical-align: top;
     }
@@ -604,7 +607,6 @@
       }
 
       function fruitOptions(tier) {
-        const def = FRUITS[tier];
         return {
           label: "fruit",
           restitution: 0.08,
@@ -614,9 +616,7 @@
           density: 0.0018 + tier * 0.00012,
           slop: 0.01,
           render: {
-            fillStyle: def.color,
-            strokeStyle: def.color,
-            lineWidth: 0
+            visible: false
           }
         };
       }
@@ -639,7 +639,7 @@
       function updateNextPreview() {
         const def = FRUITS[nextTier];
         nextFruitEl.textContent = def.emoji;
-        nextFruitEl.style.background = def.color;
+        nextFruitEl.style.background = "transparent";
         nextFruitEl.title = def.name;
       }
 
@@ -788,13 +788,13 @@
         ctx.fillText("DANGER", WALL + 8, DANGER_Y - 8);
         ctx.restore();
 
-        // Emoji faces sized to the physics body (no oversized glow/shadow)
+        // Draw only the emoji at the physics body size (no colored halo circle)
         const bodies = Composite.allBodies(world);
         for (const body of bodies) {
           if (body.label !== "fruit") continue;
           const tier = body.fruitTier;
           const def = FRUITS[tier];
-          const size = def.radius * 2;
+          const size = body.circleRadius * 2;
           ctx.save();
           ctx.translate(body.position.x, body.position.y);
           ctx.rotate(body.angle);
@@ -819,20 +819,20 @@
         });
         world = engine.world;
 
-        const floor = Bodies.rectangle(WIDTH / 2, HEIGHT - WALL / 2, WIDTH, WALL, {
+        const floor = Bodies.rectangle(WIDTH / 2, HEIGHT - WALL / 2, WIDTH - WALL * 2, WALL, {
           isStatic: true,
           friction: 0.9,
-          render: { fillStyle: "#c9b897", strokeStyle: "#b39b74", lineWidth: 1 }
+          render: { fillStyle: "#c9b897", strokeStyle: "#c9b897", lineWidth: 0 }
         });
         const left = Bodies.rectangle(WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
           isStatic: true,
           friction: 0.85,
-          render: { fillStyle: "#d7c6a4", strokeStyle: "#c9b897", lineWidth: 1 }
+          render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
         const right = Bodies.rectangle(WIDTH - WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
           isStatic: true,
           friction: 0.85,
-          render: { fillStyle: "#d7c6a4", strokeStyle: "#c9b897", lineWidth: 1 }
+          render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
         Composite.add(world, [floor, left, right]);
 
@@ -844,9 +844,16 @@
             height: HEIGHT,
             wireframes: false,
             background: "transparent",
-            pixelRatio: Math.min(window.devicePixelRatio || 1, 2)
+            pixelRatio: 1,
+            hasBounds: false
           }
         });
+
+        // Keep CSS size in sync so the full board (right wall + floor) stays visible
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
 
         Events.on(engine, "collisionStart", (event) => {
           for (const pair of event.pairs) {
