@@ -256,6 +256,7 @@
     .stage-wrap {
       --stage-max-height: min(640px, calc(100dvh - 13.5rem));
       position: relative;
+      box-sizing: content-box;
       width: min(100%, 420px, calc(var(--stage-max-height) * 420 / 640));
       height: auto;
       aspect-ratio: 420 / 640;
