@@ -494,7 +494,7 @@
       <h1 id="merge-title">Merge Game</h1>
       <p class="intro">
         Drop fruits into the box. When two of the same kind touch, they merge into the next fruit.
-        Keep the stack below the danger line — and chase the watermelon.
+        Occasionally you’ll get a bomb — drop it to blast nearby fruits. Keep the stack below the danger line.
       </p>
 
       <div class="hud">
@@ -539,6 +539,7 @@
         <span class="evo-chip" title="Pineapple">🍍</span>
         <span class="evo-chip" title="Melon">🍈</span>
         <span class="evo-chip" title="Watermelon">🍉</span>
+        <span class="evo-chip" title="Bomb">💣</span>
       </div>
 
       <p class="disclaimer">
@@ -590,8 +591,12 @@
       const GAME_OVER_MS = 2000;
       const DROP_COOLDOWN_MS = 420;
       const MAX_SPAWN_TIER = 4;
+      const BOMB_CHANCE = 0.12;
+      const BOMB_RADIUS = 22;
+      const BLAST_RADIUS = 100;
+      const BOMB = { name: "Bomb", emoji: "💣", radius: BOMB_RADIUS };
 
-      // Step 2: fruit definitions (smallest → largest)
+      // Fruit definitions (smallest → largest)
       const FRUITS = [
         { name: "Cherry",     emoji: "🍒", radius: 14, color: "#e85d6b", score: 1  },
         { name: "Strawberry", emoji: "🍓", radius: 18, color: "#ff6b81", score: 3  },
@@ -615,18 +620,29 @@
 
       let engine, world, render, runner;
       let score = 0;
-      let nextTier = 0;
-      let currentTier = 0;
+      let nextPiece = { type: "fruit", tier: 0 };
+      let currentPiece = { type: "fruit", tier: 0 };
       let previewBody = null;
       let canDrop = true;
       let gameOver = false;
       let mergeLock = new Set();
+      let bombLock = new Set();
       let dangerSince = null;
       let pointerX = WIDTH / 2;
       let lastDropAt = 0;
+      let blasts = [];
 
       function randomSpawnTier() {
         return Math.floor(Common.random(0, MAX_SPAWN_TIER + 1));
+      }
+
+      function randomNextPiece() {
+        if (Math.random() < BOMB_CHANCE) return { type: "bomb" };
+        return { type: "fruit", tier: randomSpawnTier() };
+      }
+
+      function pieceRadius(piece) {
+        return piece.type === "bomb" ? BOMB.radius : FRUITS[piece.tier].radius;
       }
 
       function fruitOptions(tier) {
@@ -638,9 +654,7 @@
           frictionAir: 0.01,
           density: 0.0018 + tier * 0.00012,
           slop: 0.01,
-          render: {
-            visible: false
-          }
+          render: { visible: false }
         };
       }
 
@@ -651,19 +665,48 @@
           ...options
         });
         body.fruitTier = tier;
+        body.pieceType = "fruit";
         return body;
       }
 
-      function clampDropX(x, tier) {
-        const r = FRUITS[tier].radius;
+      function createBomb(x, y, options = {}) {
+        const body = Bodies.circle(x, y, BOMB.radius, {
+          label: "bomb",
+          restitution: 0.05,
+          friction: 0.4,
+          frictionStatic: 0.6,
+          frictionAir: 0.01,
+          density: 0.0024,
+          slop: 0.01,
+          render: { visible: false },
+          ...options
+        });
+        body.pieceType = "bomb";
+        body.bombArmed = !options.isPreview;
+        return body;
+      }
+
+      function createPiece(piece, x, y, options = {}) {
+        return piece.type === "bomb"
+          ? createBomb(x, y, options)
+          : createFruit(piece.tier, x, y, options);
+      }
+
+      function clampDropX(x, piece) {
+        const r = pieceRadius(piece);
         return Math.max(WALL + r + 2, Math.min(WIDTH - WALL - r - 2, x));
       }
 
       function updateNextPreview() {
-        const def = FRUITS[nextTier];
-        nextFruitEl.textContent = def.emoji;
+        if (nextPiece.type === "bomb") {
+          nextFruitEl.textContent = BOMB.emoji;
+          nextFruitEl.title = BOMB.name;
+        } else {
+          const def = FRUITS[nextPiece.tier];
+          nextFruitEl.textContent = def.emoji;
+          nextFruitEl.title = def.name;
+        }
         nextFruitEl.style.background = "transparent";
-        nextFruitEl.title = def.name;
       }
 
       function setScore(value) {
@@ -680,17 +723,19 @@
       function spawnPreview() {
         removePreview();
         if (gameOver) return;
-        currentTier = nextTier;
-        nextTier = randomSpawnTier();
+        currentPiece = nextPiece;
+        nextPiece = randomNextPiece();
         updateNextPreview();
 
-        const x = clampDropX(pointerX, currentTier);
-        previewBody = createFruit(currentTier, x, DROP_Y, {
+        const x = clampDropX(pointerX, currentPiece);
+        previewBody = createPiece(currentPiece, x, DROP_Y, {
           isStatic: true,
           isSensor: true,
+          isPreview: true,
           collisionFilter: { mask: 0 }
         });
         previewBody.isPreview = true;
+        previewBody.bombArmed = false;
         Composite.add(world, previewBody);
         canDrop = true;
       }
@@ -705,7 +750,7 @@
         if (!previewBody || gameOver || !canDrop) return;
         pointerX = pointerToWorldX(clientX);
         Body.setPosition(previewBody, {
-          x: clampDropX(pointerX, currentTier),
+          x: clampDropX(pointerX, currentPiece),
           y: DROP_Y
         });
       }
@@ -718,10 +763,10 @@
         canDrop = false;
 
         const x = previewBody.position.x;
-        const tier = currentTier;
+        const piece = currentPiece;
         removePreview();
 
-        const body = createFruit(tier, x, DROP_Y);
+        const body = createPiece(piece, x, DROP_Y);
         Body.setVelocity(body, { x: 0, y: 2.2 });
         Body.applyForce(body, body.position, { x: 0, y: 0.004 });
         Composite.add(world, body);
@@ -731,10 +776,54 @@
         }, DROP_COOLDOWN_MS);
       }
 
+      function explodeBomb(bomb) {
+        if (!bomb || bomb.isPreview || bombLock.has(bomb.id)) return;
+        bombLock.add(bomb.id);
+
+        const bx = bomb.position.x;
+        const by = bomb.position.y;
+        const victims = Composite.allBodies(world).filter((body) => {
+          if (body === bomb) return false;
+          if (body.isPreview || body.isStatic) return false;
+          if (body.label !== "fruit") return false;
+          const dx = body.position.x - bx;
+          const dy = body.position.y - by;
+          const reach = BLAST_RADIUS + (body.circleRadius || 0);
+          return dx * dx + dy * dy <= reach * reach;
+        });
+
+        let gained = 2;
+        for (const fruit of victims) {
+          gained += Math.max(1, Math.floor((FRUITS[fruit.fruitTier]?.score || 1) * 0.5));
+        }
+
+        const toRemove = [bomb, ...victims];
+        Composite.remove(world, toRemove);
+        setScore(score + gained);
+        blasts.push({ x: bx, y: by, start: performance.now(), radius: BLAST_RADIUS });
+
+        window.setTimeout(() => bombLock.delete(bomb.id), 200);
+      }
+
+      function handleBombCollision(bodyA, bodyB) {
+        const bomb = bodyA.label === "bomb" ? bodyA : bodyB.label === "bomb" ? bodyB : null;
+        if (!bomb || bomb.isPreview || !bomb.bombArmed) return;
+        const other = bomb === bodyA ? bodyB : bodyA;
+        if (other.isPreview) return;
+        // Explode on fruit contact or landing on floor/walls
+        if (other.label === "fruit" || other.isStatic) {
+          explodeBomb(bomb);
+        }
+      }
+
       function tryMerge(bodyA, bodyB) {
         if (gameOver) return;
         if (!bodyA || !bodyB) return;
         if (bodyA.isPreview || bodyB.isPreview) return;
+        if (bodyA.label === "bomb" || bodyB.label === "bomb") {
+          handleBombCollision(bodyA, bodyB);
+          return;
+        }
         if (bodyA.label !== "fruit" || bodyB.label !== "fruit") return;
 
         const tierA = bodyA.fruitTier;
@@ -766,11 +855,11 @@
       function checkGameOver(timestamp) {
         if (gameOver) return;
 
-        const fruits = Composite.allBodies(world).filter(
-          (b) => b.label === "fruit" && !b.isPreview && !b.isStatic
+        const stackables = Composite.allBodies(world).filter(
+          (b) => (b.label === "fruit" || b.label === "bomb") && !b.isPreview && !b.isStatic
         );
 
-        const overLine = fruits.some((body) => {
+        const overLine = stackables.some((body) => {
           const top = body.position.y - body.circleRadius;
           return top < DANGER_Y;
         });
@@ -793,8 +882,29 @@
         Runner.stop(runner);
       }
 
+      function drawBlasts(ctx, now) {
+        blasts = blasts.filter((blast) => now - blast.start < 420);
+        for (const blast of blasts) {
+          const t = (now - blast.start) / 420;
+          const radius = blast.radius * (0.35 + t * 0.9);
+          const alpha = 1 - t;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(blast.x, blast.y, radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(192, 57, 43, ${0.75 * alpha})`;
+          ctx.lineWidth = 4;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(blast.x, blast.y, radius * 0.55, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 176, 0, ${0.28 * alpha})`;
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
       function drawExtras() {
         const ctx = render.context;
+        const now = performance.now();
 
         // Danger line
         ctx.save();
@@ -811,12 +921,11 @@
         ctx.fillText("DANGER", WALL + 8, DANGER_Y - 8);
         ctx.restore();
 
-        // Draw only the emoji at the physics body size (no colored halo circle)
+        // Draw fruits and bombs as emoji only
         const bodies = Composite.allBodies(world);
         for (const body of bodies) {
-          if (body.label !== "fruit") continue;
-          const tier = body.fruitTier;
-          const def = FRUITS[tier];
+          if (body.label !== "fruit" && body.label !== "bomb") continue;
+          const emoji = body.label === "bomb" ? BOMB.emoji : FRUITS[body.fruitTier].emoji;
           const size = body.circleRadius * 2;
           ctx.save();
           ctx.translate(body.position.x, body.position.y);
@@ -824,15 +933,20 @@
           ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
-          ctx.fillText(def.emoji, 0, 0);
+          ctx.fillText(emoji, 0, 0);
           ctx.restore();
         }
+
+        drawBlasts(ctx, now);
       }
 
-      function clearFruits() {
-        const bodies = Composite.allBodies(world).filter((b) => b.label === "fruit");
+      function clearPieces() {
+        const bodies = Composite.allBodies(world).filter(
+          (b) => b.label === "fruit" || b.label === "bomb"
+        );
         if (bodies.length) Composite.remove(world, bodies);
         previewBody = null;
+        blasts = [];
       }
 
       function buildWorld() {
@@ -900,12 +1014,13 @@
         canDrop = true;
         dangerSince = null;
         mergeLock.clear();
+        bombLock.clear();
         setScore(0);
         pointerX = WIDTH / 2;
         lastDropAt = 0;
-        nextTier = randomSpawnTier();
+        nextPiece = randomNextPiece();
 
-        clearFruits();
+        clearPieces();
         if (runner && runner.enabled === false) {
           Runner.run(runner, engine);
         } else if (runner) {
@@ -940,7 +1055,7 @@
 
       restartBtn.addEventListener("click", resetGame);
 
-      nextTier = randomSpawnTier();
+      nextPiece = randomNextPiece();
       buildWorld();
       spawnPreview();
     })();
