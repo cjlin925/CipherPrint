@@ -426,7 +426,7 @@
       }
 
       .stage-wrap {
-        --stage-max-height: min(640px, calc(100dvh - 11.5rem));
+        --stage-max-height: min(640px, calc(100dvh - 10.5rem));
       }
 
       .hud {
@@ -434,8 +434,7 @@
       }
 
       .hint-card {
-        grid-column: 1 / -1;
-        text-align: left;
+        display: none;
       }
     }
 
@@ -443,8 +442,9 @@
       .intro { display: none; }
       .evolution { display: none; }
       .disclaimer { display: none; }
+      .hint-card { display: none; }
       .stage-wrap {
-        --stage-max-height: min(640px, calc(100dvh - 10.5rem));
+        --stage-max-height: min(640px, calc(100dvh - 9.5rem));
       }
     }
   </style>
