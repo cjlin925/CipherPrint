@@ -1529,16 +1529,19 @@
       }
 
       function onDeviceMotion(event) {
-        const acc = event.accelerationIncludingGravity || event.acceleration;
+        const acc = event.acceleration || event.accelerationIncludingGravity;
         if (!acc || acc.x == null || acc.y == null || acc.z == null) return;
         const sample = { x: acc.x, y: acc.y, z: acc.z, t: performance.now() };
-        if (lastMotionSample) {
-          const dt = Math.max(16, sample.t - lastMotionSample.t);
+        if (lastMotionSample && sample.t - lastMotionSample.t < 80) {
           const dx = sample.x - lastMotionSample.x;
           const dy = sample.y - lastMotionSample.y;
           const dz = sample.z - lastMotionSample.z;
-          const jerk = Math.hypot(dx, dy, dz) * (1000 / dt);
-          if (jerk > SHAKE_THRESHOLD * 12) shakeBoard();
+          // Prefer linear acceleration; fall back to including-gravity deltas.
+          const delta = Math.hypot(dx, dy, dz);
+          const hardShake = event.acceleration
+            ? delta > SHAKE_THRESHOLD
+            : delta > SHAKE_THRESHOLD * 1.35;
+          if (hardShake) shakeBoard();
         }
         lastMotionSample = sample;
       }
