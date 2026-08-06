@@ -749,7 +749,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.2.3</span>
+        <span class="build-version">Food Merge v1.2.4</span>
       </p>
     </section>
   </main>
@@ -814,18 +814,18 @@
       const SHAKE_COOLDOWN_MS = 1100;
 
       // 10-stage food chain (Level 1 → Level 10)
-      // Slightly smaller radii; jellybean stays half the egg.
+      // Slightly larger radii; jellybean stays half the egg.
       const ITEMS = [
-        { name: "Jellybean",               emoji: "🍬", radius: 14, score: 1  },
-        { name: "Boiled Egg",              emoji: "🥚", radius: 28, score: 3  },
-        { name: "Doughnut",                emoji: "🍩", radius: 33, score: 6  },
-        { name: "Waffle",                  emoji: "🧇", radius: 38, score: 10 },
-        { name: "Croissant",               emoji: "🥐", radius: 43, score: 15 },
-        { name: "Baguette",                emoji: "🥖", radius: 47, score: 22 },
-        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 51, score: 30 },
-        { name: "Hot Dog",                 emoji: "🌭", radius: 55, score: 40 },
-        { name: "Burger",                  emoji: "🍔", radius: 58, score: 52 },
-        { name: "Birthday Cake",           emoji: "🎂", radius: 62, score: 70 }
+        { name: "Jellybean",               emoji: "🍬", radius: 17, score: 1  },
+        { name: "Boiled Egg",              emoji: "🥚", radius: 34, score: 3  },
+        { name: "Doughnut",                emoji: "🍩", radius: 40, score: 6  },
+        { name: "Waffle",                  emoji: "🧇", radius: 46, score: 10 },
+        { name: "Croissant",               emoji: "🥐", radius: 52, score: 15 },
+        { name: "Baguette",                emoji: "🥖", radius: 56, score: 22 },
+        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 61, score: 30 },
+        { name: "Hot Dog",                 emoji: "🌭", radius: 66, score: 40 },
+        { name: "Burger",                  emoji: "🍔", radius: 70, score: 52 },
+        { name: "Birthday Cake",           emoji: "🎂", radius: 75, score: 70 }
       ];
 
       const canvas = document.getElementById("game-canvas");
@@ -1485,7 +1485,7 @@
         });
 
         // Two fixed circular obstacles in the mission box
-        const obstacleA = Bodies.circle(170, 420, 30, {
+        const obstacleA = Bodies.circle(170, 360, 30, {
           isStatic: true,
           label: "obstacle",
           friction: 0.15,
@@ -1493,7 +1493,7 @@
           restitution: 0.45,
           render: { visible: false }
         });
-        const obstacleB = Bodies.circle(390, 555, 36, {
+        const obstacleB = Bodies.circle(390, 490, 36, {
           isStatic: true,
           label: "obstacle",
           friction: 0.15,
