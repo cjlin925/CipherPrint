@@ -289,12 +289,12 @@
     }
 
     .stage-wrap {
-      --stage-max-height: min(640px, calc(100svh - 13.5rem));
+      --stage-max-height: min(760px, calc(100svh - 11.5rem));
       position: relative;
       box-sizing: border-box;
-      width: min(100%, 420px, calc(var(--stage-max-height) * 420 / 640));
+      width: min(100%, 480px, calc(var(--stage-max-height) * 480 / 760));
       max-width: 100%;
-      aspect-ratio: 420 / 640;
+      aspect-ratio: 480 / 760;
       max-height: var(--stage-max-height);
       margin: 0.85rem auto 0;
       border-radius: 0.85rem;
@@ -304,6 +304,46 @@
       touch-action: none;
       user-select: none;
       flex: 0 0 auto;
+    }
+
+    .stage-wrap.is-shaking {
+      animation: board-shake 0.55s linear;
+    }
+
+    @keyframes board-shake {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      10% { transform: translate(-6px, 3px) rotate(-0.6deg); }
+      20% { transform: translate(7px, -4px) rotate(0.7deg); }
+      30% { transform: translate(-8px, -2px) rotate(-0.5deg); }
+      40% { transform: translate(6px, 5px) rotate(0.6deg); }
+      50% { transform: translate(-5px, -4px) rotate(-0.4deg); }
+      60% { transform: translate(8px, 2px) rotate(0.5deg); }
+      70% { transform: translate(-7px, 4px) rotate(-0.7deg); }
+      80% { transform: translate(5px, -3px) rotate(0.4deg); }
+      90% { transform: translate(-4px, 2px) rotate(-0.3deg); }
+    }
+
+    .gravity-toast {
+      position: absolute;
+      left: 50%;
+      top: 12%;
+      z-index: 4;
+      transform: translateX(-50%);
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(23, 32, 27, 0.82);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 160ms ease;
+    }
+
+    .gravity-toast.show {
+      opacity: 1;
     }
 
     #game-canvas {
@@ -532,7 +572,7 @@
       }
 
       .stage-wrap {
-        --stage-max-height: min(640px, calc(100svh - 10.5rem));
+        --stage-max-height: min(720px, calc(100svh - 10.5rem));
       }
 
       .hud {
@@ -550,7 +590,12 @@
     html.compact-ui .evo-chip .evo-name { display: none; }
     html.compact-ui .evo-chip { min-height: 2.6rem; }
     html.compact-ui .stage-wrap {
-      --stage-max-height: min(640px, calc(100svh - 12.5rem));
+      --stage-max-height: min(720px, calc(100svh - 12.5rem));
+    }
+
+    .evo-chip.gravity-chip {
+      border-color: rgba(46, 125, 160, 0.45);
+      background: rgba(46, 125, 160, 0.1);
     }
   </style>
 </head>
@@ -577,8 +622,8 @@
       <h1 id="food-merge-title">Food Merge</h1>
       <p class="intro">
         Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
-        from jellybean all the way to birthday cake. Bouncy obstacles send food flying; bombs clear crowded stacks.
-        Keep everything below the danger line.
+        from jellybean all the way to birthday cake. Bombs clear stacks; gravity tilts nudge the pull.
+        Shake your phone hard to jolt the board. Keep everything below the danger line.
       </p>
 
       <div class="hud">
@@ -597,7 +642,8 @@
       </div>
 
       <div class="stage-wrap" id="stage-wrap">
-        <canvas id="game-canvas" width="420" height="640" aria-label="Food merge game board"></canvas>
+        <canvas id="game-canvas" width="480" height="760" aria-label="Food merge game board"></canvas>
+        <div class="gravity-toast" id="gravity-toast" aria-live="polite"></div>
         <div class="overlay" id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
           <div class="overlay-card">
             <h2 id="game-over-title">Kitchen Chaos</h2>
@@ -671,11 +717,16 @@
           <span class="evo-level">Special</span>
           <span class="evo-name">Snack Bomb — clears nearby food</span>
         </div>
+        <div class="evo-chip gravity-chip" title="Gravity Tilt">
+          <span class="evo-icon">🧭</span>
+          <span class="evo-level">Special</span>
+          <span class="evo-name">Gravity Tilt — tips pull under 30°</span>
+        </div>
       </div>
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.1.0</span>
+        <span class="build-version">Food Merge v1.2.0</span>
       </p>
     </section>
   </main>
@@ -715,34 +766,41 @@
     (() => {
       const { Engine, Render, Runner, Bodies, Body, Composite, Events, Common } = Matter;
 
-      const WIDTH = 420;
-      const HEIGHT = 640;
+      const WIDTH = 480;
+      const HEIGHT = 760;
       const WALL = 18;
-      const DROP_Y = 72;
-      const DANGER_Y = 118;
+      const DROP_Y = 52;
+      const DANGER_Y = 96;
       const GAME_OVER_MS = 2000;
       const DROP_COOLDOWN_MS = 420;
       const MAX_SPAWN_TIER = 3; // Levels 1–4 only as random drops
-      const BOMB_CHANCE = 0.12;
-      const BOMB_RADIUS = 20;
-      const BLAST_RADIUS = 50;
+      const BOMB_CHANCE = 0.10;
+      const GRAVITY_CHANCE = 0.08;
+      const BOMB_RADIUS = 18;
+      const BLAST_RADIUS = 46;
+      const GRAVITY_RADIUS = 18;
       const BOMB = { name: "Snack Bomb", emoji: "💣", radius: BOMB_RADIUS };
+      const GRAVITY_ITEM = { name: "Gravity Tilt", emoji: "🧭", radius: GRAVITY_RADIUS };
+      const BASE_GRAVITY = 1.05;
+      const MAX_GRAVITY_TILT_DEG = 29;
       const MAX_TIER = 9; // Level 10 index
       const SETTLE_SPEED = 0.55; // only piled/settled food can trigger game over
+      const SHAKE_THRESHOLD = 28;
+      const SHAKE_COOLDOWN_MS = 1200;
 
       // 10-stage food chain (Level 1 → Level 10)
-      // Jellybean is half the egg radius, then sizes step up smoothly.
+      // Slightly smaller radii; jellybean stays half the egg.
       const ITEMS = [
-        { name: "Jellybean",               emoji: "🍬", radius: 16, score: 1  },
-        { name: "Boiled Egg",              emoji: "🥚", radius: 32, score: 3  },
-        { name: "Doughnut",                emoji: "🍩", radius: 38, score: 6  },
-        { name: "Waffle",                  emoji: "🧇", radius: 44, score: 10 },
-        { name: "Croissant",               emoji: "🥐", radius: 50, score: 15 },
-        { name: "Baguette",                emoji: "🥖", radius: 55, score: 22 },
-        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 60, score: 30 },
-        { name: "Hot Dog",                 emoji: "🌭", radius: 64, score: 40 },
-        { name: "Burger",                  emoji: "🍔", radius: 68, score: 52 },
-        { name: "Birthday Cake",           emoji: "🎂", radius: 72, score: 70 }
+        { name: "Jellybean",               emoji: "🍬", radius: 14, score: 1  },
+        { name: "Boiled Egg",              emoji: "🥚", radius: 28, score: 3  },
+        { name: "Doughnut",                emoji: "🍩", radius: 33, score: 6  },
+        { name: "Waffle",                  emoji: "🧇", radius: 38, score: 10 },
+        { name: "Croissant",               emoji: "🥐", radius: 43, score: 15 },
+        { name: "Baguette",                emoji: "🥖", radius: 47, score: 22 },
+        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 51, score: 30 },
+        { name: "Hot Dog",                 emoji: "🌭", radius: 55, score: 40 },
+        { name: "Burger",                  emoji: "🍔", radius: 58, score: 52 },
+        { name: "Birthday Cake",           emoji: "🎂", radius: 62, score: 70 }
       ];
 
       const canvas = document.getElementById("game-canvas");
@@ -755,6 +813,8 @@
       const cipherCodeEl = document.getElementById("cipher-code");
       const cipherHintEl = document.getElementById("cipher-hint");
       const restartBtn = document.getElementById("restart-btn");
+      const gravityToastEl = document.getElementById("gravity-toast");
+      const stageWrapEl = document.getElementById("stage-wrap");
 
       let engine, world, render, runner;
       let score = 0;
@@ -766,23 +826,40 @@
       let missionWon = false;
       let mergeLock = new Set();
       let bombLock = new Set();
+      let gravityLock = new Set();
       let dangerSince = null;
       let pointerX = WIDTH / 2;
       let lastDropAt = 0;
       let blasts = [];
       let unlockedCipher = null;
+      let lastShakeAt = 0;
+      let lastMotionSample = null;
+      let motionPermissionAsked = false;
+      let gravityToastTimer = null;
+
+      function isSpecialLabel(label) {
+        return label === "bomb" || label === "gravity";
+      }
+
+      function isPlayPieceLabel(label) {
+        return label === "item" || isSpecialLabel(label);
+      }
 
       function randomSpawnTier() {
         return Math.floor(Common.random(0, MAX_SPAWN_TIER + 1));
       }
 
       function randomNextPiece() {
-        if (Math.random() < BOMB_CHANCE) return { type: "bomb" };
+        const roll = Math.random();
+        if (roll < BOMB_CHANCE) return { type: "bomb" };
+        if (roll < BOMB_CHANCE + GRAVITY_CHANCE) return { type: "gravity" };
         return { type: "item", tier: randomSpawnTier() };
       }
 
       function pieceRadius(piece) {
-        return piece.type === "bomb" ? BOMB.radius : ITEMS[piece.tier].radius;
+        if (piece.type === "bomb") return BOMB.radius;
+        if (piece.type === "gravity") return GRAVITY_ITEM.radius;
+        return ITEMS[piece.tier].radius;
       }
 
       function itemOptions(tier) {
@@ -826,10 +903,27 @@
         return body;
       }
 
+      function createGravityPiece(x, y, options = {}) {
+        const body = Bodies.circle(x, y, GRAVITY_ITEM.radius, {
+          label: "gravity",
+          restitution: 0.15,
+          friction: 0.35,
+          frictionStatic: 0.5,
+          frictionAir: 0.01,
+          density: 0.002,
+          slop: 0.01,
+          render: { visible: false },
+          ...options
+        });
+        body.pieceType = "gravity";
+        body.gravityArmed = !options.isPreview;
+        return body;
+      }
+
       function createPiece(piece, x, y, options = {}) {
-        return piece.type === "bomb"
-          ? createBomb(x, y, options)
-          : createItem(piece.tier, x, y, options);
+        if (piece.type === "bomb") return createBomb(x, y, options);
+        if (piece.type === "gravity") return createGravityPiece(x, y, options);
+        return createItem(piece.tier, x, y, options);
       }
 
       function clampDropX(x, piece) {
@@ -841,6 +935,9 @@
         if (nextPiece.type === "bomb") {
           nextFruitEl.textContent = BOMB.emoji;
           nextFruitEl.title = BOMB.name;
+        } else if (nextPiece.type === "gravity") {
+          nextFruitEl.textContent = GRAVITY_ITEM.emoji;
+          nextFruitEl.title = GRAVITY_ITEM.name;
         } else {
           const def = ITEMS[nextPiece.tier];
           nextFruitEl.textContent = def.emoji;
@@ -880,6 +977,7 @@
         });
         previewBody.isPreview = true;
         previewBody.bombArmed = false;
+        previewBody.gravityArmed = false;
         Composite.add(world, previewBody);
         canDrop = true;
       }
@@ -896,6 +994,7 @@
         });
         previewBody.isPreview = true;
         previewBody.bombArmed = false;
+        previewBody.gravityArmed = false;
         Composite.add(world, previewBody);
       }
 
@@ -973,6 +1072,39 @@
         window.setTimeout(() => bombLock.delete(bomb.id), 200);
       }
 
+      function showGravityToast(degrees) {
+        if (!gravityToastEl) return;
+        const sign = degrees > 0 ? "+" : "";
+        gravityToastEl.textContent = `Gravity tilt ${sign}${degrees.toFixed(0)}°`;
+        gravityToastEl.classList.add("show");
+        if (gravityToastTimer) window.clearTimeout(gravityToastTimer);
+        gravityToastTimer = window.setTimeout(() => {
+          gravityToastEl.classList.remove("show");
+        }, 1400);
+      }
+
+      function applyGravityTilt() {
+        const tiltDeg = (Math.random() * 2 - 1) * MAX_GRAVITY_TILT_DEG;
+        const tiltRad = (tiltDeg * Math.PI) / 180;
+        engine.gravity.x = Math.sin(tiltRad) * BASE_GRAVITY;
+        engine.gravity.y = Math.cos(tiltRad) * BASE_GRAVITY;
+        for (const body of Composite.allBodies(world)) {
+          if (body.isStatic || body.isPreview) continue;
+          if (!isPlayPieceLabel(body.label)) continue;
+          if (body.isSleeping) Body.set(body, { isSleeping: false });
+        }
+        showGravityToast(tiltDeg);
+        setScore(score + 3);
+      }
+
+      function activateGravityPiece(piece) {
+        if (!piece || piece.isPreview || gravityLock.has(piece.id)) return;
+        gravityLock.add(piece.id);
+        applyGravityTilt();
+        Composite.remove(world, piece);
+        window.setTimeout(() => gravityLock.delete(piece.id), 200);
+      }
+
       function handleBombCollision(bodyA, bodyB) {
         const bomb = bodyA.label === "bomb" ? bodyA : bodyB.label === "bomb" ? bodyB : null;
         if (!bomb || bomb.isPreview || !bomb.bombArmed) return;
@@ -983,9 +1115,26 @@
           other.label === "item" ||
           other.label === "obstacle" ||
           other.label === "floor" ||
-          other.label === "wall"
+          other.label === "wall" ||
+          other.label === "gravity"
         ) {
           explodeBomb(bomb);
+        }
+      }
+
+      function handleGravityCollision(bodyA, bodyB) {
+        const piece = bodyA.label === "gravity" ? bodyA : bodyB.label === "gravity" ? bodyB : null;
+        if (!piece || piece.isPreview || !piece.gravityArmed) return;
+        const other = piece === bodyA ? bodyB : bodyA;
+        if (other.isPreview) return;
+        if (
+          other.label === "item" ||
+          other.label === "obstacle" ||
+          other.label === "floor" ||
+          other.label === "wall" ||
+          other.label === "bomb"
+        ) {
+          activateGravityPiece(piece);
         }
       }
 
@@ -994,11 +1143,15 @@
         if (!obstacle) return;
         const item = obstacle === bodyA ? bodyB : bodyA;
         if (item.isPreview || item.isStatic) return;
-        if (item.label !== "item" && item.label !== "bomb") return;
+        if (!isPlayPieceLabel(item.label)) return;
 
         // Bombs still explode on obstacle contact
         if (item.label === "bomb" && item.bombArmed) {
           explodeBomb(item);
+          return;
+        }
+        if (item.label === "gravity" && item.gravityArmed) {
+          activateGravityPiece(item);
           return;
         }
 
@@ -1061,6 +1214,10 @@
           handleBombCollision(bodyA, bodyB);
           return;
         }
+        if (bodyA.label === "gravity" || bodyB.label === "gravity") {
+          handleGravityCollision(bodyA, bodyB);
+          return;
+        }
         if (bodyA.label !== "item" || bodyB.label !== "item") return;
 
         const tierA = bodyA.itemTier;
@@ -1099,7 +1256,7 @@
         // Only settled piles count — bouncing food that briefly crosses
         // the danger line should not end the game.
         const piled = Composite.allBodies(world).filter((b) => {
-          if ((b.label !== "item" && b.label !== "bomb") || b.isPreview || b.isStatic) {
+          if (!isPlayPieceLabel(b.label) || b.isPreview || b.isStatic) {
             return false;
           }
           const top = b.position.y - b.circleRadius;
@@ -1194,8 +1351,13 @@
 
         const bodies = Composite.allBodies(world);
         for (const body of bodies) {
-          if (body.label !== "item" && body.label !== "bomb") continue;
-          const emoji = body.label === "bomb" ? BOMB.emoji : ITEMS[body.itemTier].emoji;
+          if (!isPlayPieceLabel(body.label)) continue;
+          const emoji =
+            body.label === "bomb"
+              ? BOMB.emoji
+              : body.label === "gravity"
+                ? GRAVITY_ITEM.emoji
+                : ITEMS[body.itemTier].emoji;
           const size = body.circleRadius * 2;
           ctx.save();
           ctx.translate(body.position.x, body.position.y);
@@ -1211,9 +1373,7 @@
       }
 
       function clearPieces() {
-        const bodies = Composite.allBodies(world).filter(
-          (b) => b.label === "item" || b.label === "bomb"
-        );
+        const bodies = Composite.allBodies(world).filter((b) => isPlayPieceLabel(b.label));
         if (bodies.length) Composite.remove(world, bodies);
         previewBody = null;
         blasts = [];
@@ -1221,7 +1381,7 @@
 
       function buildWorld() {
         engine = Engine.create({
-          gravity: { x: 0, y: 1.05 },
+          gravity: { x: 0, y: BASE_GRAVITY },
           enableSleeping: true
         });
         world = engine.world;
@@ -1253,7 +1413,7 @@
         });
 
         // Two fixed circular obstacles in the mission box
-        const obstacleA = Bodies.circle(128, 360, 30, {
+        const obstacleA = Bodies.circle(145, 420, 30, {
           isStatic: true,
           label: "obstacle",
           friction: 0.01,
@@ -1261,7 +1421,7 @@
           restitution: 1.2,
           render: { visible: false }
         });
-        const obstacleB = Bodies.circle(292, 470, 36, {
+        const obstacleB = Bodies.circle(335, 555, 36, {
           isStatic: true,
           label: "obstacle",
           friction: 0.01,
@@ -1315,6 +1475,7 @@
         dangerSince = null;
         mergeLock.clear();
         bombLock.clear();
+        gravityLock.clear();
         unlockedCipher = null;
         cipherCodeEl.hidden = true;
         cipherHintEl.hidden = true;
@@ -1325,6 +1486,11 @@
         pointerX = WIDTH / 2;
         lastDropAt = 0;
         nextPiece = randomNextPiece();
+        if (engine) {
+          engine.gravity.x = 0;
+          engine.gravity.y = BASE_GRAVITY;
+        }
+        if (gravityToastEl) gravityToastEl.classList.remove("show");
 
         clearPieces();
         if (runner && runner.enabled === false) {
@@ -1336,6 +1502,70 @@
         spawnPreview();
       }
 
+      function shakeBoard() {
+        if (gameOver || !world) return;
+        const now = performance.now();
+        if (now - lastShakeAt < SHAKE_COOLDOWN_MS) return;
+        lastShakeAt = now;
+
+        if (stageWrapEl) {
+          stageWrapEl.classList.remove("is-shaking");
+          // Force reflow so re-adding the class restarts the animation
+          void stageWrapEl.offsetWidth;
+          stageWrapEl.classList.add("is-shaking");
+          window.setTimeout(() => stageWrapEl.classList.remove("is-shaking"), 560);
+        }
+
+        for (const body of Composite.allBodies(world)) {
+          if (body.isStatic || body.isPreview) continue;
+          if (!isPlayPieceLabel(body.label)) continue;
+          if (body.isSleeping) Body.set(body, { isSleeping: false });
+          Body.setVelocity(body, {
+            x: body.velocity.x + (Math.random() - 0.5) * 18,
+            y: body.velocity.y + (Math.random() - 0.5) * 14 - 4
+          });
+          Body.setAngularVelocity(body, body.angularVelocity + (Math.random() - 0.5) * 0.5);
+        }
+      }
+
+      function onDeviceMotion(event) {
+        const acc = event.accelerationIncludingGravity || event.acceleration;
+        if (!acc || acc.x == null || acc.y == null || acc.z == null) return;
+        const sample = { x: acc.x, y: acc.y, z: acc.z, t: performance.now() };
+        if (lastMotionSample) {
+          const dt = Math.max(16, sample.t - lastMotionSample.t);
+          const dx = sample.x - lastMotionSample.x;
+          const dy = sample.y - lastMotionSample.y;
+          const dz = sample.z - lastMotionSample.z;
+          const jerk = Math.hypot(dx, dy, dz) * (1000 / dt);
+          if (jerk > SHAKE_THRESHOLD * 12) shakeBoard();
+        }
+        lastMotionSample = sample;
+      }
+
+      function enableMotionListening() {
+        window.addEventListener("devicemotion", onDeviceMotion, { passive: true });
+      }
+
+      async function requestMotionPermissionIfNeeded() {
+        if (motionPermissionAsked) return;
+        motionPermissionAsked = true;
+        const request = typeof DeviceMotionEvent !== "undefined"
+          && typeof DeviceMotionEvent.requestPermission === "function"
+          ? DeviceMotionEvent.requestPermission
+          : null;
+        if (!request) {
+          enableMotionListening();
+          return;
+        }
+        try {
+          const state = await request.call(DeviceMotionEvent);
+          if (state === "granted") enableMotionListening();
+        } catch (_) {
+          // Permission denied or unavailable — shake stays off.
+        }
+      }
+
       // Pointer / mouse / touch controls
       canvas.addEventListener("pointermove", (event) => {
         movePreview(event.clientX);
@@ -1344,6 +1574,7 @@
       canvas.addEventListener("pointerdown", (event) => {
         canvas.setPointerCapture?.(event.pointerId);
         movePreview(event.clientX);
+        requestMotionPermissionIfNeeded();
       });
 
       canvas.addEventListener("pointerup", (event) => {
@@ -1363,6 +1594,7 @@
       nextCardEl.addEventListener("click", (event) => {
         event.preventDefault();
         swapCurrentAndNext();
+        requestMotionPermissionIfNeeded();
       });
       nextCardEl.addEventListener("keydown", (event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -1373,9 +1605,22 @@
 
       restartBtn.addEventListener("click", resetGame);
 
+      // Desktop / debug: press S to shake the board
+      window.addEventListener("keydown", (event) => {
+        if (event.key === "s" || event.key === "S") shakeBoard();
+      });
+
+      // Non-iOS browsers can listen immediately
+      if (
+        typeof DeviceMotionEvent === "undefined" ||
+        typeof DeviceMotionEvent.requestPermission !== "function"
+      ) {
+        enableMotionListening();
+      }
+
       // Lock board size so mobile browser chrome show/hide on scroll
       // cannot shrink/expand the playfield mid-game.
-      const stageWrap = document.getElementById("stage-wrap");
+      const stageWrap = stageWrapEl;
       let lockedViewportWidth = 0;
 
       function lockStageSize(force = false) {
@@ -1385,7 +1630,7 @@
         }
         lockedViewportWidth = viewportWidth;
 
-        document.documentElement.classList.toggle("compact-ui", window.innerHeight < 760);
+        document.documentElement.classList.toggle("compact-ui", window.innerHeight < 860);
 
         // Clear lock to measure natural CSS size, then freeze pixel dimensions.
         stageWrap.style.width = "";
@@ -1394,17 +1639,17 @@
         stageWrap.style.aspectRatio = "";
 
         const parentWidth = stageWrap.parentElement.getBoundingClientRect().width;
-        const chromeBudget = document.documentElement.classList.contains("compact-ui") ? 210 : 250;
+        const chromeBudget = document.documentElement.classList.contains("compact-ui") ? 200 : 240;
         // Use stable small-viewport height; fall back to innerHeight at lock time.
         const stableH = Math.min(
-          640,
-          (window.innerHeight || 640) - chromeBudget
+          760,
+          (window.innerHeight || 760) - chromeBudget
         );
         const width = Math.max(
           220,
-          Math.min(420, parentWidth, stableH * (420 / 640))
+          Math.min(480, parentWidth, stableH * (480 / 760))
         );
-        const height = width * (640 / 420);
+        const height = width * (760 / 480);
 
         stageWrap.style.width = `${Math.round(width)}px`;
         stageWrap.style.height = `${Math.round(height)}px`;
