@@ -189,7 +189,7 @@
     }
 
     .intro {
-      max-width: 38rem;
+      max-width: 42rem;
       margin: 0.65rem 0 0;
       color: var(--muted);
       line-height: 1.55;
@@ -309,9 +309,9 @@
       --stage-max-height: min(760px, calc(100svh - 11.5rem));
       position: relative;
       box-sizing: border-box;
-      width: min(100%, 480px, calc(var(--stage-max-height) * 480 / 760));
+      width: min(100%, 560px, calc(var(--stage-max-height) * 560 / 760));
       max-width: 100%;
-      aspect-ratio: 480 / 760;
+      aspect-ratio: 560 / 760;
       max-height: var(--stage-max-height);
       margin: 0.85rem auto 0;
       border-radius: 0.85rem;
@@ -670,7 +670,7 @@
       </div>
 
       <div class="stage-wrap" id="stage-wrap">
-        <canvas id="game-canvas" width="480" height="760" aria-label="Food merge game board"></canvas>
+        <canvas id="game-canvas" width="560" height="760" aria-label="Food merge game board"></canvas>
         <div class="gravity-toast" id="gravity-toast" aria-live="polite"></div>
         <div class="overlay" id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
           <div class="overlay-card">
@@ -754,7 +754,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.2.1</span>
+        <span class="build-version">Food Merge v1.2.2</span>
       </p>
     </section>
   </main>
@@ -794,7 +794,7 @@
     (() => {
       const { Engine, Render, Runner, Bodies, Body, Composite, Events, Common } = Matter;
 
-      const WIDTH = 480;
+      const WIDTH = 560;
       const HEIGHT = 760;
       const WALL = 18;
       const DROP_Y = 52;
@@ -813,10 +813,10 @@
       const MAX_GRAVITY_TILT_DEG = 29;
       const MAX_TIER = 9; // Level 10 index
       const SETTLE_SPEED = 0.55; // only piled/settled food can trigger game over
-      // Sensitive enough for a firm phone shake; still ignores light jostling.
-      const SHAKE_THRESHOLD = 11;
-      const SHAKE_THRESHOLD_GRAVITY = 13;
-      const SHAKE_COOLDOWN_MS = 700;
+      // Firm shake only — ignores light jostling / walking.
+      const SHAKE_THRESHOLD = 20;
+      const SHAKE_THRESHOLD_GRAVITY = 24;
+      const SHAKE_COOLDOWN_MS = 1100;
 
       // 10-stage food chain (Level 1 → Level 10)
       // Slightly smaller radii; jellybean stays half the egg.
@@ -900,10 +900,10 @@
       function itemOptions(tier) {
         return {
           label: "item",
-          restitution: 0.55,
-          friction: 0.2,
-          frictionStatic: 0.35,
-          frictionAir: 0.008,
+          restitution: 0.18,
+          friction: 0.35,
+          frictionStatic: 0.5,
+          frictionAir: 0.012,
           density: 0.0018 + tier * 0.00014,
           slop: 0.01,
           render: { visible: false }
@@ -924,10 +924,10 @@
       function createBomb(x, y, options = {}) {
         const body = Bodies.circle(x, y, BOMB.radius, {
           label: "bomb",
-          restitution: 0.05,
-          friction: 0.4,
-          frictionStatic: 0.6,
-          frictionAir: 0.01,
+          restitution: 0.04,
+          friction: 0.45,
+          frictionStatic: 0.65,
+          frictionAir: 0.014,
           density: 0.0024,
           slop: 0.01,
           render: { visible: false },
@@ -941,10 +941,10 @@
       function createGravityPiece(x, y, options = {}) {
         const body = Bodies.circle(x, y, GRAVITY_ITEM.radius, {
           label: "gravity",
-          restitution: 0.15,
-          friction: 0.35,
-          frictionStatic: 0.5,
-          frictionAir: 0.01,
+          restitution: 0.08,
+          friction: 0.4,
+          frictionStatic: 0.55,
+          frictionAir: 0.014,
           density: 0.002,
           slop: 0.01,
           render: { visible: false },
@@ -1126,7 +1126,9 @@
           gravityValueEl.textContent = `${sign}${rounded}°`;
         }
         if (gravityArrowEl) {
-          gravityArrowEl.style.setProperty("--tilt", `${tiltDeg}deg`);
+          // Positive tilt pulls right (Matter +x). CSS rotate is clockwise,
+          // so negate so the ↓ arrow tips toward the pull direction.
+          gravityArrowEl.style.setProperty("--tilt", `${-tiltDeg}deg`);
         }
         if (gravityCardEl) {
           gravityCardEl.title =
@@ -1146,14 +1148,30 @@
         if (toast) showGravityToast(tiltDeg);
       }
 
-      function applyGravityTilt() {
-        const tiltDeg = (Math.random() * 2 - 1) * MAX_GRAVITY_TILT_DEG;
-        setGravityTilt(tiltDeg, { toast: true });
+      function stirBodiesForGravity(tiltDeg) {
+        const tiltRad = (tiltDeg * Math.PI) / 180;
+        const dirX = Math.sin(tiltRad);
+        const dirY = Math.cos(tiltRad);
         for (const body of Composite.allBodies(world)) {
           if (body.isStatic || body.isPreview) continue;
           if (!isPlayPieceLabel(body.label)) continue;
-          if (body.isSleeping) Body.set(body, { isSleeping: false });
+          Body.set(body, { isSleeping: false });
+          // Nudge along the new gravity so settled piles start sliding.
+          Body.setVelocity(body, {
+            x: body.velocity.x + dirX * 3.6,
+            y: body.velocity.y + dirY * 1.1
+          });
+          Body.applyForce(body, body.position, {
+            x: dirX * body.mass * 0.005,
+            y: dirY * body.mass * 0.0012
+          });
         }
+      }
+
+      function applyGravityTilt() {
+        const tiltDeg = (Math.random() * 2 - 1) * MAX_GRAVITY_TILT_DEG;
+        setGravityTilt(tiltDeg, { toast: true });
+        stirBodiesForGravity(tiltDeg);
         setScore(score + 3);
       }
 
@@ -1221,23 +1239,23 @@
         let nx = dx / dist;
         let ny = dy / dist;
 
-        // Flat/top hits get a sideways kick so the piece flies off at an angle
+        // Soft deflect — obstacles should redirect, not rocket food away
         if (Math.abs(nx) < 0.28) {
-          nx = (item.position.x < WIDTH / 2 ? -1 : 1) * (0.7 + Math.random() * 0.35);
+          nx = (item.position.x < WIDTH / 2 ? -1 : 1) * (0.55 + Math.random() * 0.3);
           const nLen = Math.hypot(nx, ny) || 1;
           nx /= nLen;
           ny /= nLen;
         }
 
         const impact = Math.hypot(item.velocity.x, item.velocity.y);
-        const bounceSpeed = Math.max(12, Math.min(22, impact * 2.1 + 8));
-        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (3 + Math.random() * 4);
+        const bounceSpeed = Math.max(4, Math.min(9, impact * 0.85 + 2.5));
+        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (0.8 + Math.random() * 1.4);
 
         Body.setVelocity(item, {
           x: nx * bounceSpeed + sideKick,
-          y: Math.min(ny * bounceSpeed, -7)
+          y: Math.min(ny * bounceSpeed, -2.5)
         });
-        Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.6);
+        Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.25);
       }
 
       function triggerWin(cakeBody) {
@@ -1455,38 +1473,38 @@
         const ceiling = Bodies.rectangle(WIDTH / 2, WALL / 2, WIDTH - WALL * 2, WALL, {
           isStatic: true,
           label: "ceiling",
-          friction: 0.2,
-          restitution: 0.2,
+          friction: 0.35,
+          restitution: 0.05,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
         const left = Bodies.rectangle(WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
           isStatic: true,
           label: "wall",
-          friction: 0.85,
+          friction: 0.9,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
         const right = Bodies.rectangle(WIDTH - WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
           isStatic: true,
           label: "wall",
-          friction: 0.85,
+          friction: 0.9,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
 
         // Two fixed circular obstacles in the mission box
-        const obstacleA = Bodies.circle(145, 420, 30, {
+        const obstacleA = Bodies.circle(170, 420, 30, {
           isStatic: true,
           label: "obstacle",
-          friction: 0.01,
-          frictionStatic: 0.01,
-          restitution: 1.2,
+          friction: 0.15,
+          frictionStatic: 0.15,
+          restitution: 0.45,
           render: { visible: false }
         });
-        const obstacleB = Bodies.circle(335, 555, 36, {
+        const obstacleB = Bodies.circle(390, 555, 36, {
           isStatic: true,
           label: "obstacle",
-          friction: 0.01,
-          frictionStatic: 0.01,
-          restitution: 1.2,
+          friction: 0.15,
+          frictionStatic: 0.15,
+          restitution: 0.45,
           render: { visible: false }
         });
 
@@ -1735,9 +1753,9 @@
         );
         const width = Math.max(
           220,
-          Math.min(480, parentWidth, stableH * (480 / 760))
+          Math.min(560, parentWidth, stableH * (560 / 760))
         );
-        const height = width * (760 / 480);
+        const height = width * (760 / 560);
 
         stageWrap.style.width = `${Math.round(width)}px`;
         stageWrap.style.height = `${Math.round(height)}px`;
