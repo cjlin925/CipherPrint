@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Food Merge — CipherPrint</title>
-  <meta name="description" content="Food merge game: combine snacks from jellybean to birthday cake. Drop, merge, and clear the kitchen with bombs.">
+  <meta name="description" content="Food merge game: combine snacks from jellybean to birthday cake. Drop, merge, and climb the kitchen treat chain.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#215c42">
   <link rel="canonical" href="https://cjlin925.github.io/CipherPrint/food-merge.html">
@@ -647,7 +647,7 @@
       <h1 id="food-merge-title">Food Merge</h1>
       <p class="intro">
         Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
-        from jellybean all the way to birthday cake. Bombs clear stacks; gravity tilts nudge the pull.
+        from jellybean all the way to birthday cake. Gravity tilts nudge the pull.
         Shake your phone firmly to jolt the board. Keep everything below the danger line.
       </p>
 
@@ -740,11 +740,6 @@
           <span class="evo-level">Lv 10</span>
           <span class="evo-name">Birthday Cake</span>
         </div>
-        <div class="evo-chip bomb-chip" title="Snack Bomb">
-          <span class="evo-icon">💣</span>
-          <span class="evo-level">Special</span>
-          <span class="evo-name">Snack Bomb — clears nearby food</span>
-        </div>
         <div class="evo-chip gravity-chip" title="Gravity Tilt">
           <span class="evo-icon">🧭</span>
           <span class="evo-level">Special</span>
@@ -754,7 +749,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.2.2</span>
+        <span class="build-version">Food Merge v1.2.3</span>
       </p>
     </section>
   </main>
@@ -802,7 +797,7 @@
       const GAME_OVER_MS = 2000;
       const DROP_COOLDOWN_MS = 420;
       const MAX_SPAWN_TIER = 3; // Levels 1–4 only as random drops
-      const BOMB_CHANCE = 0.10;
+      const BOMB_CHANCE = 0; // bombs disabled
       const GRAVITY_CHANCE = 0.08;
       const BOMB_RADIUS = 18;
       const BLAST_RADIUS = 46;
@@ -885,9 +880,8 @@
       }
 
       function randomNextPiece() {
-        const roll = Math.random();
-        if (roll < BOMB_CHANCE) return { type: "bomb" };
-        if (roll < BOMB_CHANCE + GRAVITY_CHANCE) return { type: "gravity" };
+        // Bombs disabled — only gravity specials may appear.
+        if (Math.random() < GRAVITY_CHANCE) return { type: "gravity" };
         return { type: "item", tier: randomSpawnTier() };
       }
 
