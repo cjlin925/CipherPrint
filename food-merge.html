@@ -675,7 +675,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.0.0</span>
+        <span class="build-version">Food Merge v1.1.0</span>
       </p>
     </section>
   </main>
@@ -728,19 +728,21 @@
       const BLAST_RADIUS = 50;
       const BOMB = { name: "Snack Bomb", emoji: "💣", radius: BOMB_RADIUS };
       const MAX_TIER = 9; // Level 10 index
+      const SETTLE_SPEED = 0.55; // only piled/settled food can trigger game over
 
       // 10-stage food chain (Level 1 → Level 10)
+      // Jellybean is half the egg radius, then sizes step up smoothly.
       const ITEMS = [
-        { name: "Jellybean",               emoji: "🍬", radius: 14, score: 1  },
-        { name: "Boiled Egg",              emoji: "🥚", radius: 18, score: 3  },
-        { name: "Doughnut",                emoji: "🍩", radius: 23, score: 6  },
-        { name: "Waffle",                  emoji: "🧇", radius: 28, score: 10 },
-        { name: "Croissant",               emoji: "🥐", radius: 34, score: 15 },
-        { name: "Baguette",                emoji: "🥖", radius: 40, score: 22 },
-        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 47, score: 30 },
-        { name: "Hot Dog",                 emoji: "🌭", radius: 54, score: 40 },
-        { name: "Burger",                  emoji: "🍔", radius: 62, score: 52 },
-        { name: "Birthday Cake",           emoji: "🎂", radius: 70, score: 70 }
+        { name: "Jellybean",               emoji: "🍬", radius: 16, score: 1  },
+        { name: "Boiled Egg",              emoji: "🥚", radius: 32, score: 3  },
+        { name: "Doughnut",                emoji: "🍩", radius: 38, score: 6  },
+        { name: "Waffle",                  emoji: "🧇", radius: 44, score: 10 },
+        { name: "Croissant",               emoji: "🥐", radius: 50, score: 15 },
+        { name: "Baguette",                emoji: "🥖", radius: 55, score: 22 },
+        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 60, score: 30 },
+        { name: "Hot Dog",                 emoji: "🌭", radius: 64, score: 40 },
+        { name: "Burger",                  emoji: "🍔", radius: 68, score: 52 },
+        { name: "Birthday Cake",           emoji: "🎂", radius: 72, score: 70 }
       ];
 
       const canvas = document.getElementById("game-canvas");
@@ -976,7 +978,13 @@
         if (!bomb || bomb.isPreview || !bomb.bombArmed) return;
         const other = bomb === bodyA ? bodyB : bodyA;
         if (other.isPreview) return;
-        if (other.label === "item" || other.isStatic) {
+        // Explode on food/obstacle/floor/wall contact — not the ceiling
+        if (
+          other.label === "item" ||
+          other.label === "obstacle" ||
+          other.label === "floor" ||
+          other.label === "wall"
+        ) {
           explodeBomb(bomb);
         }
       }
@@ -1088,16 +1096,20 @@
       function checkGameOver(timestamp) {
         if (gameOver) return;
 
-        const stackables = Composite.allBodies(world).filter(
-          (b) => (b.label === "item" || b.label === "bomb") && !b.isPreview && !b.isStatic
-        );
-
-        const overLine = stackables.some((body) => {
-          const top = body.position.y - body.circleRadius;
-          return top < DANGER_Y;
+        // Only settled piles count — bouncing food that briefly crosses
+        // the danger line should not end the game.
+        const piled = Composite.allBodies(world).filter((b) => {
+          if ((b.label !== "item" && b.label !== "bomb") || b.isPreview || b.isStatic) {
+            return false;
+          }
+          const top = b.position.y - b.circleRadius;
+          if (top >= DANGER_Y) return false;
+          const speed = Math.hypot(b.velocity.x, b.velocity.y);
+          const spin = Math.abs(b.angularVelocity || 0);
+          return speed < SETTLE_SPEED && spin < 0.08;
         });
 
-        if (overLine) {
+        if (piled.length > 0) {
           if (dangerSince == null) dangerSince = timestamp;
           else if (timestamp - dangerSince >= GAME_OVER_MS) endGame();
         } else {
@@ -1216,16 +1228,26 @@
 
         const floor = Bodies.rectangle(WIDTH / 2, HEIGHT - WALL / 2, WIDTH - WALL * 2, WALL, {
           isStatic: true,
+          label: "floor",
           friction: 0.9,
           render: { fillStyle: "#c9b897", strokeStyle: "#c9b897", lineWidth: 0 }
         });
+        const ceiling = Bodies.rectangle(WIDTH / 2, WALL / 2, WIDTH - WALL * 2, WALL, {
+          isStatic: true,
+          label: "ceiling",
+          friction: 0.2,
+          restitution: 0.2,
+          render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
+        });
         const left = Bodies.rectangle(WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
           isStatic: true,
+          label: "wall",
           friction: 0.85,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
         const right = Bodies.rectangle(WIDTH - WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
           isStatic: true,
+          label: "wall",
           friction: 0.85,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
@@ -1248,7 +1270,7 @@
           render: { visible: false }
         });
 
-        Composite.add(world, [floor, left, right, obstacleA, obstacleB]);
+        Composite.add(world, [floor, ceiling, left, right, obstacleA, obstacleB]);
 
         render = Render.create({
           canvas,
