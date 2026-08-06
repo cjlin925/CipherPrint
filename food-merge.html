@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>Agent Merge — CipherPrint</title>
-  <meta name="description" content="Secret-agent merge game: combine spy gear from dried sardine to a top-secret golden briefcase and unlock a cipher code.">
+  <title>Food Merge — CipherPrint</title>
+  <meta name="description" content="Food merge game: combine snacks from jellybean to birthday cake. Drop, merge, and clear the kitchen with bombs.">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#215c42">
-  <link rel="canonical" href="https://cjlin925.github.io/CipherPrint/merge.html">
+  <link rel="canonical" href="https://cjlin925.github.io/CipherPrint/food-merge.html">
   <link rel="icon" href="/CipherPrint/favicon.ico" sizes="any">
   <link rel="icon" href="/CipherPrint/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="/CipherPrint/favicon-32.png" type="image/png" sizes="32x32">
@@ -15,13 +15,13 @@
   <link rel="manifest" href="/CipherPrint/site.webmanifest">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="CipherPrint">
-  <meta property="og:title" content="Agent Merge — CipherPrint">
-  <meta property="og:description" content="Merge secret-agent gear, build the golden briefcase, and unlock a 4-digit cipher code for your printable worksheets.">
-  <meta property="og:url" content="https://cjlin925.github.io/CipherPrint/merge.html">
+  <meta property="og:title" content="Food Merge — CipherPrint">
+  <meta property="og:description" content="Merge snacks from jellybean to birthday cake in this kitchen merge game with bouncy obstacles.">
+  <meta property="og:url" content="https://cjlin925.github.io/CipherPrint/food-merge.html">
   <meta property="og:locale" content="en_US">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Agent Merge — CipherPrint">
-  <meta name="twitter:description" content="Merge secret-agent gear, build the golden briefcase, and unlock a 4-digit cipher code for your printable worksheets.">
+  <meta name="twitter:title" content="Food Merge — CipherPrint">
+  <meta name="twitter:description" content="Merge snacks from jellybean to birthday cake in this kitchen merge game with bouncy obstacles.">
   <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
   <style>
     :root {
@@ -299,7 +299,7 @@
       margin: 0.85rem auto 0;
       border-radius: 0.85rem;
       border: 3px solid var(--board-edge);
-      background: linear-gradient(180deg, #fff8ea 0%, var(--board) 48%, #efe4cf 100%);
+      background: linear-gradient(180deg, #fff6e8 0%, #f7e8d2 48%, #f0d9b8 100%);
       overflow: hidden;
       touch-action: none;
       user-select: none;
@@ -407,7 +407,7 @@
 
     .evolution {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 0.45rem;
       margin-top: 0.9rem;
     }
@@ -564,21 +564,21 @@
       <ul class="site-nav-links">
         <li><a href="/CipherPrint/">CipherPrint</a></li>
         <li><a href="/CipherPrint/flag-map.html">Flag Map</a></li>
-        <li><a href="/CipherPrint/merge.html" aria-current="page">Agent Merge</a></li>
-        <li><a href="/CipherPrint/food-merge.html">Food Merge</a></li>
+        <li><a href="/CipherPrint/merge.html">Agent Merge</a></li>
+        <li><a href="/CipherPrint/food-merge.html" aria-current="page">Food Merge</a></li>
         <li><a href="/CipherPrint/story.html">Story</a></li>
       </ul>
     </nav>
   </header>
 
   <main class="screen">
-    <section class="panel" aria-labelledby="merge-title">
-      <p class="eyebrow">Secret agent ops</p>
-      <h1 id="merge-title">Agent Merge</h1>
+    <section class="panel" aria-labelledby="food-merge-title">
+      <p class="eyebrow">Kitchen snack ops</p>
+      <h1 id="food-merge-title">Food Merge</h1>
       <p class="intro">
-        Drop agent gear into the mission box. Merge matching tools to climb the 8-stage equipment chain.
-        Build the Top-Secret Golden Briefcase to unlock a 4-digit cipher code for your printable worksheets.
-        Watch the circular security posts, and use bombs to clear crowded gear — keep the stack below the danger line.
+        Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
+        from jellybean all the way to birthday cake. Bouncy obstacles send food flying; bombs clear crowded stacks.
+        Keep everything below the danger line.
       </p>
 
       <div class="hud">
@@ -588,7 +588,7 @@
         </div>
         <div class="next-card" id="next-card" role="button" tabindex="0" aria-label="Swap next item with current item" title="Tap to swap with current item">
           <p class="hud-label">Next</p>
-          <div class="next-fruit" id="next-fruit" aria-live="polite">🐟</div>
+          <div class="next-fruit" id="next-fruit" aria-live="polite">🍬</div>
         </div>
         <div class="hint-card">
           <p class="hud-label">Controls</p>
@@ -597,75 +597,85 @@
       </div>
 
       <div class="stage-wrap" id="stage-wrap">
-        <canvas id="game-canvas" width="420" height="640" aria-label="Agent merge game board"></canvas>
+        <canvas id="game-canvas" width="420" height="640" aria-label="Food merge game board"></canvas>
         <div class="overlay" id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
           <div class="overlay-card">
-            <h2 id="game-over-title">Mission Failed</h2>
-            <p id="overlay-message">The gear pile crossed the danger line.</p>
+            <h2 id="game-over-title">Kitchen Chaos</h2>
+            <p id="overlay-message">The snack pile crossed the danger line.</p>
             <p class="overlay-score" id="final-score">Score: 0</p>
             <p class="cipher-code" id="cipher-code" hidden></p>
             <p id="cipher-hint" hidden style="margin-top:0.55rem;color:var(--muted);font-size:0.85rem;line-height:1.4;">
-              Use this code on your companion CipherPrint worksheets.
+              Birthday Cake secured. Great kitchen merge run!
             </p>
             <div class="overlay-actions">
-              <button type="button" id="restart-btn">New Mission</button>
+              <button type="button" id="restart-btn">New Batch</button>
               <a class="secondary" href="/CipherPrint/" style="display:block;text-align:center;text-decoration:none;padding:0.85rem 1.15rem;border-radius:0.75rem;background:rgba(33,92,66,0.1);color:var(--ink);font-weight:700;">Back to CipherPrint</a>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="evolution" aria-label="Agent equipment evolution">
-        <div class="evo-chip" title="Dried Sardine">
-          <span class="evo-icon">🐟</span>
+      <div class="evolution" aria-label="Food evolution order">
+        <div class="evo-chip" title="Jellybean">
+          <span class="evo-icon">🍬</span>
           <span class="evo-level">Lv 1</span>
-          <span class="evo-name">Dried Sardine</span>
+          <span class="evo-name">Jellybean</span>
         </div>
-        <div class="evo-chip" title="Scrap Paper">
-          <span class="evo-icon">📜</span>
+        <div class="evo-chip" title="Boiled Egg">
+          <span class="evo-icon">🥚</span>
           <span class="evo-level">Lv 2</span>
-          <span class="evo-name">Scrap Paper</span>
+          <span class="evo-name">Boiled Egg</span>
         </div>
-        <div class="evo-chip" title="Magnifying Glass">
-          <span class="evo-icon">🔍</span>
+        <div class="evo-chip" title="Doughnut">
+          <span class="evo-icon">🍩</span>
           <span class="evo-level">Lv 3</span>
-          <span class="evo-name">Magnifying Glass</span>
+          <span class="evo-name">Doughnut</span>
         </div>
-        <div class="evo-chip" title="Paw Print Stamp">
-          <span class="evo-icon">🐾</span>
+        <div class="evo-chip" title="Waffle">
+          <span class="evo-icon">🧇</span>
           <span class="evo-level">Lv 4</span>
-          <span class="evo-name">Paw Print Stamp</span>
+          <span class="evo-name">Waffle</span>
         </div>
-        <div class="evo-chip" title="Encrypted USB Drive">
-          <span class="evo-icon">💾</span>
+        <div class="evo-chip" title="Croissant">
+          <span class="evo-icon">🥐</span>
           <span class="evo-level">Lv 5</span>
-          <span class="evo-name">Encrypted USB</span>
+          <span class="evo-name">Croissant</span>
         </div>
-        <div class="evo-chip" title="Brass Skeleton Key">
-          <span class="evo-icon">🗝️</span>
+        <div class="evo-chip" title="Baguette">
+          <span class="evo-icon">🥖</span>
           <span class="evo-level">Lv 6</span>
-          <span class="evo-name">Skeleton Key</span>
+          <span class="evo-name">Baguette</span>
         </div>
-        <div class="evo-chip" title="Agent Crest Badge">
-          <span class="evo-icon">🛡️</span>
+        <div class="evo-chip" title="Fried Chicken Drumstick">
+          <span class="evo-icon">🍗</span>
           <span class="evo-level">Lv 7</span>
-          <span class="evo-name">Crest Badge</span>
+          <span class="evo-name">Drumstick</span>
         </div>
-        <div class="evo-chip" title="Top-Secret Golden Briefcase">
-          <span class="evo-icon">📦</span>
+        <div class="evo-chip" title="Hot Dog">
+          <span class="evo-icon">🌭</span>
           <span class="evo-level">Lv 8</span>
-          <span class="evo-name">Golden Briefcase</span>
+          <span class="evo-name">Hot Dog</span>
         </div>
-        <div class="evo-chip bomb-chip" title="Smoke Bomb">
+        <div class="evo-chip" title="Burger">
+          <span class="evo-icon">🍔</span>
+          <span class="evo-level">Lv 9</span>
+          <span class="evo-name">Burger</span>
+        </div>
+        <div class="evo-chip" title="Birthday Cake">
+          <span class="evo-icon">🎂</span>
+          <span class="evo-level">Lv 10</span>
+          <span class="evo-name">Birthday Cake</span>
+        </div>
+        <div class="evo-chip bomb-chip" title="Snack Bomb">
           <span class="evo-icon">💣</span>
           <span class="evo-level">Special</span>
-          <span class="evo-name">Smoke Bomb — clears nearby gear</span>
+          <span class="evo-name">Snack Bomb — clears nearby food</span>
         </div>
       </div>
 
       <p class="disclaimer">
-        CipherPrint © 2026. Secret-agent merge mission for printable cipher worksheets.
-        <span class="build-version">Merge Game v1.3.0</span>
+        CipherPrint © 2026. Kitchen food merge game for offline fun.
+        <span class="build-version">Food Merge v1.0.0</span>
       </p>
     </section>
   </main>
@@ -712,23 +722,25 @@
       const DANGER_Y = 118;
       const GAME_OVER_MS = 2000;
       const DROP_COOLDOWN_MS = 420;
-      const MAX_SPAWN_TIER = 2; // Levels 1–3 only as random drops
+      const MAX_SPAWN_TIER = 3; // Levels 1–4 only as random drops
       const BOMB_CHANCE = 0.12;
       const BOMB_RADIUS = 20;
-      const BLAST_RADIUS = 50; // half of previous 100
-      const BOMB = { name: "Smoke Bomb", emoji: "💣", radius: BOMB_RADIUS };
-      const MAX_TIER = 7; // Level 8 index
+      const BLAST_RADIUS = 50;
+      const BOMB = { name: "Snack Bomb", emoji: "💣", radius: BOMB_RADIUS };
+      const MAX_TIER = 9; // Level 10 index
 
-      // 8-stage secret agent equipment (Level 1 → Level 8)
+      // 10-stage food chain (Level 1 → Level 10)
       const ITEMS = [
-        { name: "Dried Sardine",              emoji: "🐟", radius: 16, score: 1  },
-        { name: "Scrap Paper",                emoji: "📜", radius: 22, score: 3  },
-        { name: "Magnifying Glass",           emoji: "🔍", radius: 28, score: 6  },
-        { name: "Paw Print Stamp",            emoji: "🐾", radius: 34, score: 10 },
-        { name: "Encrypted USB Drive",        emoji: "💾", radius: 40, score: 16 },
-        { name: "Brass Skeleton Key",         emoji: "🗝️", radius: 48, score: 24 },
-        { name: "Agent Crest Badge",          emoji: "🛡️", radius: 56, score: 36 },
-        { name: "Top-Secret Golden Briefcase", emoji: "📦", radius: 66, score: 60 }
+        { name: "Jellybean",               emoji: "🍬", radius: 14, score: 1  },
+        { name: "Boiled Egg",              emoji: "🥚", radius: 18, score: 3  },
+        { name: "Doughnut",                emoji: "🍩", radius: 23, score: 6  },
+        { name: "Waffle",                  emoji: "🧇", radius: 28, score: 10 },
+        { name: "Croissant",               emoji: "🥐", radius: 34, score: 15 },
+        { name: "Baguette",                emoji: "🥖", radius: 40, score: 22 },
+        { name: "Fried Chicken Drumstick", emoji: "🍗", radius: 47, score: 30 },
+        { name: "Hot Dog",                 emoji: "🌭", radius: 54, score: 40 },
+        { name: "Burger",                  emoji: "🍔", radius: 62, score: 52 },
+        { name: "Birthday Cake",           emoji: "🎂", radius: 70, score: 70 }
       ];
 
       const canvas = document.getElementById("game-canvas");
@@ -1007,7 +1019,7 @@
         Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.6);
       }
 
-      function triggerWin(briefcaseBody) {
+      function triggerWin(cakeBody) {
         if (missionWon || gameOver) return;
         missionWon = true;
         gameOver = true;
@@ -1015,8 +1027,8 @@
         removePreview();
         unlockedCipher = makeCipherCode();
 
-        overlayTitle.textContent = "Briefcase Secured";
-        overlayMessage.textContent = "Top-Secret Golden Briefcase assembled. Cipher code unlocked for your printable worksheets.";
+        overlayTitle.textContent = "Cake Complete";
+        overlayMessage.textContent = "Birthday Cake assembled. The kitchen merge chain is complete!";
         finalScoreEl.textContent = `Score: ${score}`;
         cipherCodeEl.hidden = false;
         cipherHintEl.hidden = false;
@@ -1024,8 +1036,8 @@
         overlay.classList.add("show");
         Runner.stop(runner);
 
-        if (briefcaseBody && !briefcaseBody.isStatic) {
-          Body.setVelocity(briefcaseBody, { x: 0, y: -2 });
+        if (cakeBody && !cakeBody.isStatic) {
+          Body.setVelocity(cakeBody, { x: 0, y: -2 });
         }
       }
 
@@ -1046,7 +1058,7 @@
         const tierA = bodyA.itemTier;
         const tierB = bodyB.itemTier;
         if (tierA !== tierB) return;
-        if (tierA >= MAX_TIER) return; // already max briefcase
+        if (tierA >= MAX_TIER) return; // already max birthday cake
         if (mergeLock.has(bodyA.id) || mergeLock.has(bodyB.id)) return;
 
         mergeLock.add(bodyA.id);
@@ -1099,8 +1111,8 @@
         missionWon = false;
         canDrop = false;
         removePreview();
-        overlayTitle.textContent = "Mission Failed";
-        overlayMessage.textContent = "The gear pile crossed the danger line.";
+        overlayTitle.textContent = "Kitchen Chaos";
+        overlayMessage.textContent = "The snack pile crossed the danger line.";
         finalScoreEl.textContent = `Score: ${score}`;
         cipherCodeEl.hidden = true;
         cipherHintEl.hidden = true;
@@ -1285,8 +1297,8 @@
         cipherCodeEl.hidden = true;
         cipherHintEl.hidden = true;
         cipherCodeEl.textContent = "";
-        overlayTitle.textContent = "Mission Failed";
-        overlayMessage.textContent = "The gear pile crossed the danger line.";
+        overlayTitle.textContent = "Kitchen Chaos";
+        overlayMessage.textContent = "The snack pile crossed the danger line.";
         setScore(0);
         pointerX = WIDTH / 2;
         lastDropAt = 0;
