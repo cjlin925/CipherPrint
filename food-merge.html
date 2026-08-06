@@ -206,7 +206,7 @@
 
     .score-card,
     .next-card,
-    .hint-card {
+    .gravity-card {
       padding: 0.6rem 0.75rem;
       border: 1px solid var(--line);
       border-radius: 0.9rem;
@@ -214,7 +214,8 @@
     }
 
     .score-card,
-    .next-card {
+    .next-card,
+    .gravity-card {
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -239,13 +240,37 @@
     .next-card:active {
       transform: scale(0.98);
     }
-    .hint-card {
+
+    .gravity-card {
       text-align: right;
+      align-items: flex-end;
+    }
+
+    .gravity-readout {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: 5.5rem;
-      box-sizing: border-box;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.45rem;
+      min-height: 2.75rem;
+    }
+
+    .gravity-arrow {
+      display: inline-grid;
+      place-items: center;
+      width: 2.1rem;
+      height: 2.1rem;
+      border-radius: 999px;
+      background: rgba(46, 125, 160, 0.12);
+      color: #2e7da0;
+      font-size: 1.25rem;
+      line-height: 1;
+      transform: rotate(var(--tilt, 0deg));
+      transition: transform 220ms ease;
+    }
+
+    .gravity-card .hud-value {
+      min-height: 0;
+      font-size: clamp(1.1rem, 3.6vw, 1.45rem);
     }
 
     .hud-label {
@@ -278,14 +303,6 @@
       font-size: 1.4rem;
       line-height: 1;
       background: transparent;
-    }
-
-    .hint-card p {
-      margin: 0.2rem 0 0;
-      color: var(--ink);
-      font-size: 0.82rem;
-      font-weight: 650;
-      line-height: 1.35;
     }
 
     .stage-wrap {
@@ -576,21 +593,29 @@
       }
 
       .hud {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr auto;
       }
 
-      .hint-card {
-        display: none;
+      .gravity-card {
+        min-width: 5.5rem;
+        padding: 0.5rem 0.6rem;
+        min-height: 4.5rem;
       }
     }
 
     /* Applied once via JS so scroll/chrome show-hide doesn't reflow the board */
     html.compact-ui .intro { display: none; }
-    html.compact-ui .hint-card { display: none; }
     html.compact-ui .evo-chip .evo-name { display: none; }
     html.compact-ui .evo-chip { min-height: 2.6rem; }
     html.compact-ui .stage-wrap {
       --stage-max-height: min(720px, calc(100svh - 12.5rem));
+    }
+    html.compact-ui .hud {
+      grid-template-columns: 1fr 1fr auto;
+    }
+    html.compact-ui .gravity-card {
+      min-width: 5.5rem;
+      min-height: 4.5rem;
     }
 
     .evo-chip.gravity-chip {
@@ -635,9 +660,12 @@
           <p class="hud-label">Next</p>
           <div class="next-fruit" id="next-fruit" aria-live="polite">🍬</div>
         </div>
-        <div class="hint-card">
-          <p class="hud-label">Controls</p>
-          <p>Move to aim · Click to drop · Tap Next to swap</p>
+        <div class="gravity-card" id="gravity-card" title="Current gravity direction">
+          <p class="hud-label">Gravity</p>
+          <div class="gravity-readout">
+            <span class="gravity-arrow" id="gravity-arrow" aria-hidden="true">↓</span>
+            <p class="hud-value" id="gravity-value">0°</p>
+          </div>
         </div>
       </div>
 
@@ -726,7 +754,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.2.0</span>
+        <span class="build-version">Food Merge v1.2.1</span>
       </p>
     </section>
   </main>
@@ -785,8 +813,10 @@
       const MAX_GRAVITY_TILT_DEG = 29;
       const MAX_TIER = 9; // Level 10 index
       const SETTLE_SPEED = 0.55; // only piled/settled food can trigger game over
-      const SHAKE_THRESHOLD = 28;
-      const SHAKE_COOLDOWN_MS = 1200;
+      // Sensitive enough for a firm phone shake; still ignores light jostling.
+      const SHAKE_THRESHOLD = 11;
+      const SHAKE_THRESHOLD_GRAVITY = 13;
+      const SHAKE_COOLDOWN_MS = 700;
 
       // 10-stage food chain (Level 1 → Level 10)
       // Slightly smaller radii; jellybean stays half the egg.
@@ -815,6 +845,9 @@
       const restartBtn = document.getElementById("restart-btn");
       const gravityToastEl = document.getElementById("gravity-toast");
       const stageWrapEl = document.getElementById("stage-wrap");
+      const gravityValueEl = document.getElementById("gravity-value");
+      const gravityArrowEl = document.getElementById("gravity-arrow");
+      const gravityCardEl = document.getElementById("gravity-card");
 
       let engine, world, render, runner;
       let score = 0;
@@ -835,7 +868,9 @@
       let lastShakeAt = 0;
       let lastMotionSample = null;
       let motionPermissionAsked = false;
+      let motionListening = false;
       let gravityToastTimer = null;
+      let currentGravityTiltDeg = 0;
 
       function isSpecialLabel(label) {
         return label === "bomb" || label === "gravity";
@@ -1083,17 +1118,42 @@
         }, 1400);
       }
 
+      function updateGravityDisplay(tiltDeg) {
+        currentGravityTiltDeg = tiltDeg;
+        const rounded = Math.round(tiltDeg);
+        const sign = rounded > 0 ? "+" : "";
+        if (gravityValueEl) {
+          gravityValueEl.textContent = `${sign}${rounded}°`;
+        }
+        if (gravityArrowEl) {
+          gravityArrowEl.style.setProperty("--tilt", `${tiltDeg}deg`);
+        }
+        if (gravityCardEl) {
+          gravityCardEl.title =
+            rounded === 0
+              ? "Gravity straight down"
+              : `Gravity tilted ${sign}${rounded}° from down`;
+        }
+      }
+
+      function setGravityTilt(tiltDeg, { toast = false } = {}) {
+        const tiltRad = (tiltDeg * Math.PI) / 180;
+        if (engine) {
+          engine.gravity.x = Math.sin(tiltRad) * BASE_GRAVITY;
+          engine.gravity.y = Math.cos(tiltRad) * BASE_GRAVITY;
+        }
+        updateGravityDisplay(tiltDeg);
+        if (toast) showGravityToast(tiltDeg);
+      }
+
       function applyGravityTilt() {
         const tiltDeg = (Math.random() * 2 - 1) * MAX_GRAVITY_TILT_DEG;
-        const tiltRad = (tiltDeg * Math.PI) / 180;
-        engine.gravity.x = Math.sin(tiltRad) * BASE_GRAVITY;
-        engine.gravity.y = Math.cos(tiltRad) * BASE_GRAVITY;
+        setGravityTilt(tiltDeg, { toast: true });
         for (const body of Composite.allBodies(world)) {
           if (body.isStatic || body.isPreview) continue;
           if (!isPlayPieceLabel(body.label)) continue;
           if (body.isSleeping) Body.set(body, { isSleeping: false });
         }
-        showGravityToast(tiltDeg);
         setScore(score + 3);
       }
 
@@ -1486,10 +1546,7 @@
         pointerX = WIDTH / 2;
         lastDropAt = 0;
         nextPiece = randomNextPiece();
-        if (engine) {
-          engine.gravity.x = 0;
-          engine.gravity.y = BASE_GRAVITY;
-        }
+        setGravityTilt(0);
         if (gravityToastEl) gravityToastEl.classList.remove("show");
 
         clearPieces();
@@ -1529,43 +1586,62 @@
       }
 
       function onDeviceMotion(event) {
-        const acc = event.acceleration || event.accelerationIncludingGravity;
-        if (!acc || acc.x == null || acc.y == null || acc.z == null) return;
-        const sample = { x: acc.x, y: acc.y, z: acc.z, t: performance.now() };
-        if (lastMotionSample && sample.t - lastMotionSample.t < 80) {
-          const dx = sample.x - lastMotionSample.x;
-          const dy = sample.y - lastMotionSample.y;
-          const dz = sample.z - lastMotionSample.z;
-          // Prefer linear acceleration; fall back to including-gravity deltas.
-          const delta = Math.hypot(dx, dy, dz);
-          const hardShake = event.acceleration
-            ? delta > SHAKE_THRESHOLD
-            : delta > SHAKE_THRESHOLD * 1.35;
-          if (hardShake) shakeBoard();
+        const now = performance.now();
+        const lin = event.acceleration;
+        const grav = event.accelerationIncludingGravity;
+
+        // Prefer true linear acceleration when the device reports it.
+        if (lin && (lin.x != null || lin.y != null || lin.z != null)) {
+          const mag = Math.hypot(lin.x || 0, lin.y || 0, lin.z || 0);
+          if (mag >= SHAKE_THRESHOLD) {
+            shakeBoard();
+            return;
+          }
+        }
+
+        // Fallback: sudden change in accelerationIncludingGravity.
+        if (!grav || (grav.x == null && grav.y == null && grav.z == null)) return;
+        const sample = { x: grav.x || 0, y: grav.y || 0, z: grav.z || 0, t: now };
+        if (lastMotionSample) {
+          const dt = sample.t - lastMotionSample.t;
+          if (dt > 0 && dt < 250) {
+            const delta = Math.hypot(
+              sample.x - lastMotionSample.x,
+              sample.y - lastMotionSample.y,
+              sample.z - lastMotionSample.z
+            );
+            if (delta >= SHAKE_THRESHOLD_GRAVITY) shakeBoard();
+          }
         }
         lastMotionSample = sample;
       }
 
       function enableMotionListening() {
+        if (motionListening) return;
+        motionListening = true;
         window.addEventListener("devicemotion", onDeviceMotion, { passive: true });
       }
 
       async function requestMotionPermissionIfNeeded() {
-        if (motionPermissionAsked) return;
-        motionPermissionAsked = true;
-        const request = typeof DeviceMotionEvent !== "undefined"
-          && typeof DeviceMotionEvent.requestPermission === "function"
-          ? DeviceMotionEvent.requestPermission
-          : null;
-        if (!request) {
+        if (motionListening) return;
+        const needsPermission =
+          typeof DeviceMotionEvent !== "undefined" &&
+          typeof DeviceMotionEvent.requestPermission === "function";
+
+        if (!needsPermission) {
           enableMotionListening();
+          motionPermissionAsked = true;
           return;
         }
+
+        if (motionPermissionAsked) return;
+        motionPermissionAsked = true;
         try {
-          const state = await request.call(DeviceMotionEvent);
+          const state = await DeviceMotionEvent.requestPermission();
           if (state === "granted") enableMotionListening();
         } catch (_) {
           // Permission denied or unavailable — shake stays off.
+          motionPermissionAsked = false;
         }
       }
 
@@ -1592,6 +1668,13 @@
         if (event.clientX < rect.left - 40 || event.clientX > rect.right + 40) return;
         movePreview(event.clientX);
       });
+
+      // Ask for motion sensors on any first interaction (iOS requires a gesture).
+      const askMotionOnce = () => {
+        requestMotionPermissionIfNeeded();
+      };
+      window.addEventListener("touchstart", askMotionOnce, { passive: true, once: true });
+      window.addEventListener("click", askMotionOnce, { once: true });
 
       const nextCardEl = document.getElementById("next-card");
       nextCardEl.addEventListener("click", (event) => {
@@ -1620,6 +1703,8 @@
       ) {
         enableMotionListening();
       }
+
+      updateGravityDisplay(0);
 
       // Lock board size so mobile browser chrome show/hide on scroll
       // cannot shrink/expand the playfield mid-game.
