@@ -679,7 +679,7 @@
         Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
         from jellybean all the way to birthday cake. Clear three kitchen stages: more pegs, then more cats.
         Gravity tilts nudge the pull; kitchen cats crawl in and gobble two snacks before vanishing —
-        or starve after five seconds. Bounce too hard into the ceiling and a snack can smash.
+        or starve after three seconds. Bounce too hard into the ceiling and a snack can smash.
         Shake your phone firmly to jolt the board. Keep everything below the danger line.
       </p>
 
@@ -786,13 +786,13 @@
         <div class="evo-chip cat-chip" title="Kitchen Cat">
           <span class="evo-icon">🐱</span>
           <span class="evo-level">Special</span>
-          <span class="evo-name">Kitchen Cat — crawls, eats 2, starves in 5s</span>
+          <span class="evo-name">Kitchen Cat — crawls, eats 2, starves in 3s</span>
         </div>
       </div>
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.4.0</span>
+        <span class="build-version">Food Merge v1.4.1</span>
       </p>
     </section>
   </main>
@@ -860,7 +860,7 @@
       const CEILING_SMASH_SPEED_TOTAL = 12;
       const CAT_EAT_TARGET = 2;
       const CAT_CRAWL_STEP = 2.6;
-      const CAT_STARVE_MS = 5000;
+      const CAT_STARVE_MS = 3000;
 
       const STAGES = [
         {
@@ -881,9 +881,9 @@
           gravityChance: 0.08,
           catChance: 0.03,
           obstacles: [
-            { x: 140, y: 330, r: 28 },
-            { x: 280, y: 470, r: 34 },
-            { x: 420, y: 350, r: 30 }
+            { x: 90, y: 250, r: 28 },
+            { x: 470, y: 310, r: 30 },
+            { x: 280, y: 560, r: 34 }
           ]
         },
         {
@@ -1071,6 +1071,8 @@
         body.catEaten = 0;
         body.catDir = 1;
         body.catBornAt = 0;
+        body.catBouncing = false;
+        body.catBounceUntil = 0;
         return body;
       }
 
@@ -1389,8 +1391,56 @@
         cat.catActive = true;
         cat.catEaten = cat.catEaten || 0;
         cat.catBornAt = performance.now();
+        cat.catBouncing = false;
+        cat.catBounceUntil = 0;
         Body.set(cat, {
           isSleeping: false,
+          restitution: 0,
+          friction: 1,
+          frictionStatic: 1,
+          frictionAir: 0.15,
+          inertia: Infinity
+        });
+        Body.setVelocity(cat, { x: 0, y: 0 });
+        Body.setAngularVelocity(cat, 0);
+      }
+
+      function bounceCatOffObstacle(cat, obstacle) {
+        if (!cat || cat.isPreview) return;
+        activateCat(cat);
+        const dx = cat.position.x - obstacle.position.x;
+        const dy = cat.position.y - obstacle.position.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        let nx = dx / dist;
+        let ny = dy / dist;
+        if (Math.abs(nx) < 0.25) {
+          nx = (cat.position.x < WIDTH / 2 ? -1 : 1) * (0.65 + Math.random() * 0.3);
+          const nLen = Math.hypot(nx, ny) || 1;
+          nx /= nLen;
+          ny /= nLen;
+        }
+
+        const bounceSpeed = 11 + Math.random() * 4;
+        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.random() * 3);
+        cat.catBouncing = true;
+        cat.catBounceUntil = performance.now() + 520;
+        Body.set(cat, {
+          isSleeping: false,
+          restitution: 0.6,
+          frictionAir: 0.015
+        });
+        Body.setVelocity(cat, {
+          x: nx * bounceSpeed + sideKick,
+          y: Math.min(ny * bounceSpeed, -7)
+        });
+        Body.setAngularVelocity(cat, (Math.random() - 0.5) * 0.45);
+      }
+
+      function endCatBounce(cat) {
+        if (!cat) return;
+        cat.catBouncing = false;
+        cat.catBounceUntil = 0;
+        Body.set(cat, {
           restitution: 0,
           friction: 1,
           frictionStatic: 1,
@@ -1492,6 +1542,17 @@
             continue;
           }
 
+          // After an obstacle hit, let the bounce play out before crawling again
+          if (body.catBouncing) {
+            const speed = Math.hypot(body.velocity.x, body.velocity.y);
+            if (now >= (body.catBounceUntil || 0) || speed < 1.4) {
+              endCatBounce(body);
+            } else {
+              Body.set(body, { isSleeping: false });
+              continue;
+            }
+          }
+
           Body.set(body, { isSleeping: false, restitution: 0 });
 
           const foods = Composite.allBodies(world).filter(
@@ -1567,7 +1628,7 @@
           return;
         }
         if (item.label === "cat") {
-          activateCat(item);
+          bounceCatOffObstacle(item, obstacle);
           return;
         }
 
