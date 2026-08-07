@@ -622,6 +622,11 @@
       border-color: rgba(46, 125, 160, 0.45);
       background: rgba(46, 125, 160, 0.1);
     }
+
+    .evo-chip.cat-chip {
+      border-color: rgba(196, 120, 48, 0.45);
+      background: rgba(196, 120, 48, 0.1);
+    }
   </style>
 </head>
 <body>
@@ -647,9 +652,9 @@
       <h1 id="food-merge-title">Food Merge</h1>
       <p class="intro">
         Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
-        from jellybean all the way to birthday cake. Gravity tilts nudge the pull.
-        Bounce too hard into the ceiling and a snack can smash. Shake your phone firmly to jolt the board.
-        Keep everything below the danger line.
+        from jellybean all the way to birthday cake. Gravity tilts nudge the pull; kitchen cats crawl in
+        and gobble two snacks before vanishing. Bounce too hard into the ceiling and a snack can smash.
+        Shake your phone firmly to jolt the board. Keep everything below the danger line.
       </p>
 
       <div class="hud">
@@ -746,11 +751,16 @@
           <span class="evo-level">Special</span>
           <span class="evo-name">Gravity Tilt — tips pull under 30°</span>
         </div>
+        <div class="evo-chip cat-chip" title="Kitchen Cat">
+          <span class="evo-icon">🐱</span>
+          <span class="evo-level">Special</span>
+          <span class="evo-name">Kitchen Cat — crawls, eats 2 snacks</span>
+        </div>
       </div>
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.2.6</span>
+        <span class="build-version">Food Merge v1.3.0</span>
       </p>
     </section>
   </main>
@@ -800,11 +810,14 @@
       const MAX_SPAWN_TIER = 3; // Levels 1–4 only as random drops
       const BOMB_CHANCE = 0; // bombs disabled
       const GRAVITY_CHANCE = 0.08;
+      const CAT_CHANCE = 0.07;
       const BOMB_RADIUS = 18;
       const BLAST_RADIUS = 46;
       const GRAVITY_RADIUS = 18;
+      const CAT_RADIUS = 22;
       const BOMB = { name: "Snack Bomb", emoji: "💣", radius: BOMB_RADIUS };
       const GRAVITY_ITEM = { name: "Gravity Tilt", emoji: "🧭", radius: GRAVITY_RADIUS };
+      const CAT = { name: "Kitchen Cat", emoji: "🐱", radius: CAT_RADIUS };
       const BASE_GRAVITY = 1.05;
       const MAX_GRAVITY_TILT_DEG = 29;
       const MAX_TIER = 9; // Level 10 index
@@ -815,6 +828,8 @@
       const SHAKE_COOLDOWN_MS = 1100;
       const CEILING_SMASH_SPEED = 9; // upward speed into ceiling that destroys food
       const CEILING_SMASH_SPEED_TOTAL = 12;
+      const CAT_EAT_TARGET = 2;
+      const CAT_CRAWL_SPEED = 3.5;
 
       // 10-stage food chain (Level 1 → Level 10)
       // Slightly larger radii; jellybean stays half the egg.
@@ -859,11 +874,13 @@
       let bombLock = new Set();
       let gravityLock = new Set();
       let smashLock = new Set();
+      let catEatLock = new Set();
       let dangerSince = null;
       let pointerX = WIDTH / 2;
       let lastDropAt = 0;
       let blasts = [];
       let smashes = [];
+      let bites = [];
       let unlockedCipher = null;
       let lastShakeAt = 0;
       let lastMotionSample = null;
@@ -873,7 +890,7 @@
       let currentGravityTiltDeg = 0;
 
       function isSpecialLabel(label) {
-        return label === "bomb" || label === "gravity";
+        return label === "bomb" || label === "gravity" || label === "cat";
       }
 
       function isPlayPieceLabel(label) {
@@ -885,14 +902,17 @@
       }
 
       function randomNextPiece() {
-        // Bombs disabled — only gravity specials may appear.
-        if (Math.random() < GRAVITY_CHANCE) return { type: "gravity" };
+        // Bombs disabled — gravity tilts and kitchen cats may appear.
+        const roll = Math.random();
+        if (roll < GRAVITY_CHANCE) return { type: "gravity" };
+        if (roll < GRAVITY_CHANCE + CAT_CHANCE) return { type: "cat" };
         return { type: "item", tier: randomSpawnTier() };
       }
 
       function pieceRadius(piece) {
         if (piece.type === "bomb") return BOMB.radius;
         if (piece.type === "gravity") return GRAVITY_ITEM.radius;
+        if (piece.type === "cat") return CAT.radius;
         return ITEMS[piece.tier].radius;
       }
 
@@ -954,9 +974,29 @@
         return body;
       }
 
+      function createCat(x, y, options = {}) {
+        const body = Bodies.circle(x, y, CAT.radius, {
+          label: "cat",
+          restitution: 0.15,
+          friction: 0.12,
+          frictionStatic: 0.2,
+          frictionAir: 0.02,
+          density: 0.0016,
+          slop: 0.01,
+          render: { visible: false },
+          ...options
+        });
+        body.pieceType = "cat";
+        body.catActive = false;
+        body.catEaten = 0;
+        body.catDir = 1;
+        return body;
+      }
+
       function createPiece(piece, x, y, options = {}) {
         if (piece.type === "bomb") return createBomb(x, y, options);
         if (piece.type === "gravity") return createGravityPiece(x, y, options);
+        if (piece.type === "cat") return createCat(x, y, options);
         return createItem(piece.tier, x, y, options);
       }
 
@@ -972,6 +1012,9 @@
         } else if (nextPiece.type === "gravity") {
           nextFruitEl.textContent = GRAVITY_ITEM.emoji;
           nextFruitEl.title = GRAVITY_ITEM.name;
+        } else if (nextPiece.type === "cat") {
+          nextFruitEl.textContent = CAT.emoji;
+          nextFruitEl.title = CAT.name;
         } else {
           const def = ITEMS[nextPiece.tier];
           nextFruitEl.textContent = def.emoji;
@@ -1012,6 +1055,7 @@
         previewBody.isPreview = true;
         previewBody.bombArmed = false;
         previewBody.gravityArmed = false;
+        previewBody.catActive = false;
         Composite.add(world, previewBody);
         canDrop = true;
       }
@@ -1029,6 +1073,7 @@
         previewBody.isPreview = true;
         previewBody.bombArmed = false;
         previewBody.gravityArmed = false;
+        previewBody.catActive = false;
         Composite.add(world, previewBody);
       }
 
@@ -1215,6 +1260,143 @@
         }
       }
 
+      function activateCat(cat) {
+        if (!cat || cat.isPreview || cat.catActive) return;
+        cat.catActive = true;
+        cat.catEaten = cat.catEaten || 0;
+        Body.set(cat, { isSleeping: false, frictionAir: 0.04 });
+      }
+
+      function despawnCat(cat) {
+        if (!cat || cat.isPreview || catEatLock.has(`gone-${cat.id}`)) return;
+        catEatLock.add(`gone-${cat.id}`);
+        bites.push({
+          x: cat.position.x,
+          y: cat.position.y,
+          start: performance.now(),
+          emoji: CAT.emoji,
+          kind: "leave"
+        });
+        Composite.remove(world, cat);
+        window.setTimeout(() => catEatLock.delete(`gone-${cat.id}`), 200);
+      }
+
+      function catEatFood(cat, food) {
+        if (!cat || !food || cat.isPreview || food.isPreview) return;
+        if (food.label !== "item") return;
+        if (!cat.catActive) activateCat(cat);
+        if (catEatLock.has(food.id) || catEatLock.has(`cat-${cat.id}-${food.id}`)) return;
+        catEatLock.add(food.id);
+        catEatLock.add(`cat-${cat.id}-${food.id}`);
+
+        const def = ITEMS[food.itemTier] || ITEMS[0];
+        const gained = Math.max(1, Math.floor(def.score * 0.35));
+        const fx = food.position.x;
+        const fy = food.position.y;
+        Composite.remove(world, food);
+        setScore(score + gained);
+        bites.push({
+          x: fx,
+          y: fy,
+          start: performance.now(),
+          emoji: def.emoji,
+          kind: "eat",
+          gained
+        });
+        cat.catEaten = (cat.catEaten || 0) + 1;
+        Body.set(cat, { isSleeping: false });
+
+        if (cat.catEaten >= CAT_EAT_TARGET) {
+          despawnCat(cat);
+        }
+
+        window.setTimeout(() => {
+          catEatLock.delete(food.id);
+          catEatLock.delete(`cat-${cat.id}-${food.id}`);
+        }, 180);
+      }
+
+      function handleCatCollision(bodyA, bodyB) {
+        const cat = bodyA.label === "cat" ? bodyA : bodyB.label === "cat" ? bodyB : null;
+        if (!cat || cat.isPreview) return;
+        const other = cat === bodyA ? bodyB : bodyA;
+        if (other.isPreview) return;
+
+        if (
+          !cat.catActive &&
+          (other.label === "floor" ||
+            other.label === "wall" ||
+            other.label === "obstacle" ||
+            other.label === "item")
+        ) {
+          activateCat(cat);
+        }
+
+        if (other.label === "item") {
+          catEatFood(cat, other);
+        }
+      }
+
+      function updateCats() {
+        if (gameOver || !world) return;
+        for (const body of Composite.allBodies(world)) {
+          if (body.label !== "cat" || body.isPreview || !body.catActive) continue;
+          if ((body.catEaten || 0) >= CAT_EAT_TARGET) {
+            despawnCat(body);
+            continue;
+          }
+
+          Body.set(body, { isSleeping: false });
+
+          const foods = Composite.allBodies(world).filter(
+            (b) => b.label === "item" && !b.isPreview && !b.isStatic
+          );
+
+          if (!foods.length) {
+            // Wander until snacks appear, then leave after a short idle
+            body.catWanderMs = (body.catWanderMs || 0) + 16;
+            const dir = body.catDir || 1;
+            Body.setVelocity(body, {
+              x: dir * (CAT_CRAWL_SPEED * 0.65),
+              y: Math.min(body.velocity.y, 2.2)
+            });
+            if (body.position.x <= WALL + CAT.radius + 4) body.catDir = 1;
+            if (body.position.x >= WIDTH - WALL - CAT.radius - 4) body.catDir = -1;
+            if (body.catWanderMs > 2800) despawnCat(body);
+            continue;
+          }
+
+          body.catWanderMs = 0;
+          let nearest = null;
+          let best = Infinity;
+          for (const food of foods) {
+            const d = Math.hypot(
+              food.position.x - body.position.x,
+              food.position.y - body.position.y
+            );
+            if (d < best) {
+              best = d;
+              nearest = food;
+            }
+          }
+
+          if (!nearest) continue;
+          const dx = nearest.position.x - body.position.x;
+          const dy = nearest.position.y - body.position.y;
+          const len = Math.hypot(dx, dy) || 1;
+          body.catDir = dx >= 0 ? 1 : -1;
+          Body.setVelocity(body, {
+            x: (dx / len) * CAT_CRAWL_SPEED,
+            y: (dy / len) * CAT_CRAWL_SPEED * 0.9
+          });
+          Body.setAngularVelocity(body, 0);
+
+          // Close enough to nibble even if collision is soft
+          const reach = CAT.radius + (nearest.circleRadius || 0) + 4;
+          if (best <= reach) catEatFood(body, nearest);
+        }
+      }
+
       function handleObstacleBounce(bodyA, bodyB) {
         const obstacle = bodyA.label === "obstacle" ? bodyA : bodyB.label === "obstacle" ? bodyB : null;
         if (!obstacle) return;
@@ -1229,6 +1411,10 @@
         }
         if (item.label === "gravity" && item.gravityArmed) {
           activateGravityPiece(item);
+          return;
+        }
+        if (item.label === "cat") {
+          activateCat(item);
           return;
         }
 
@@ -1288,6 +1474,10 @@
         if (!ceiling) return false;
         const item = ceiling === bodyA ? bodyB : bodyA;
         if (item.isPreview || item.isStatic) return true;
+        if (item.label === "cat") {
+          activateCat(item);
+          return true;
+        }
         if (item.label !== "item") return true;
 
         const speed = Math.hypot(item.velocity.x, item.velocity.y);
@@ -1337,6 +1527,10 @@
           handleGravityCollision(bodyA, bodyB);
           return;
         }
+        if (bodyA.label === "cat" || bodyB.label === "cat") {
+          handleCatCollision(bodyA, bodyB);
+          return;
+        }
         if (bodyA.label !== "item" || bodyB.label !== "item") return;
 
         const tierA = bodyA.itemTier;
@@ -1378,6 +1572,8 @@
           if (!isPlayPieceLabel(b.label) || b.isPreview || b.isStatic) {
             return false;
           }
+          // Cats are temporary and should not end the run
+          if (b.label === "cat") return false;
           const top = b.position.y - b.circleRadius;
           if (top >= DANGER_Y) return false;
           const speed = Math.hypot(b.velocity.x, b.velocity.y);
@@ -1470,6 +1666,35 @@
         }
       }
 
+      function drawBites(ctx, now) {
+        bites = bites.filter((bite) => now - bite.start < 520);
+        for (const bite of bites) {
+          const t = (now - bite.start) / 520;
+          const alpha = 1 - t;
+          ctx.save();
+          ctx.translate(bite.x, bite.y);
+          ctx.globalAlpha = alpha;
+          if (bite.kind === "leave") {
+            ctx.font = `${Math.round(28 + t * 10)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(bite.emoji, 0, -t * 24);
+            ctx.fillStyle = `rgba(23, 32, 27, ${0.7 * alpha})`;
+            ctx.font = "700 12px Inter, system-ui, sans-serif";
+            ctx.fillText("bye!", 0, 18 + t * 8);
+          } else {
+            ctx.font = `${Math.round(22 - t * 8)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(bite.emoji, 0, -t * 16);
+            ctx.fillStyle = `rgba(33, 92, 66, ${0.9 * alpha})`;
+            ctx.font = "700 13px Inter, system-ui, sans-serif";
+            ctx.fillText(`+${bite.gained}`, 0, 16 + t * 10);
+          }
+          ctx.restore();
+        }
+      }
+
       function drawExtras() {
         const ctx = render.context;
         const now = performance.now();
@@ -1517,11 +1742,20 @@
               ? BOMB.emoji
               : body.label === "gravity"
                 ? GRAVITY_ITEM.emoji
-                : ITEMS[body.itemTier].emoji;
+                : body.label === "cat"
+                  ? CAT.emoji
+                  : ITEMS[body.itemTier].emoji;
           const size = body.circleRadius * 2;
           ctx.save();
           ctx.translate(body.position.x, body.position.y);
-          ctx.rotate(body.angle);
+          if (body.label === "cat") {
+            // Face crawl direction; light bob while hunting
+            const bob = body.catActive ? Math.sin(now / 90) * 2 : 0;
+            ctx.translate(0, bob);
+            ctx.scale(body.catDir < 0 ? -1 : 1, 1);
+          } else {
+            ctx.rotate(body.angle);
+          }
           ctx.font = `${size}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
@@ -1531,6 +1765,7 @@
 
         drawBlasts(ctx, now);
         drawSmashes(ctx, now);
+        drawBites(ctx, now);
       }
 
       function clearPieces() {
@@ -1539,6 +1774,7 @@
         previewBody = null;
         blasts = [];
         smashes = [];
+        bites = [];
       }
 
       function buildWorld() {
@@ -1621,6 +1857,7 @@
 
         Events.on(render, "afterRender", drawExtras);
         Events.on(engine, "afterUpdate", () => {
+          updateCats();
           checkGameOver(performance.now());
         });
 
@@ -1639,6 +1876,7 @@
         bombLock.clear();
         gravityLock.clear();
         smashLock.clear();
+        catEatLock.clear();
         unlockedCipher = null;
         cipherCodeEl.hidden = true;
         cipherHintEl.hidden = true;
