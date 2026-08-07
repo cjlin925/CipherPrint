@@ -306,12 +306,12 @@
     }
 
     .stage-wrap {
-      --stage-max-height: min(760px, calc(100svh - 11.5rem));
+      --stage-max-height: min(880px, calc(100svh - 11.5rem));
       position: relative;
       box-sizing: border-box;
-      width: min(100%, 560px, calc(var(--stage-max-height) * 560 / 760));
+      width: min(100%, 560px, calc(var(--stage-max-height) * 560 / 880));
       max-width: 100%;
-      aspect-ratio: 560 / 760;
+      aspect-ratio: 560 / 880;
       max-height: var(--stage-max-height);
       margin: 0.85rem auto 0;
       border-radius: 0.85rem;
@@ -614,7 +614,7 @@
       }
 
       .stage-wrap {
-        --stage-max-height: min(720px, calc(100svh - 10.5rem));
+        --stage-max-height: min(800px, calc(100svh - 10.5rem));
       }
 
       .hud {
@@ -633,7 +633,7 @@
     html.compact-ui .evo-chip .evo-name { display: none; }
     html.compact-ui .evo-chip { min-height: 2.6rem; }
     html.compact-ui .stage-wrap {
-      --stage-max-height: min(720px, calc(100svh - 12.5rem));
+      --stage-max-height: min(800px, calc(100svh - 12.5rem));
     }
     html.compact-ui .hud {
       grid-template-columns: 1fr 1fr auto;
@@ -707,7 +707,7 @@
       </div>
 
       <div class="stage-wrap" id="stage-wrap">
-        <canvas id="game-canvas" width="560" height="760" aria-label="Food merge game board"></canvas>
+        <canvas id="game-canvas" width="560" height="880" aria-label="Food merge game board"></canvas>
         <div class="gravity-toast" id="gravity-toast" aria-live="polite"></div>
         <div class="overlay" id="game-over-overlay" role="dialog" aria-modal="true" aria-labelledby="game-over-title">
           <div class="overlay-card">
@@ -792,7 +792,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.4.1</span>
+        <span class="build-version">Food Merge v1.4.2</span>
       </p>
     </section>
   </main>
@@ -833,7 +833,7 @@
       const { Engine, Render, Runner, Bodies, Body, Composite, Events, Common } = Matter;
 
       const WIDTH = 560;
-      const HEIGHT = 760;
+      const HEIGHT = 880;
       const WALL = 18;
       const DROP_Y = 52;
       const DANGER_Y = 96;
@@ -998,10 +998,10 @@
       function itemOptions(tier) {
         return {
           label: "item",
-          restitution: 0.38,
-          friction: 0.28,
-          frictionStatic: 0.42,
-          frictionAir: 0.01,
+          restitution: 0.12,
+          friction: 0.4,
+          frictionStatic: 0.55,
+          frictionAir: 0.014,
           density: 0.0018 + tier * 0.00014,
           slop: 0.01,
           render: { visible: false }
@@ -1238,6 +1238,10 @@
         removePreview();
 
         const body = createPiece(piece, x, DROP_Y);
+        if (piece.type === "cat") {
+          // Starve timer starts at drop, not when crawling begins
+          body.catBornAt = performance.now();
+        }
         Body.setVelocity(body, { x: 0, y: 2.2 });
         Body.applyForce(body, body.position, { x: 0, y: 0.004 });
         Composite.add(world, body);
@@ -1390,7 +1394,8 @@
         if (!cat || cat.isPreview || cat.catActive) return;
         cat.catActive = true;
         cat.catEaten = cat.catEaten || 0;
-        cat.catBornAt = performance.now();
+        // Keep drop-time starve clock; only set if somehow missing
+        if (!cat.catBornAt) cat.catBornAt = performance.now();
         cat.catBouncing = false;
         cat.catBounceUntil = 0;
         Body.set(cat, {
@@ -1530,15 +1535,17 @@
         if (gameOver || !world) return;
         const now = performance.now();
         for (const body of Composite.allBodies(world)) {
-          if (body.label !== "cat" || body.isPreview || !body.catActive) continue;
-          if ((body.catEaten || 0) >= CAT_EAT_TARGET) {
-            despawnCat(body, "full");
+          if (body.label !== "cat" || body.isPreview) continue;
+
+          // 3s lifetime from drop — applies while falling or crawling
+          if (body.catBornAt && now - body.catBornAt >= CAT_STARVE_MS) {
+            starveCat(body);
             continue;
           }
 
-          if (!body.catBornAt) body.catBornAt = now;
-          if (now - body.catBornAt >= CAT_STARVE_MS) {
-            starveCat(body);
+          if (!body.catActive) continue;
+          if ((body.catEaten || 0) >= CAT_EAT_TARGET) {
+            despawnCat(body, "full");
             continue;
           }
 
