@@ -1254,8 +1254,10 @@
           other.label === "obstacle" ||
           other.label === "floor" ||
           other.label === "wall" ||
-          other.label === "bomb"
+          other.label === "bomb" ||
+          other.label === "cat"
         ) {
+          if (other.label === "cat") activateCat(other);
           activateGravityPiece(piece);
         }
       }
