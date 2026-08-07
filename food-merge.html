@@ -422,6 +422,31 @@
       margin-top: 1.15rem;
     }
 
+    .stage-bar {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin: 0.75rem 0 0;
+      padding: 0.45rem 0.15rem 0;
+    }
+
+    .stage-bar .stage-label {
+      margin: 0;
+      color: var(--ink);
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stage-bar .stage-desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 650;
+      text-align: right;
+    }
+
     button {
       appearance: none;
       border: 0;
@@ -652,8 +677,9 @@
       <h1 id="food-merge-title">Food Merge</h1>
       <p class="intro">
         Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
-        from jellybean all the way to birthday cake. Gravity tilts nudge the pull; kitchen cats crawl in
-        and gobble two snacks before vanishing — or starve after five seconds. Bounce too hard into the ceiling and a snack can smash.
+        from jellybean all the way to birthday cake. Clear three kitchen stages: more pegs, then more cats.
+        Gravity tilts nudge the pull; kitchen cats crawl in and gobble two snacks before vanishing —
+        or starve after five seconds. Bounce too hard into the ceiling and a snack can smash.
         Shake your phone firmly to jolt the board. Keep everything below the danger line.
       </p>
 
@@ -675,6 +701,11 @@
         </div>
       </div>
 
+      <div class="stage-bar" aria-live="polite">
+        <p class="stage-label">Stage <span id="stage-number">1</span></p>
+        <p class="stage-desc" id="stage-desc">2 bouncy obstacles</p>
+      </div>
+
       <div class="stage-wrap" id="stage-wrap">
         <canvas id="game-canvas" width="560" height="760" aria-label="Food merge game board"></canvas>
         <div class="gravity-toast" id="gravity-toast" aria-live="polite"></div>
@@ -688,7 +719,8 @@
               Birthday Cake secured. Great kitchen merge run!
             </p>
             <div class="overlay-actions">
-              <button type="button" id="restart-btn">New Batch</button>
+              <button type="button" id="continue-btn">Continue</button>
+              <button type="button" id="next-stage-btn" class="secondary">Next Stage</button>
               <a class="secondary" href="/CipherPrint/" style="display:block;text-align:center;text-decoration:none;padding:0.85rem 1.15rem;border-radius:0.75rem;background:rgba(33,92,66,0.1);color:var(--ink);font-weight:700;">Back to CipherPrint</a>
             </div>
           </div>
@@ -760,7 +792,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.3.4</span>
+        <span class="build-version">Food Merge v1.4.0</span>
       </p>
     </section>
   </main>
@@ -809,8 +841,6 @@
       const DROP_COOLDOWN_MS = 420;
       const MAX_SPAWN_TIER = 3; // Levels 1–4 only as random drops
       const BOMB_CHANCE = 0; // bombs disabled
-      const GRAVITY_CHANCE = 0.08;
-      const CAT_CHANCE = 0.03;
       const BOMB_RADIUS = 18;
       const BLAST_RADIUS = 46;
       const GRAVITY_RADIUS = 18;
@@ -831,6 +861,50 @@
       const CAT_EAT_TARGET = 2;
       const CAT_CRAWL_STEP = 2.6;
       const CAT_STARVE_MS = 5000;
+
+      const STAGES = [
+        {
+          id: 1,
+          name: "Stage 1",
+          desc: "2 bouncy obstacles",
+          gravityChance: 0.08,
+          catChance: 0.03,
+          obstacles: [
+            { x: 170, y: 360, r: 30 },
+            { x: 390, y: 490, r: 36 }
+          ]
+        },
+        {
+          id: 2,
+          name: "Stage 2",
+          desc: "3 bouncy obstacles",
+          gravityChance: 0.08,
+          catChance: 0.03,
+          obstacles: [
+            { x: 140, y: 330, r: 28 },
+            { x: 280, y: 470, r: 34 },
+            { x: 420, y: 350, r: 30 }
+          ]
+        },
+        {
+          id: 3,
+          name: "Stage 3",
+          desc: "3 obstacles · more cats",
+          gravityChance: 0.08,
+          catChance: 0.12,
+          obstacles: [
+            { x: 140, y: 330, r: 28 },
+            { x: 280, y: 470, r: 34 },
+            { x: 420, y: 350, r: 30 }
+          ]
+        }
+      ];
+
+      let currentStageIndex = 0;
+
+      function getStage() {
+        return STAGES[currentStageIndex] || STAGES[0];
+      }
 
       // 10-stage food chain (Level 1 → Level 10)
       // Slightly larger radii; jellybean stays half the egg.
@@ -856,12 +930,15 @@
       const finalScoreEl = document.getElementById("final-score");
       const cipherCodeEl = document.getElementById("cipher-code");
       const cipherHintEl = document.getElementById("cipher-hint");
-      const restartBtn = document.getElementById("restart-btn");
+      const restartBtn = document.getElementById("continue-btn");
+      const nextStageBtn = document.getElementById("next-stage-btn");
       const gravityToastEl = document.getElementById("gravity-toast");
       const stageWrapEl = document.getElementById("stage-wrap");
       const gravityValueEl = document.getElementById("gravity-value");
       const gravityArrowEl = document.getElementById("gravity-arrow");
       const gravityCardEl = document.getElementById("gravity-card");
+      const stageNumberEl = document.getElementById("stage-number");
+      const stageDescEl = document.getElementById("stage-desc");
 
       let engine, world, render, runner;
       let score = 0;
@@ -904,9 +981,10 @@
 
       function randomNextPiece() {
         // Bombs disabled — gravity tilts and kitchen cats may appear.
+        const stage = getStage();
         const roll = Math.random();
-        if (roll < GRAVITY_CHANCE) return { type: "gravity" };
-        if (roll < GRAVITY_CHANCE + CAT_CHANCE) return { type: "cat" };
+        if (roll < stage.gravityChance) return { type: "gravity" };
+        if (roll < stage.gravityChance + stage.catChance) return { type: "cat" };
         return { type: "item", tier: randomSpawnTier() };
       }
 
@@ -1024,6 +1102,47 @@
           nextFruitEl.title = def.name;
         }
         nextFruitEl.style.background = "transparent";
+      }
+
+      function updateStageHud() {
+        const stage = getStage();
+        if (stageNumberEl) stageNumberEl.textContent = String(stage.id);
+        if (stageDescEl) stageDescEl.textContent = stage.desc;
+        if (nextStageBtn) {
+          nextStageBtn.textContent =
+            currentStageIndex >= STAGES.length - 1
+              ? "Restart Stage 1"
+              : `Next Stage (${STAGES[currentStageIndex + 1].id})`;
+        }
+      }
+
+      function clearObstacles() {
+        if (!world) return;
+        const obstacles = Composite.allBodies(world).filter((b) => b.label === "obstacle");
+        if (obstacles.length) Composite.remove(world, obstacles);
+      }
+
+      function createObstacle(def) {
+        return Bodies.circle(def.x, def.y, def.r, {
+          isStatic: true,
+          label: "obstacle",
+          friction: 0.02,
+          frictionStatic: 0.02,
+          restitution: 1.2,
+          render: { visible: false }
+        });
+      }
+
+      function spawnStageObstacles() {
+        if (!world) return;
+        clearObstacles();
+        const bodies = getStage().obstacles.map(createObstacle);
+        if (bodies.length) Composite.add(world, bodies);
+      }
+
+      function applyStageLayout() {
+        spawnStageObstacles();
+        updateStageHud();
       }
 
       function setScore(value) {
@@ -1522,6 +1641,25 @@
         return true;
       }
 
+      function showEndOverlay({ title, message, won }) {
+        overlayTitle.textContent = title;
+        overlayMessage.textContent = message;
+        finalScoreEl.textContent = `Score: ${score}`;
+        if (won) {
+          unlockedCipher = unlockedCipher || makeCipherCode();
+          cipherCodeEl.hidden = false;
+          cipherHintEl.hidden = false;
+          cipherCodeEl.textContent = unlockedCipher;
+        } else {
+          cipherCodeEl.hidden = true;
+          cipherHintEl.hidden = true;
+          cipherCodeEl.textContent = "";
+        }
+        updateStageHud();
+        overlay.classList.add("show");
+        if (runner) Runner.stop(runner);
+      }
+
       function triggerWin(cakeBody) {
         if (missionWon || gameOver) return;
         missionWon = true;
@@ -1530,14 +1668,17 @@
         removePreview();
         unlockedCipher = makeCipherCode();
 
-        overlayTitle.textContent = "Cake Complete";
-        overlayMessage.textContent = "Birthday Cake assembled. The kitchen merge chain is complete!";
-        finalScoreEl.textContent = `Score: ${score}`;
-        cipherCodeEl.hidden = false;
-        cipherHintEl.hidden = false;
-        cipherCodeEl.textContent = unlockedCipher;
-        overlay.classList.add("show");
-        Runner.stop(runner);
+        const stage = getStage();
+        const nextMsg =
+          currentStageIndex >= STAGES.length - 1
+            ? "Final stage cleared. Continue for another batch, or restart from Stage 1."
+            : `Stage ${stage.id} cleared. Continue here, or advance to Stage ${STAGES[currentStageIndex + 1].id}.`;
+
+        showEndOverlay({
+          title: "Cake Complete",
+          message: `Birthday Cake assembled on ${stage.name}. ${nextMsg}`,
+          won: true
+        });
 
         if (cakeBody && !cakeBody.isStatic) {
           Body.setVelocity(cakeBody, { x: 0, y: -2 });
@@ -1629,14 +1770,16 @@
         missionWon = false;
         canDrop = false;
         removePreview();
-        overlayTitle.textContent = "Kitchen Chaos";
-        overlayMessage.textContent = "The snack pile crossed the danger line.";
-        finalScoreEl.textContent = `Score: ${score}`;
-        cipherCodeEl.hidden = true;
-        cipherHintEl.hidden = true;
-        cipherCodeEl.textContent = "";
-        overlay.classList.add("show");
-        Runner.stop(runner);
+        const stage = getStage();
+        const nextMsg =
+          currentStageIndex >= STAGES.length - 1
+            ? "Continue this stage, or restart from Stage 1."
+            : `Continue Stage ${stage.id}, or try Stage ${STAGES[currentStageIndex + 1].id}.`;
+        showEndOverlay({
+          title: "Kitchen Chaos",
+          message: `The snack pile crossed the danger line on ${stage.name}. ${nextMsg}`,
+          won: false
+        });
       }
 
       function drawBlasts(ctx, now) {
@@ -1852,25 +1995,8 @@
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
 
-        // Two fixed circular obstacles in the mission box
-        const obstacleA = Bodies.circle(170, 360, 30, {
-          isStatic: true,
-          label: "obstacle",
-          friction: 0.02,
-          frictionStatic: 0.02,
-          restitution: 1.2,
-          render: { visible: false }
-        });
-        const obstacleB = Bodies.circle(390, 490, 36, {
-          isStatic: true,
-          label: "obstacle",
-          friction: 0.02,
-          frictionStatic: 0.02,
-          restitution: 1.2,
-          render: { visible: false }
-        });
-
-        Composite.add(world, [floor, ceiling, left, right, obstacleA, obstacleB]);
+        Composite.add(world, [floor, ceiling, left, right]);
+        spawnStageObstacles();
 
         render = Render.create({
           canvas,
@@ -1908,7 +2034,12 @@
         Runner.run(runner, engine);
       }
 
-      function resetGame() {
+      function resetGame({ advance = false } = {}) {
+        if (advance) {
+          currentStageIndex =
+            currentStageIndex >= STAGES.length - 1 ? 0 : currentStageIndex + 1;
+        }
+
         overlay.classList.remove("show");
         gameOver = false;
         missionWon = false;
@@ -1932,6 +2063,7 @@
         setGravityTilt(0);
         if (gravityToastEl) gravityToastEl.classList.remove("show");
 
+        applyStageLayout();
         clearPieces();
         if (runner && runner.enabled === false) {
           Runner.run(runner, engine);
@@ -2072,7 +2204,8 @@
         }
       });
 
-      restartBtn.addEventListener("click", resetGame);
+      restartBtn.addEventListener("click", () => resetGame({ advance: false }));
+      nextStageBtn.addEventListener("click", () => resetGame({ advance: true }));
 
       // Desktop / debug: press S to shake the board
       window.addEventListener("keydown", (event) => {
@@ -2088,6 +2221,7 @@
       }
 
       updateGravityDisplay(0);
+      updateStageHud();
 
       // Lock board size so mobile browser chrome show/hide on scroll
       // cannot shrink/expand the playfield mid-game.
