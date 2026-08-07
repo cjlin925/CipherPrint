@@ -977,11 +977,11 @@
       function createCat(x, y, options = {}) {
         const body = Bodies.circle(x, y, CAT.radius, {
           label: "cat",
-          restitution: 0.15,
-          friction: 0.12,
-          frictionStatic: 0.2,
-          frictionAir: 0.02,
-          density: 0.0016,
+          restitution: 0,
+          friction: 0.85,
+          frictionStatic: 0.9,
+          frictionAir: 0.05,
+          density: 0.0022,
           slop: 0.01,
           render: { visible: false },
           ...options
