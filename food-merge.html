@@ -754,13 +754,13 @@
         <div class="evo-chip cat-chip" title="Kitchen Cat">
           <span class="evo-icon">🐱</span>
           <span class="evo-level">Special</span>
-          <span class="evo-name">Kitchen Cat — crawls, eats 2 snacks</span>
+          <span class="evo-name">Kitchen Cat — crawls, eats 2, starves in 5s</span>
         </div>
       </div>
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.3.3</span>
+        <span class="build-version">Food Merge v1.3.4</span>
       </p>
     </section>
   </main>
@@ -829,7 +829,8 @@
       const CEILING_SMASH_SPEED = 9; // upward speed into ceiling that destroys food
       const CEILING_SMASH_SPEED_TOTAL = 12;
       const CAT_EAT_TARGET = 2;
-      const CAT_CRAWL_SPEED = 3.5;
+      const CAT_CRAWL_STEP = 2.6;
+      const CAT_STARVE_MS = 5000;
 
       // 10-stage food chain (Level 1 → Level 10)
       // Slightly larger radii; jellybean stays half the egg.
@@ -978,10 +979,11 @@
         const body = Bodies.circle(x, y, CAT.radius, {
           label: "cat",
           restitution: 0,
-          friction: 0.85,
-          frictionStatic: 0.9,
-          frictionAir: 0.05,
-          density: 0.0022,
+          friction: 1,
+          frictionStatic: 1,
+          frictionAir: 0.08,
+          density: 0.003,
+          inertia: Infinity,
           slop: 0.01,
           render: { visible: false },
           ...options
@@ -990,6 +992,7 @@
         body.catActive = false;
         body.catEaten = 0;
         body.catDir = 1;
+        body.catBornAt = 0;
         return body;
       }
 
@@ -1266,33 +1269,35 @@
         if (!cat || cat.isPreview || cat.catActive) return;
         cat.catActive = true;
         cat.catEaten = cat.catEaten || 0;
+        cat.catBornAt = performance.now();
         Body.set(cat, {
           isSleeping: false,
           restitution: 0,
-          friction: 0.85,
-          frictionStatic: 0.9,
-          frictionAir: 0.06
+          friction: 1,
+          frictionStatic: 1,
+          frictionAir: 0.15,
+          inertia: Infinity
         });
-        // Kill leftover bounce from the drop/landing
-        Body.setVelocity(cat, {
-          x: cat.velocity.x * 0.35,
-          y: Math.max(0, cat.velocity.y)
-        });
+        Body.setVelocity(cat, { x: 0, y: 0 });
         Body.setAngularVelocity(cat, 0);
       }
 
-      function despawnCat(cat) {
+      function despawnCat(cat, reason = "full") {
         if (!cat || cat.isPreview || catEatLock.has(`gone-${cat.id}`)) return;
         catEatLock.add(`gone-${cat.id}`);
         bites.push({
           x: cat.position.x,
           y: cat.position.y,
           start: performance.now(),
-          emoji: CAT.emoji,
-          kind: "leave"
+          emoji: reason === "starve" ? "💀" : CAT.emoji,
+          kind: reason === "starve" ? "starve" : "leave"
         });
         Composite.remove(world, cat);
         window.setTimeout(() => catEatLock.delete(`gone-${cat.id}`), 200);
+      }
+
+      function starveCat(cat) {
+        despawnCat(cat, "starve");
       }
 
       function catEatFood(cat, food) {
@@ -1319,9 +1324,10 @@
         });
         cat.catEaten = (cat.catEaten || 0) + 1;
         Body.set(cat, { isSleeping: false });
+        Body.setVelocity(cat, { x: 0, y: 0 });
 
         if (cat.catEaten >= CAT_EAT_TARGET) {
-          despawnCat(cat);
+          despawnCat(cat, "full");
         }
 
         window.setTimeout(() => {
@@ -1353,64 +1359,75 @@
 
       function updateCats() {
         if (gameOver || !world) return;
+        const now = performance.now();
         for (const body of Composite.allBodies(world)) {
           if (body.label !== "cat" || body.isPreview || !body.catActive) continue;
           if ((body.catEaten || 0) >= CAT_EAT_TARGET) {
-            despawnCat(body);
+            despawnCat(body, "full");
             continue;
           }
 
-          Body.set(body, { isSleeping: false });
+          if (!body.catBornAt) body.catBornAt = now;
+          if (now - body.catBornAt >= CAT_STARVE_MS) {
+            starveCat(body);
+            continue;
+          }
+
+          Body.set(body, { isSleeping: false, restitution: 0 });
 
           const foods = Composite.allBodies(world).filter(
             (b) => b.label === "item" && !b.isPreview && !b.isStatic
           );
 
-          if (!foods.length) {
-            // Wander until snacks appear, then leave after a short idle
-            body.catWanderMs = (body.catWanderMs || 0) + 16;
+          let stepX = 0;
+          let stepY = 0.35; // gentle settle, no hop
+
+          if (foods.length) {
+            let nearest = null;
+            let best = Infinity;
+            for (const food of foods) {
+              const d = Math.hypot(
+                food.position.x - body.position.x,
+                food.position.y - body.position.y
+              );
+              if (d < best) {
+                best = d;
+                nearest = food;
+              }
+            }
+
+            if (nearest) {
+              const dx = nearest.position.x - body.position.x;
+              const dy = nearest.position.y - body.position.y;
+              const len = Math.hypot(dx, dy) || 1;
+              body.catDir = dx >= 0 ? 1 : -1;
+              stepX = (dx / len) * CAT_CRAWL_STEP;
+              // Soft climb only — never rocket upward
+              stepY = Math.max(-0.9, Math.min(1.6, (dy / len) * CAT_CRAWL_STEP * 0.4));
+
+              const reach = CAT.radius + (nearest.circleRadius || 0) + 4;
+              if (best <= reach) catEatFood(body, nearest);
+            }
+          } else {
             const dir = body.catDir || 1;
-            Body.setVelocity(body, {
-              x: dir * (CAT_CRAWL_SPEED * 0.65),
-              y: Math.max(0, Math.min(body.velocity.y, 2.5))
-            });
-            Body.setAngularVelocity(body, 0);
+            stepX = dir * CAT_CRAWL_STEP * 0.55;
             if (body.position.x <= WALL + CAT.radius + 4) body.catDir = 1;
             if (body.position.x >= WIDTH - WALL - CAT.radius - 4) body.catDir = -1;
-            if (body.catWanderMs > 2800) despawnCat(body);
-            continue;
           }
 
-          body.catWanderMs = 0;
-          let nearest = null;
-          let best = Infinity;
-          for (const food of foods) {
-            const d = Math.hypot(
-              food.position.x - body.position.x,
-              food.position.y - body.position.y
-            );
-            if (d < best) {
-              best = d;
-              nearest = food;
-            }
-          }
+          const nextX = Math.max(
+            WALL + CAT.radius + 2,
+            Math.min(WIDTH - WALL - CAT.radius - 2, body.position.x + stepX)
+          );
+          const nextY = Math.max(
+            WALL + CAT.radius + 2,
+            Math.min(HEIGHT - WALL - CAT.radius - 2, body.position.y + stepY)
+          );
 
-          if (!nearest) continue;
-          const dx = nearest.position.x - body.position.x;
-          const dy = nearest.position.y - body.position.y;
-          const len = Math.hypot(dx, dy) || 1;
-          body.catDir = dx >= 0 ? 1 : -1;
-          // Prefer ground crawl; only climb gently toward raised snacks
-          const climb = Math.max(-1.6, Math.min(2.8, (dy / len) * CAT_CRAWL_SPEED * 0.55));
-          Body.setVelocity(body, {
-            x: (dx / len) * CAT_CRAWL_SPEED,
-            y: climb
-          });
+          // Position crawl with zero velocity so physics bounce cannot launch the cat
+          Body.setPosition(body, { x: nextX, y: nextY });
+          Body.setVelocity(body, { x: 0, y: 0 });
           Body.setAngularVelocity(body, 0);
-
-          // Close enough to nibble even if collision is soft
-          const reach = CAT.radius + (nearest.circleRadius || 0) + 4;
-          if (best <= reach) catEatFood(body, nearest);
         }
       }
 
@@ -1684,14 +1701,22 @@
       }
 
       function drawBites(ctx, now) {
-        bites = bites.filter((bite) => now - bite.start < 520);
+        bites = bites.filter((bite) => now - bite.start < 700);
         for (const bite of bites) {
-          const t = (now - bite.start) / 520;
+          const t = (now - bite.start) / 700;
           const alpha = 1 - t;
           ctx.save();
           ctx.translate(bite.x, bite.y);
           ctx.globalAlpha = alpha;
-          if (bite.kind === "leave") {
+          if (bite.kind === "starve") {
+            ctx.font = `${Math.round(32 + t * 14)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText("💀", 0, -t * 20);
+            ctx.fillStyle = `rgba(80, 40, 40, ${0.75 * alpha})`;
+            ctx.font = "700 12px Inter, system-ui, sans-serif";
+            ctx.fillText("starved", 0, 20 + t * 8);
+          } else if (bite.kind === "leave") {
             ctx.font = `${Math.round(28 + t * 10)}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
