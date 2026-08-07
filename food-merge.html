@@ -648,7 +648,8 @@
       <p class="intro">
         Drop snacks into the kitchen box. Merge matching foods to climb the 10-stage treat chain —
         from jellybean all the way to birthday cake. Gravity tilts nudge the pull.
-        Shake your phone firmly to jolt the board. Keep everything below the danger line.
+        Bounce too hard into the ceiling and a snack can smash. Shake your phone firmly to jolt the board.
+        Keep everything below the danger line.
       </p>
 
       <div class="hud">
@@ -749,7 +750,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.2.4</span>
+        <span class="build-version">Food Merge v1.2.5</span>
       </p>
     </section>
   </main>
@@ -812,6 +813,8 @@
       const SHAKE_THRESHOLD = 20;
       const SHAKE_THRESHOLD_GRAVITY = 24;
       const SHAKE_COOLDOWN_MS = 1100;
+      const CEILING_SMASH_SPEED = 9; // upward speed into ceiling that destroys food
+      const CEILING_SMASH_SPEED_TOTAL = 12;
 
       // 10-stage food chain (Level 1 → Level 10)
       // Slightly larger radii; jellybean stays half the egg.
@@ -855,10 +858,12 @@
       let mergeLock = new Set();
       let bombLock = new Set();
       let gravityLock = new Set();
+      let smashLock = new Set();
       let dangerSince = null;
       let pointerX = WIDTH / 2;
       let lastDropAt = 0;
       let blasts = [];
+      let smashes = [];
       let unlockedCipher = null;
       let lastShakeAt = 0;
       let lastMotionSample = null;
@@ -1233,23 +1238,64 @@
         let nx = dx / dist;
         let ny = dy / dist;
 
-        // Soft deflect — obstacles should redirect, not rocket food away
+        // Strong bounce off pegs — food can fly toward the ceiling
         if (Math.abs(nx) < 0.28) {
-          nx = (item.position.x < WIDTH / 2 ? -1 : 1) * (0.55 + Math.random() * 0.3);
+          nx = (item.position.x < WIDTH / 2 ? -1 : 1) * (0.7 + Math.random() * 0.35);
           const nLen = Math.hypot(nx, ny) || 1;
           nx /= nLen;
           ny /= nLen;
         }
 
         const impact = Math.hypot(item.velocity.x, item.velocity.y);
-        const bounceSpeed = Math.max(4, Math.min(9, impact * 0.85 + 2.5));
-        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (0.8 + Math.random() * 1.4);
+        const bounceSpeed = Math.max(11, Math.min(21, impact * 2.0 + 7));
+        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (2.5 + Math.random() * 3.5);
 
         Body.setVelocity(item, {
           x: nx * bounceSpeed + sideKick,
-          y: Math.min(ny * bounceSpeed, -2.5)
+          y: Math.min(ny * bounceSpeed, -8)
         });
-        Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.25);
+        Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.55);
+      }
+
+      function smashItemOnCeiling(item) {
+        if (!item || item.isPreview || item.label !== "item") return;
+        if (smashLock.has(item.id) || gameOver) return;
+        smashLock.add(item.id);
+
+        const tier = item.itemTier ?? 0;
+        const def = ITEMS[tier] || ITEMS[0];
+        const penalty = Math.max(1, Math.floor(def.score * 0.8));
+        const x = item.position.x;
+        const y = item.position.y;
+        const radius = item.circleRadius || def.radius;
+
+        Composite.remove(world, item);
+        setScore(Math.max(0, score - penalty));
+        smashes.push({
+          x,
+          y,
+          start: performance.now(),
+          radius,
+          emoji: def.emoji,
+          penalty
+        });
+
+        window.setTimeout(() => smashLock.delete(item.id), 200);
+      }
+
+      function handleCeilingHit(bodyA, bodyB) {
+        const ceiling = bodyA.label === "ceiling" ? bodyA : bodyB.label === "ceiling" ? bodyB : null;
+        if (!ceiling) return false;
+        const item = ceiling === bodyA ? bodyB : bodyA;
+        if (item.isPreview || item.isStatic) return true;
+        if (item.label !== "item") return true;
+
+        const speed = Math.hypot(item.velocity.x, item.velocity.y);
+        const upward = -item.velocity.y;
+        if (upward >= CEILING_SMASH_SPEED || speed >= CEILING_SMASH_SPEED_TOTAL) {
+          smashItemOnCeiling(item);
+        }
+        return true;
       }
 
       function triggerWin(cakeBody) {
@@ -1278,6 +1324,7 @@
         if (gameOver) return;
         if (!bodyA || !bodyB) return;
         if (bodyA.isPreview || bodyB.isPreview) return;
+        if (handleCeilingHit(bodyA, bodyB)) return;
         if (bodyA.label === "obstacle" || bodyB.label === "obstacle") {
           handleObstacleBounce(bodyA, bodyB);
           return;
@@ -1382,6 +1429,47 @@
         }
       }
 
+      function drawSmashes(ctx, now) {
+        smashes = smashes.filter((smash) => now - smash.start < 650);
+        for (const smash of smashes) {
+          const t = (now - smash.start) / 650;
+          const alpha = 1 - t;
+          const spread = smash.radius * (0.4 + t * 1.8);
+          ctx.save();
+          ctx.translate(smash.x, smash.y);
+
+          // Splat ring
+          ctx.beginPath();
+          ctx.arc(0, 0, smash.radius * (0.9 + t * 1.4), 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(120, 70, 40, ${0.55 * alpha})`;
+          ctx.lineWidth = 3;
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, smash.radius * (0.5 + t), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(180, 110, 60, ${0.22 * alpha})`;
+          ctx.fill();
+
+          // Flying crumb bits of the smashed snack
+          const crumbSize = Math.max(12, smash.radius * (1.1 - t * 0.7));
+          ctx.font = `${crumbSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.globalAlpha = alpha;
+          for (let i = 0; i < 5; i++) {
+            const ang = (i / 5) * Math.PI * 2 + t * 1.2;
+            const dist = spread * (0.45 + (i % 2) * 0.35);
+            ctx.fillText(smash.emoji, Math.cos(ang) * dist, Math.sin(ang) * dist - t * 18);
+          }
+
+          // Score penalty popup
+          ctx.globalAlpha = alpha;
+          ctx.fillStyle = `rgba(192, 57, 43, ${0.95 * alpha})`;
+          ctx.font = `700 ${Math.round(16 + (1 - t) * 4)}px Inter, system-ui, sans-serif`;
+          ctx.fillText(`-${smash.penalty}`, 0, -smash.radius - 10 - t * 22);
+          ctx.restore();
+        }
+      }
+
       function drawExtras() {
         const ctx = render.context;
         const now = performance.now();
@@ -1442,6 +1530,7 @@
         }
 
         drawBlasts(ctx, now);
+        drawSmashes(ctx, now);
       }
 
       function clearPieces() {
@@ -1449,6 +1538,7 @@
         if (bodies.length) Composite.remove(world, bodies);
         previewBody = null;
         blasts = [];
+        smashes = [];
       }
 
       function buildWorld() {
@@ -1467,8 +1557,8 @@
         const ceiling = Bodies.rectangle(WIDTH / 2, WALL / 2, WIDTH - WALL * 2, WALL, {
           isStatic: true,
           label: "ceiling",
-          friction: 0.35,
-          restitution: 0.05,
+          friction: 0.25,
+          restitution: 0.15,
           render: { fillStyle: "#d7c6a4", strokeStyle: "#d7c6a4", lineWidth: 0 }
         });
         const left = Bodies.rectangle(WALL / 2, HEIGHT / 2, WALL, HEIGHT, {
@@ -1488,17 +1578,17 @@
         const obstacleA = Bodies.circle(170, 360, 30, {
           isStatic: true,
           label: "obstacle",
-          friction: 0.15,
-          frictionStatic: 0.15,
-          restitution: 0.45,
+          friction: 0.02,
+          frictionStatic: 0.02,
+          restitution: 1.2,
           render: { visible: false }
         });
         const obstacleB = Bodies.circle(390, 490, 36, {
           isStatic: true,
           label: "obstacle",
-          friction: 0.15,
-          frictionStatic: 0.15,
-          restitution: 0.45,
+          friction: 0.02,
+          frictionStatic: 0.02,
+          restitution: 1.2,
           render: { visible: false }
         });
 
@@ -1548,6 +1638,7 @@
         mergeLock.clear();
         bombLock.clear();
         gravityLock.clear();
+        smashLock.clear();
         unlockedCipher = null;
         cipherCodeEl.hidden = true;
         cipherHintEl.hidden = true;
