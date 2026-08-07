@@ -1654,14 +1654,14 @@
         }
 
         const impact = Math.hypot(item.velocity.x, item.velocity.y);
-        const bounceSpeed = Math.max(11, Math.min(21, impact * 2.0 + 7));
-        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (2.5 + Math.random() * 3.5);
+        const bounceSpeed = Math.max(5, Math.min(11, impact * 1.05 + 3.5));
+        const sideKick = (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2);
 
         Body.setVelocity(item, {
           x: nx * bounceSpeed + sideKick,
-          y: Math.min(ny * bounceSpeed, -8)
+          y: Math.min(ny * bounceSpeed, -4)
         });
-        Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.55);
+        Body.setAngularVelocity(item, (Math.random() - 0.5) * 0.3);
       }
 
       function smashItemOnCeiling(item) {
@@ -2303,7 +2303,7 @@
         }
         lockedViewportWidth = viewportWidth;
 
-        document.documentElement.classList.toggle("compact-ui", window.innerHeight < 860);
+        document.documentElement.classList.toggle("compact-ui", window.innerHeight < 920);
 
         // Clear lock to measure natural CSS size, then freeze pixel dimensions.
         stageWrap.style.width = "";
@@ -2315,14 +2315,14 @@
         const chromeBudget = document.documentElement.classList.contains("compact-ui") ? 200 : 240;
         // Use stable small-viewport height; fall back to innerHeight at lock time.
         const stableH = Math.min(
-          760,
-          (window.innerHeight || 760) - chromeBudget
+          880,
+          (window.innerHeight || 880) - chromeBudget
         );
         const width = Math.max(
           220,
-          Math.min(560, parentWidth, stableH * (560 / 760))
+          Math.min(560, parentWidth, stableH * (560 / 880))
         );
-        const height = width * (760 / 560);
+        const height = width * (880 / 560);
 
         stageWrap.style.width = `${Math.round(width)}px`;
         stageWrap.style.height = `${Math.round(height)}px`;
