@@ -760,7 +760,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.3.2</span>
+        <span class="build-version">Food Merge v1.3.3</span>
       </p>
     </section>
   </main>
@@ -1266,7 +1266,19 @@
         if (!cat || cat.isPreview || cat.catActive) return;
         cat.catActive = true;
         cat.catEaten = cat.catEaten || 0;
-        Body.set(cat, { isSleeping: false, frictionAir: 0.04 });
+        Body.set(cat, {
+          isSleeping: false,
+          restitution: 0,
+          friction: 0.85,
+          frictionStatic: 0.9,
+          frictionAir: 0.06
+        });
+        // Kill leftover bounce from the drop/landing
+        Body.setVelocity(cat, {
+          x: cat.velocity.x * 0.35,
+          y: Math.max(0, cat.velocity.y)
+        });
+        Body.setAngularVelocity(cat, 0);
       }
 
       function despawnCat(cat) {
@@ -1360,8 +1372,9 @@
             const dir = body.catDir || 1;
             Body.setVelocity(body, {
               x: dir * (CAT_CRAWL_SPEED * 0.65),
-              y: Math.min(body.velocity.y, 2.2)
+              y: Math.max(0, Math.min(body.velocity.y, 2.5))
             });
+            Body.setAngularVelocity(body, 0);
             if (body.position.x <= WALL + CAT.radius + 4) body.catDir = 1;
             if (body.position.x >= WIDTH - WALL - CAT.radius - 4) body.catDir = -1;
             if (body.catWanderMs > 2800) despawnCat(body);
@@ -1387,9 +1400,11 @@
           const dy = nearest.position.y - body.position.y;
           const len = Math.hypot(dx, dy) || 1;
           body.catDir = dx >= 0 ? 1 : -1;
+          // Prefer ground crawl; only climb gently toward raised snacks
+          const climb = Math.max(-1.6, Math.min(2.8, (dy / len) * CAT_CRAWL_SPEED * 0.55));
           Body.setVelocity(body, {
             x: (dx / len) * CAT_CRAWL_SPEED,
-            y: (dy / len) * CAT_CRAWL_SPEED * 0.9
+            y: climb
           });
           Body.setAngularVelocity(body, 0);
 
