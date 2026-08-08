@@ -1428,6 +1428,7 @@
         previewBody.catActive = false;
         Composite.add(world, previewBody);
         canDrop = true;
+        scheduleSave();
       }
 
       function rebuildPreviewAt(x) {
