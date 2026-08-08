@@ -792,7 +792,7 @@
 
       <p class="disclaimer">
         CipherPrint © 2026. Kitchen food merge game for offline fun.
-        <span class="build-version">Food Merge v1.4.2</span>
+        <span class="build-version">Food Merge v1.4.3</span>
       </p>
     </section>
   </main>
@@ -861,6 +861,9 @@
       const CAT_EAT_TARGET = 2;
       const CAT_CRAWL_STEP = 2.6;
       const CAT_STARVE_MS = 3000;
+      const SAVE_KEY = "cipherprint-food-merge-progress";
+      const SAVE_VERSION = 1;
+      const AUTOSAVE_MS = 1200;
 
       const STAGES = [
         {
@@ -966,6 +969,8 @@
       let motionListening = false;
       let gravityToastTimer = null;
       let currentGravityTiltDeg = 0;
+      let saveTimer = null;
+      let restoreToastTimer = null;
 
       function isSpecialLabel(label) {
         return label === "bomb" || label === "gravity" || label === "cat";
@@ -1147,9 +1152,250 @@
         updateStageHud();
       }
 
+      function normalizePieceSpec(piece) {
+        if (!piece || typeof piece !== "object") return null;
+        if (piece.type === "item") {
+          const tier = Math.max(0, Math.min(MAX_TIER, Number(piece.tier) || 0));
+          return { type: "item", tier };
+        }
+        if (piece.type === "gravity") return { type: "gravity" };
+        if (piece.type === "cat") return { type: "cat" };
+        if (piece.type === "bomb") return { type: "bomb" };
+        return null;
+      }
+
+      function serializeBody(body) {
+        if (!body || body.isPreview || body.isStatic) return null;
+        const base = {
+          x: body.position.x,
+          y: body.position.y,
+          vx: body.velocity.x,
+          vy: body.velocity.y,
+          angle: body.angle,
+          angularVelocity: body.angularVelocity || 0
+        };
+        if (body.label === "item") {
+          return { type: "item", tier: body.itemTier ?? 0, ...base };
+        }
+        if (body.label === "gravity") {
+          return { type: "gravity", gravityArmed: !!body.gravityArmed, ...base };
+        }
+        if (body.label === "cat") {
+          const lifeLeft = body.catBornAt
+            ? Math.max(0, CAT_STARVE_MS - (performance.now() - body.catBornAt))
+            : CAT_STARVE_MS;
+          return {
+            type: "cat",
+            catActive: !!body.catActive,
+            catEaten: body.catEaten || 0,
+            catDir: body.catDir || 1,
+            lifeLeft,
+            ...base
+          };
+        }
+        if (body.label === "bomb") {
+          return { type: "bomb", bombArmed: !!body.bombArmed, ...base };
+        }
+        return null;
+      }
+
+      function collectSaveState() {
+        if (!world) return null;
+        const pieces = Composite.allBodies(world)
+          .map(serializeBody)
+          .filter(Boolean);
+        return {
+          v: SAVE_VERSION,
+          stageIndex: currentStageIndex,
+          score,
+          gravityTilt: currentGravityTiltDeg,
+          nextPiece: normalizePieceSpec(nextPiece) || { type: "item", tier: 0 },
+          currentPiece: normalizePieceSpec(currentPiece) || { type: "item", tier: 0 },
+          pointerX,
+          gameOver: !!gameOver,
+          missionWon: !!missionWon,
+          unlockedCipher,
+          canDrop: !!canDrop,
+          pieces,
+          savedAt: Date.now()
+        };
+      }
+
+      function saveProgress() {
+        try {
+          const state = collectSaveState();
+          if (!state) return;
+          localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+        } catch (_) {
+          // Quota / private mode — ignore
+        }
+      }
+
+      function scheduleSave() {
+        if (saveTimer) return;
+        saveTimer = window.setTimeout(() => {
+          saveTimer = null;
+          saveProgress();
+        }, 250);
+      }
+
+      function loadProgress() {
+        try {
+          const raw = localStorage.getItem(SAVE_KEY);
+          if (!raw) return null;
+          const state = JSON.parse(raw);
+          if (!state || state.v !== SAVE_VERSION) return null;
+          if (!Array.isArray(state.pieces)) return null;
+          return state;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function clearProgress() {
+        try {
+          localStorage.removeItem(SAVE_KEY);
+        } catch (_) {}
+      }
+
+      function restoreBody(spec) {
+        if (!spec || typeof spec !== "object") return null;
+        const x = Math.max(WALL + 8, Math.min(WIDTH - WALL - 8, Number(spec.x) || WIDTH / 2));
+        const y = Math.max(WALL + 8, Math.min(HEIGHT - WALL - 8, Number(spec.y) || HEIGHT / 2));
+        let body = null;
+        if (spec.type === "item") {
+          const tier = Math.max(0, Math.min(MAX_TIER, Number(spec.tier) || 0));
+          body = createItem(tier, x, y);
+        } else if (spec.type === "gravity") {
+          body = createGravityPiece(x, y);
+          body.gravityArmed = spec.gravityArmed !== false;
+        } else if (spec.type === "cat") {
+          body = createCat(x, y);
+          body.catActive = !!spec.catActive;
+          body.catEaten = Math.max(0, Number(spec.catEaten) || 0);
+          body.catDir = spec.catDir < 0 ? -1 : 1;
+          const lifeLeft = Math.max(0, Math.min(CAT_STARVE_MS, Number(spec.lifeLeft) ?? CAT_STARVE_MS));
+          body.catBornAt = performance.now() - (CAT_STARVE_MS - lifeLeft);
+          if (body.catActive) {
+            Body.set(body, {
+              restitution: 0,
+              friction: 1,
+              frictionStatic: 1,
+              frictionAir: 0.15,
+              inertia: Infinity
+            });
+          }
+        } else if (spec.type === "bomb") {
+          body = createBomb(x, y);
+          body.bombArmed = spec.bombArmed !== false;
+        }
+        if (!body) return null;
+        Body.setVelocity(body, {
+          x: Number(spec.vx) || 0,
+          y: Number(spec.vy) || 0
+        });
+        Body.setAngle(body, Number(spec.angle) || 0);
+        Body.setAngularVelocity(body, Number(spec.angularVelocity) || 0);
+        return body;
+      }
+
+      function showRestoreToast() {
+        if (!gravityToastEl) return;
+        gravityToastEl.textContent = "Progress restored";
+        gravityToastEl.classList.add("show");
+        if (restoreToastTimer) window.clearTimeout(restoreToastTimer);
+        restoreToastTimer = window.setTimeout(() => {
+          gravityToastEl.classList.remove("show");
+        }, 1600);
+      }
+
+      function spawnHeldPreview() {
+        removePreview();
+        if (gameOver) return;
+        updateNextPreview();
+        const x = clampDropX(pointerX, currentPiece);
+        previewBody = createPiece(currentPiece, x, DROP_Y, {
+          isStatic: true,
+          isSensor: true,
+          isPreview: true,
+          collisionFilter: { mask: 0 }
+        });
+        previewBody.isPreview = true;
+        previewBody.bombArmed = false;
+        previewBody.gravityArmed = false;
+        previewBody.catActive = false;
+        Composite.add(world, previewBody);
+        canDrop = true;
+      }
+
+      function restoreProgress(state) {
+        currentStageIndex = Math.max(
+          0,
+          Math.min(STAGES.length - 1, Number(state.stageIndex) || 0)
+        );
+        applyStageLayout();
+        setScore(Math.max(0, Number(state.score) || 0));
+        setGravityTilt(Number(state.gravityTilt) || 0);
+        nextPiece = normalizePieceSpec(state.nextPiece) || randomNextPiece();
+        currentPiece = normalizePieceSpec(state.currentPiece) || { type: "item", tier: 0 };
+        pointerX = Math.max(WALL, Math.min(WIDTH - WALL, Number(state.pointerX) || WIDTH / 2));
+        gameOver = !!state.gameOver;
+        missionWon = !!state.missionWon;
+        unlockedCipher = state.unlockedCipher || null;
+        dangerSince = null;
+        mergeLock.clear();
+        bombLock.clear();
+        gravityLock.clear();
+        smashLock.clear();
+        catEatLock.clear();
+
+        clearPieces();
+        const restored = [];
+        for (const spec of state.pieces) {
+          const body = restoreBody(spec);
+          if (body) restored.push(body);
+        }
+        if (restored.length) Composite.add(world, restored);
+
+        if (gameOver) {
+          canDrop = false;
+          removePreview();
+          const stage = getStage();
+          if (missionWon) {
+            const nextMsg =
+              currentStageIndex >= STAGES.length - 1
+                ? "Final stage cleared. Continue for another batch, or restart from Stage 1."
+                : `Stage ${stage.id} cleared. Continue here, or advance to Stage ${STAGES[currentStageIndex + 1].id}.`;
+            showEndOverlay({
+              title: "Cake Complete",
+              message: `Birthday Cake assembled on ${stage.name}. ${nextMsg}`,
+              won: true
+            });
+          } else {
+            const nextMsg =
+              currentStageIndex >= STAGES.length - 1
+                ? "Continue this stage, or restart from Stage 1."
+                : `Continue Stage ${stage.id}, or try Stage ${STAGES[currentStageIndex + 1].id}.`;
+            showEndOverlay({
+              title: "Kitchen Chaos",
+              message: `The snack pile crossed the danger line on ${stage.name}. ${nextMsg}`,
+              won: false
+            });
+          }
+        } else {
+          overlay.classList.remove("show");
+          if (runner && runner.enabled === false) Runner.run(runner, engine);
+          spawnHeldPreview();
+        }
+
+        showRestoreToast();
+        saveProgress();
+      }
+
       function setScore(value) {
         score = value;
         scoreEl.textContent = String(score);
+        scheduleSave();
       }
 
       function makeCipherCode() {
@@ -1245,6 +1491,7 @@
         Body.setVelocity(body, { x: 0, y: 2.2 });
         Body.applyForce(body, body.position, { x: 0, y: 0.004 });
         Composite.add(world, body);
+        scheduleSave();
 
         window.setTimeout(() => {
           if (!gameOver) spawnPreview();
@@ -1726,6 +1973,7 @@
         updateStageHud();
         overlay.classList.add("show");
         if (runner) Runner.stop(runner);
+        saveProgress();
       }
 
       function triggerWin(cakeBody) {
@@ -2140,6 +2388,7 @@
           Runner.run(runner, engine);
         }
         spawnPreview();
+        saveProgress();
       }
 
       function shakeBoard() {
@@ -2336,9 +2585,25 @@
       });
       window.addEventListener("resize", () => lockStageSize(false));
 
-      nextPiece = randomNextPiece();
       buildWorld();
-      spawnPreview();
+      const saved = loadProgress();
+      if (saved && (saved.pieces.length > 0 || saved.score > 0 || saved.gameOver || saved.stageIndex > 0)) {
+        restoreProgress(saved);
+      } else {
+        nextPiece = randomNextPiece();
+        spawnPreview();
+        saveProgress();
+      }
+
+      window.setInterval(() => {
+        if (!gameOver) saveProgress();
+      }, AUTOSAVE_MS);
+
+      window.addEventListener("pagehide", saveProgress);
+      window.addEventListener("beforeunload", saveProgress);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") saveProgress();
+      });
     })();
   </script>
 </body>
