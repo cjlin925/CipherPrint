@@ -424,7 +424,7 @@
 
     .stage-bar {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       justify-content: space-between;
       gap: 0.75rem;
       margin: 0.75rem 0 0;
@@ -437,6 +437,13 @@
       font-size: 0.95rem;
       font-weight: 800;
       letter-spacing: -0.02em;
+    }
+
+    .stage-bar .stage-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-left: auto;
     }
 
     .stage-bar .stage-desc {
@@ -485,6 +492,32 @@
       background: rgba(33, 92, 66, 0.08);
       color: var(--ink);
       transform: none;
+    }
+
+    .music-toggle {
+      width: 2.35rem;
+      height: 2.35rem;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--accent-dark);
+      background: #fafcfb;
+      font-size: 1rem;
+      line-height: 1;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .music-toggle:hover {
+      border-color: rgba(33, 92, 66, 0.45);
+      background: rgba(33, 92, 66, 0.08);
+      color: var(--accent-dark);
+      transform: none;
+    }
+
+    .music-toggle[aria-pressed="false"] {
+      color: var(--muted);
+      opacity: 0.72;
     }
 
     .evolution {
@@ -704,7 +737,17 @@
 
       <div class="stage-bar" aria-live="polite">
         <p class="stage-label">Stage <span id="stage-number">1</span></p>
-        <p class="stage-desc" id="stage-desc">2 bouncy obstacles</p>
+        <div class="stage-meta">
+          <p class="stage-desc" id="stage-desc">2 bouncy obstacles</p>
+          <button
+            type="button"
+            class="music-toggle"
+            id="music-toggle"
+            aria-pressed="true"
+            aria-label="Mute background music"
+            title="Mute music"
+          >♪</button>
+        </div>
       </div>
 
       <div class="stage-wrap" id="stage-wrap">
@@ -826,6 +869,266 @@
       window.matchMedia("(max-width: 720px)").addEventListener("change", (event) => {
         if (!event.matches) setOpen(false);
       });
+    })();
+  </script>
+
+  <script>
+    /** Chill bossa / soft jazz bed via Web Audio — no vocals, seamless loop. */
+    const KitchenBossa = (() => {
+      const MUSIC_KEY = "cipherprint-food-merge-music";
+      const BPM = 108;
+      const BEAT = 60 / BPM;
+      const BAR = BEAT * 4;
+      const LOOP_BARS = 8;
+      const LOOP = BAR * LOOP_BARS;
+
+      // Cheerful ii–V flavored loop in C (warm, playful, casual-puzzle feel).
+      const CHORDS = [
+        ["C3", "E3", "G3", "B3"],   // Cmaj7
+        ["A2", "C3", "E3", "G3"],   // Am7
+        ["D3", "F3", "A3", "C4"],   // Dm7
+        ["G2", "B2", "D3", "F3"],   // G7
+        ["E3", "G3", "B3", "D4"],   // Em7
+        ["A2", "C#3", "E3", "G3"],  // A7
+        ["D3", "F3", "A3", "C4"],   // Dm7
+        ["G2", "B2", "D3", "F3"]    // G7
+      ];
+      const BASS = ["C2", "A1", "D2", "G1", "E2", "A1", "D2", "G1"];
+      const MELODY = [
+        "E4", null, "G4", "A4",
+        "G4", null, "E4", "C4",
+        "D4", null, "F4", "A4",
+        "G4", null, "B3", "D4",
+        "E4", null, "G4", "B4",
+        "A4", null, "E4", "C#4",
+        "D4", null, "F4", "A4",
+        "G4", null, "F4", "D4"
+      ];
+
+      const NOTE_HZ = (() => {
+        const A4 = 440;
+        const names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+        const map = {};
+        for (let oct = 1; oct <= 6; oct += 1) {
+          names.forEach((name, i) => {
+            const n = (oct - 4) * 12 + (i - 9);
+            map[`${name}${oct}`] = A4 * (2 ** (n / 12));
+          });
+        }
+        return map;
+      })();
+
+      let ctx = null;
+      let master = null;
+      let musicGain = null;
+      let started = false;
+      let muted = false;
+      let schedulerId = 0;
+      let nextBarAt = 0;
+      let barIndex = 0;
+
+      function loadMuted() {
+        try {
+          return localStorage.getItem(MUSIC_KEY) === "off";
+        } catch (_) {
+          return false;
+        }
+      }
+
+      function saveMuted(value) {
+        try {
+          localStorage.setItem(MUSIC_KEY, value ? "off" : "on");
+        } catch (_) {
+          // Ignore quota / private mode.
+        }
+      }
+
+      function ensureContext() {
+        if (ctx) return ctx;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        ctx = new AudioCtx();
+        master = ctx.createGain();
+        master.gain.value = 0.18;
+        musicGain = ctx.createGain();
+        musicGain.gain.value = muted ? 0 : 1;
+        musicGain.connect(master);
+        master.connect(ctx.destination);
+        return ctx;
+      }
+
+      function envGain(t, attack, decay, peak, sustain = 0) {
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(Math.max(peak, 0.0002), t + attack);
+        g.gain.exponentialRampToValueAtTime(Math.max(sustain, 0.0001), t + attack + decay);
+        return g;
+      }
+
+      function tone(freq, t, dur, type, peak, filterFreq) {
+        const osc = ctx.createOscillator();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, t);
+        const g = envGain(t, 0.012, dur * 0.85, peak, 0.0001);
+        let node = osc;
+        if (filterFreq) {
+          const filter = ctx.createBiquadFilter();
+          filter.type = "lowpass";
+          filter.frequency.setValueAtTime(filterFreq, t);
+          filter.Q.value = 0.7;
+          osc.connect(filter);
+          node = filter;
+        }
+        node.connect(g);
+        g.connect(musicGain);
+        osc.start(t);
+        osc.stop(t + dur + 0.05);
+      }
+
+      function softNoise(t, dur, peak, highpass = 1800) {
+        const frames = Math.max(1, Math.floor(ctx.sampleRate * dur));
+        const buffer = ctx.createBuffer(1, frames, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < frames; i += 1) data[i] = Math.random() * 2 - 1;
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = "highpass";
+        filter.frequency.value = highpass;
+        const g = envGain(t, 0.004, dur * 0.9, peak, 0.0001);
+        src.connect(filter);
+        filter.connect(g);
+        g.connect(musicGain);
+        src.start(t);
+        src.stop(t + dur + 0.02);
+      }
+
+      function playPiano(freq, t, dur, peak = 0.045) {
+        tone(freq, t, dur, "sine", peak, 2400);
+        tone(freq * 2.005, t, dur * 0.7, "sine", peak * 0.28, 3200);
+        tone(freq * 0.5, t, dur * 0.55, "triangle", peak * 0.12, 900);
+      }
+
+      function playGuitar(freq, t, dur, peak = 0.03) {
+        tone(freq, t, dur, "triangle", peak, 1800);
+        tone(freq * 2.01, t, dur * 0.55, "sine", peak * 0.18, 2600);
+        softNoise(t, Math.min(0.05, dur * 0.25), peak * 0.08, 2200);
+      }
+
+      function playBass(freq, t, dur) {
+        tone(freq, t, dur, "sine", 0.07, 420);
+        tone(freq * 2, t, dur * 0.45, "triangle", 0.015, 700);
+      }
+
+      function scheduleBar(barStart, chordIdx) {
+        const chord = CHORDS[chordIdx];
+        const root = NOTE_HZ[BASS[chordIdx]];
+
+        // Soft piano chord on beat 1, light answer on beat 3.
+        chord.forEach((note, i) => {
+          const f = NOTE_HZ[note];
+          playPiano(f, barStart + 0.01 + i * 0.012, BEAT * 2.6, 0.032 - i * 0.003);
+          playPiano(f, barStart + BEAT * 2 + 0.01 + i * 0.01, BEAT * 1.6, 0.018 - i * 0.002);
+        });
+
+        // Acoustic-ish guitar strums: syncopated bossa feel.
+        const strumBeats = [0, 0.75, 1.5, 2.25, 3];
+        strumBeats.forEach((beat, s) => {
+          const t = barStart + beat * BEAT;
+          chord.forEach((note, i) => {
+            playGuitar(NOTE_HZ[note], t + i * 0.018, BEAT * 1.15, 0.022 - i * 0.0025);
+          });
+          if (s % 2 === 1) softNoise(t, 0.045, 0.012, 3500);
+        });
+
+        // Warm walking bass.
+        playBass(root, barStart, BEAT * 1.85);
+        playBass(root * (5 / 4), barStart + BEAT * 1.5, BEAT * 0.9);
+        playBass(root, barStart + BEAT * 2.5, BEAT * 1.2);
+        playBass(root * (9 / 8), barStart + BEAT * 3.5, BEAT * 0.55);
+
+        // Playful melody fragments (soft, sparse).
+        for (let i = 0; i < 4; i += 1) {
+          const note = MELODY[chordIdx * 4 + i];
+          if (!note) continue;
+          const t = barStart + i * BEAT + (i % 2 ? 0.08 : 0);
+          playPiano(NOTE_HZ[note], t, BEAT * 1.35, 0.02);
+        }
+
+        // Soft shaker / brushed groove.
+        for (let i = 0; i < 8; i += 1) {
+          const t = barStart + i * (BEAT / 2);
+          if (i === 1 || i === 3 || i === 5 || i === 7) {
+            softNoise(t, 0.03, 0.006, 4500);
+            continue;
+          }
+          const accent = i === 2 || i === 6 ? 0.014 : 0.007;
+          softNoise(t, 0.032, accent, i % 2 ? 4000 : 2600);
+        }
+
+        // Gentle clave / rim clicks.
+        [0.75, 1.75, 2.5, 3.5].forEach((beat, i) => {
+          const t = barStart + beat * BEAT;
+          tone(1650 + i * 90, t, 0.035, "triangle", 0.007, 2800);
+          softNoise(t, 0.02, 0.007, 4800);
+        });
+      }
+
+      function scheduler() {
+        if (!ctx || !started) return;
+        const lookAhead = 0.35;
+        while (nextBarAt < ctx.currentTime + lookAhead) {
+          scheduleBar(nextBarAt, barIndex % LOOP_BARS);
+          nextBarAt += BAR;
+          barIndex += 1;
+        }
+      }
+
+      function start() {
+        muted = loadMuted();
+        if (!ensureContext()) return false;
+        if (ctx.state === "suspended") ctx.resume();
+        if (!started) {
+          started = true;
+          barIndex = 0;
+          nextBarAt = ctx.currentTime + 0.08;
+          scheduler();
+          schedulerId = window.setInterval(scheduler, 80);
+        }
+        setMuted(muted, false);
+        return true;
+      }
+
+      function setMuted(next, persist = true) {
+        muted = !!next;
+        if (persist) saveMuted(muted);
+        if (!musicGain || !ctx) return muted;
+        const now = ctx.currentTime;
+        musicGain.gain.cancelScheduledValues(now);
+        musicGain.gain.setValueAtTime(musicGain.gain.value, now);
+        musicGain.gain.linearRampToValueAtTime(muted ? 0 : 1, now + 0.18);
+        return muted;
+      }
+
+      function toggle() {
+        start();
+        return setMuted(!muted);
+      }
+
+      function setSuspended(hidden) {
+        if (!ctx || !started) return;
+        if (hidden) {
+          if (ctx.state === "running") ctx.suspend();
+        } else if (!muted && ctx.state === "suspended") {
+          ctx.resume();
+        }
+      }
+
+      function isMuted() {
+        return started ? muted : loadMuted();
+      }
+
+      return { start, toggle, setMuted, setSuspended, isMuted };
     })();
   </script>
 
@@ -2510,6 +2813,28 @@
       window.addEventListener("touchstart", askMotionOnce, { passive: true, once: true });
       window.addEventListener("click", askMotionOnce, { once: true });
 
+      const musicToggle = document.getElementById("music-toggle");
+      const syncMusicToggle = () => {
+        const on = !KitchenBossa.isMuted();
+        musicToggle.setAttribute("aria-pressed", on ? "true" : "false");
+        musicToggle.setAttribute("aria-label", on ? "Mute background music" : "Unmute background music");
+        musicToggle.title = on ? "Mute music" : "Unmute music";
+        musicToggle.textContent = on ? "♪" : "♩";
+      };
+      syncMusicToggle();
+      musicToggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        KitchenBossa.toggle();
+        syncMusicToggle();
+      });
+
+      const startMusicOnce = () => {
+        KitchenBossa.start();
+        syncMusicToggle();
+      };
+      window.addEventListener("pointerdown", startMusicOnce, { once: true });
+      window.addEventListener("keydown", startMusicOnce, { once: true });
+
       const nextCardEl = document.getElementById("next-card");
       nextCardEl.addEventListener("click", (event) => {
         event.preventDefault();
@@ -2605,6 +2930,7 @@
       window.addEventListener("beforeunload", saveProgress);
       document.addEventListener("visibilitychange", () => {
         if (document.visibilityState === "hidden") saveProgress();
+        KitchenBossa.setSuspended(document.visibilityState === "hidden");
       });
     })();
   </script>
