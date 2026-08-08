@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CipherPrint · Origami</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17201b;
+      --muted: #69736d;
+      --paper: #ffffff;
+      --accent: #215c42;
+      --accent-dark: #17412f;
+      --line: #dfe5e1;
+      --valley: #1a4d8c;
+      --mountain: #8b2e1a;
+      --cut: #111;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(33, 92, 66, 0.08), transparent 28rem),
+        #f4f6f4;
+      font-family: "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .screen {
+      display: grid;
+      min-height: calc(100vh - 3.6rem);
+      place-items: center;
+      padding: 2rem;
+    }
+
+    .studio {
+      width: min(100%, 68rem);
+      padding: clamp(1.75rem, 5vw, 3rem);
+      border: 1px solid rgba(23, 32, 27, 0.08);
+      border-radius: 1.25rem;
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: 0 1.5rem 4rem rgba(23, 32, 27, 0.09);
+    }
+
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem 1rem;
+      padding: 0.85rem clamp(1rem, 4vw, 2rem);
+      border-bottom: 1px solid rgba(23, 32, 27, 0.08);
+      background: rgba(244, 246, 244, 0.88);
+      backdrop-filter: blur(10px);
+    }
+
+    .site-nav-brand {
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.15rem;
+      font-weight: 500;
+      letter-spacing: -0.03em;
+      text-decoration: none;
+    }
+
+    .nav-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      border: 1px solid rgba(23, 32, 27, 0.12);
+      border-radius: 0.65rem;
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .nav-toggle-bars,
+    .nav-toggle-bars::before,
+    .nav-toggle-bars::after {
+      display: block;
+      width: 1.1rem;
+      height: 2px;
+      border-radius: 999px;
+      background: currentColor;
+      transition: transform 160ms ease, opacity 160ms ease;
+    }
+
+    .nav-toggle-bars {
+      position: relative;
+    }
+
+    .nav-toggle-bars::before,
+    .nav-toggle-bars::after {
+      content: "";
+      position: absolute;
+      left: 0;
+    }
+
+    .nav-toggle-bars::before { top: -6px; }
+    .nav-toggle-bars::after { top: 6px; }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars {
+      background: transparent;
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::before {
+      top: 0;
+      transform: rotate(45deg);
+    }
+
+    .nav-toggle[aria-expanded="true"] .nav-toggle-bars::after {
+      top: 0;
+      transform: rotate(-45deg);
+    }
+
+    .site-nav-menu {
+      margin-left: auto;
+    }
+
+    .site-nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.35rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .site-nav-links a {
+      display: inline-block;
+      padding: 0.45rem 0.8rem;
+      border-radius: 0.55rem;
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 650;
+      text-decoration: none;
+      transition: color 150ms ease, background-color 150ms ease;
+    }
+
+    .site-nav-links a:hover {
+      color: var(--ink);
+      background: rgba(33, 92, 66, 0.08);
+    }
+
+    .site-nav-links a[aria-current="page"] {
+      color: var(--accent-dark);
+      background: rgba(33, 92, 66, 0.12);
+    }
+
+    @media (max-width: 720px) {
+      .nav-toggle {
+        display: inline-flex;
+      }
+
+      .site-nav-menu {
+        display: none;
+        width: 100%;
+        margin-left: 0;
+        padding-top: 0.35rem;
+      }
+
+      .site-nav-menu.is-open {
+        display: block;
+      }
+
+      .site-nav-links {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.25rem;
+      }
+
+      .site-nav-links a {
+        width: 100%;
+        padding: 0.75rem 0.85rem;
+      }
+    }
+
+    .eyebrow {
+      margin: 0 0 0.75rem;
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.25rem, 7vw, 3.75rem);
+      font-weight: 500;
+      letter-spacing: -0.055em;
+      line-height: 0.95;
+    }
+
+    .intro {
+      max-width: 40rem;
+      margin: 1rem 0 1.75rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .theme-label {
+      margin: 0 0 0.65rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .model-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .model-pills input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      padding: 0;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    .model-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.5rem;
+      margin: 0;
+      padding: 0.6rem 0.85rem;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+      transition: border-color 150ms ease, background 150ms ease, color 150ms ease;
+    }
+
+    .model-pills input:checked + .model-pill {
+      border-color: var(--accent);
+      color: #fff;
+      background: var(--accent);
+    }
+
+    .model-pills input:focus-visible + .model-pill {
+      box-shadow: 0 0 0 3px rgba(33, 92, 66, 0.16);
+    }
+
+    .preview-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(13rem, 0.7fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    .preview-frame {
+      display: grid;
+      place-items: center;
+      min-height: 32rem;
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: 0.85rem;
+      background:
+        linear-gradient(45deg, #f3f5f3 25%, transparent 25%),
+        linear-gradient(-45deg, #f3f5f3 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #f3f5f3 75%),
+        linear-gradient(-45deg, transparent 75%, #f3f5f3 75%);
+      background-position: 0 0, 0 6px, 6px -6px, -6px 0;
+      background-size: 12px 12px;
+      background-color: #fafcfb;
+    }
+
+    .preview-frame svg {
+      width: min(100%, 34rem);
+      height: auto;
+      background: #fff;
+      box-shadow: 0 0.5rem 1.5rem rgba(23, 32, 27, 0.08);
+    }
+
+    .details {
+      padding: 1.1rem;
+      border: 1px solid var(--line);
+      border-radius: 0.85rem;
+      background: #fafcfb;
+    }
+
+    .details h2 {
+      margin: 0 0 0.5rem;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.35rem;
+      font-weight: 500;
+    }
+
+    .details p {
+      margin: 0 0 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .legend {
+      display: grid;
+      gap: 0.55rem;
+      margin: 0 0 1rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    .legend li {
+      display: grid;
+      grid-template-columns: 2.4rem 1fr;
+      gap: 0.65rem;
+      align-items: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .legend svg {
+      width: 2.4rem;
+      height: 0.7rem;
+    }
+
+    .steps {
+      margin: 0;
+      padding-left: 1.15rem;
+      color: var(--ink);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .steps li + li {
+      margin-top: 0.35rem;
+    }
+
+    .print-actions {
+      margin-top: 1.5rem;
+    }
+
+    button {
+      width: 100%;
+      margin: 0;
+      padding: 0.9rem 1.2rem;
+      border: 0;
+      border-radius: 0.65rem;
+      color: white;
+      background: var(--accent);
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .privacy {
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-align: center;
+    }
+
+    .disclaimer {
+      max-width: 36rem;
+      margin: 0.65rem auto 0;
+      color: var(--muted);
+      font-size: 0.68rem;
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .print-sheet {
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .screen {
+        padding: 1rem;
+      }
+
+      .preview-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @page {
+      size: letter;
+      margin: 0.5in;
+    }
+
+    @media print {
+      :root {
+        --ink: #000;
+        --valley: #000;
+        --mountain: #000;
+        --cut: #000;
+      }
+
+      html,
+      body {
+        min-height: auto;
+        background: #fff;
+      }
+
+      .site-nav,
+      .screen {
+        display: none !important;
+      }
+
+      .print-sheet {
+        display: block;
+        width: 7.5in;
+        margin: 0 auto;
+        color: #000;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .print-header {
+        margin-bottom: 0.2in;
+        text-align: center;
+      }
+
+      .print-header p {
+        margin: 0 0 0.08in;
+        font-size: 8pt;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .print-header h1 {
+        margin: 0;
+        font-size: 16pt;
+        letter-spacing: 0.04em;
+      }
+
+      .print-meta {
+        display: flex;
+        justify-content: space-between;
+        margin: 0.12in 0 0.18in;
+        font-size: 8pt;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .print-stage {
+        display: grid;
+        place-items: center;
+      }
+
+      .print-stage svg {
+        width: 7in;
+        height: auto;
+        max-height: 8in;
+      }
+
+      .print-legend {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.12in 0.3in;
+        margin-top: 0.12in;
+        padding-top: 0.1in;
+        border-top: 1px solid #000;
+        font-size: 8pt;
+        font-weight: 700;
+      }
+
+      .print-legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.12in;
+      }
+
+      .print-legend svg {
+        width: 0.55in;
+        height: 0.12in;
+      }
+
+      .print-steps {
+        margin: 0.12in 0 0;
+        padding-left: 0.2in;
+        font-size: 8.5pt;
+        line-height: 1.3;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-nav">
+    <a class="site-nav-brand" href="/CipherPrint/">CipherPrint</a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="Open menu">
+      <span class="nav-toggle-bars" aria-hidden="true"></span>
+    </button>
+    <nav id="site-menu" class="site-nav-menu" aria-label="Primary">
+      <ul class="site-nav-links">
+        <li><a href="/CipherPrint/">CipherPrint</a></li>
+        <li><a href="/CipherPrint/flag-map.html">Flag Map</a></li>
+        <li><a href="/CipherPrint/origami.html" aria-current="page">Origami</a></li>
+        <li><a href="/CipherPrint/merge.html">Agent Merge</a></li>
+        <li><a href="/CipherPrint/food-merge.html">Food Merge</a></li>
+        <li><a href="/CipherPrint/story.html">Story</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="screen">
+    <section class="studio" aria-labelledby="app-title">
+      <p class="eyebrow">Offline fold templates</p>
+      <h1 id="app-title">Origami Print</h1>
+      <p class="intro">Preview crease patterns in the browser, then print a clean US Letter sheet with fold lines and cutting guides. Valley folds are dashed; mountain folds are dash-dot.</p>
+
+      <p class="theme-label">Choose a model</p>
+      <div class="model-pills" role="radiogroup" aria-label="Origami model">
+        <input id="model-envelope" name="origamiModel" type="radio" value="envelope" checked>
+        <label class="model-pill" for="model-envelope">Secret Envelope</label>
+
+        <input id="model-sailboat" name="origamiModel" type="radio" value="sailboat">
+        <label class="model-pill" for="model-sailboat">Sailboat</label>
+
+        <input id="model-box" name="origamiModel" type="radio" value="box">
+        <label class="model-pill" for="model-box">Masu Box</label>
+
+        <input id="model-fortune" name="origamiModel" type="radio" value="fortune">
+        <label class="model-pill" for="model-fortune">Fortune Teller</label>
+
+        <input id="model-airplane" name="origamiModel" type="radio" value="airplane">
+        <label class="model-pill" for="model-airplane">Airplane</label>
+      </div>
+
+      <div class="preview-layout">
+        <div class="preview-frame" aria-live="polite">
+          <div id="preview-svg"></div>
+        </div>
+
+        <aside class="details">
+          <h2 id="model-title">Secret Envelope</h2>
+          <p id="model-blurb">A foldable pocket for hiding a short coded note. Start from a square cut from letter paper.</p>
+
+          <ul class="legend" aria-label="Fold line legend">
+            <li>
+              <svg viewBox="0 0 48 8" aria-hidden="true"><line class="cut" x1="0" y1="4" x2="48" y2="4" stroke="currentColor" stroke-width="1.6"/></svg>
+              Cut edge
+            </li>
+            <li>
+              <svg viewBox="0 0 48 8" aria-hidden="true"><line x1="0" y1="4" x2="48" y2="4" stroke="var(--valley)" stroke-width="1.6" stroke-dasharray="5 3"/></svg>
+              Valley fold
+            </li>
+            <li>
+              <svg viewBox="0 0 48 8" aria-hidden="true"><line x1="0" y1="4" x2="48" y2="4" stroke="var(--mountain)" stroke-width="1.6" stroke-dasharray="7 2.5 1.5 2.5"/></svg>
+              Mountain fold
+            </li>
+          </ul>
+
+          <ol class="steps" id="model-steps"></ol>
+        </aside>
+      </div>
+
+      <div class="print-actions">
+        <button id="print-button" type="button">Generate &amp; Print</button>
+      </div>
+      <p class="privacy">No network. No saved templates. Just print.</p>
+      <p class="disclaimer">CipherPrint © 2026. For personal and educational use.</p>
+    </section>
+  </main>
+
+  <article id="print-sheet" class="print-sheet" aria-label="Printable origami template">
+    <header class="print-header">
+      <p>CipherPrint // Origami</p>
+      <h1 id="print-title">Secret Envelope</h1>
+    </header>
+    <div class="print-meta">
+      <span id="print-size">Square template · US Letter</span>
+      <span>Valley = dashed · Mountain = dash-dot</span>
+    </div>
+    <div class="print-stage">
+      <div id="print-svg"></div>
+    </div>
+    <div class="print-legend" aria-hidden="true">
+      <span>
+        <svg viewBox="0 0 48 8"><line x1="0" y1="4" x2="48" y2="4" stroke="#000" stroke-width="1.8"/></svg>
+        Cut
+      </span>
+      <span>
+        <svg viewBox="0 0 48 8"><line x1="0" y1="4" x2="48" y2="4" stroke="#000" stroke-width="1.8" stroke-dasharray="5 3"/></svg>
+        Valley
+      </span>
+      <span>
+        <svg viewBox="0 0 48 8"><line x1="0" y1="4" x2="48" y2="4" stroke="#000" stroke-width="1.8" stroke-dasharray="7 2.5 1.5 2.5"/></svg>
+        Mountain
+      </span>
+    </div>
+    <ol class="print-steps" id="print-steps"></ol>
+  </article>
+
+  <script>
+    const svgNS = "http://www.w3.org/2000/svg";
+    const previewHost = document.getElementById("preview-svg");
+    const printHost = document.getElementById("print-svg");
+    const modelTitle = document.getElementById("model-title");
+    const modelBlurb = document.getElementById("model-blurb");
+    const modelSteps = document.getElementById("model-steps");
+    const printTitle = document.getElementById("print-title");
+    const printSize = document.getElementById("print-size");
+    const printSteps = document.getElementById("print-steps");
+    const printButton = document.getElementById("print-button");
+
+    function svgEl(name, attrs = {}, text = "") {
+      const element = document.createElementNS(svgNS, name);
+      Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+      if (text) element.textContent = text;
+      return element;
+    }
+
+    function line(x1, y1, x2, y2, kind, palette = "screen") {
+      const colors = palette === "print"
+        ? { cut: "#000", valley: "#000", mountain: "#000" }
+        : { cut: "var(--cut)", valley: "var(--valley)", mountain: "var(--mountain)" };
+      const styles = {
+        cut: { stroke: colors.cut, "stroke-width": "2.2" },
+        valley: { stroke: colors.valley, "stroke-width": "1.7", "stroke-dasharray": "7 4" },
+        mountain: { stroke: colors.mountain, "stroke-width": "1.7", "stroke-dasharray": "9 3 2 3" }
+      };
+      const style = styles[kind] || styles.valley;
+      return svgEl("line", {
+        x1, y1, x2, y2,
+        fill: "none",
+        "stroke-linecap": "round",
+        ...style
+      });
+    }
+
+    function label(x, y, text, anchor = "middle", palette = "screen") {
+      return svgEl("text", {
+        x, y,
+        fill: palette === "print" ? "#000" : "#333",
+        "font-family": "Georgia, Times New Roman, serif",
+        "font-size": "7.5",
+        "text-anchor": anchor,
+        "dominant-baseline": "middle"
+      }, text);
+    }
+
+    /** Secret message envelope from a square. */
+    function buildEnvelope(palette = "screen") {
+      const svg = svgEl("svg", {
+        viewBox: "0 0 200 200",
+        role: "img",
+        "aria-label": "Secret envelope crease pattern"
+      });
+
+      // Outer cutting square
+      svg.appendChild(svgEl("rect", {
+        x: 10, y: 10, width: 180, height: 180,
+        fill: "#fff",
+        stroke: palette === "print" ? "#000" : "var(--cut)",
+        "stroke-width": "2.2"
+      }));
+
+      // Side flaps to center (valley): crease midway from edge to center
+      svg.appendChild(line(55, 10, 55, 190, "valley", palette));
+      svg.appendChild(line(145, 10, 145, 190, "valley", palette));
+      // Mid pocket shelf (mountain — reverse crease when forming pocket)
+      svg.appendChild(line(55, 100, 145, 100, "mountain", palette));
+      // Bottom tuck panel
+      svg.appendChild(line(10, 145, 190, 145, "valley", palette));
+      // Top closure flap
+      svg.appendChild(line(10, 55, 190, 55, "valley", palette));
+      // Diagonal tuck corners on bottom panel
+      svg.appendChild(line(55, 145, 10, 190, "valley", palette));
+      svg.appendChild(line(145, 145, 190, 190, "valley", palette));
+      // Top flap tip guides
+      svg.appendChild(line(55, 55, 100, 10, "mountain", palette));
+      svg.appendChild(line(145, 55, 100, 10, "mountain", palette));
+
+      svg.appendChild(label(100, 32, "FLAP", "middle", palette));
+      svg.appendChild(label(100, 122, "POCKET", "middle", palette));
+      svg.appendChild(label(100, 168, "TUCK", "middle", palette));
+      svg.appendChild(label(28, 100, "L", "middle", palette));
+      svg.appendChild(label(172, 100, "R", "middle", palette));
+
+      return svg;
+    }
+
+    /** Classic origami sailboat crease pattern. */
+    function buildSailboat(palette = "screen") {
+      const svg = svgEl("svg", {
+        viewBox: "0 0 200 200",
+        role: "img",
+        "aria-label": "Sailboat crease pattern"
+      });
+
+      svg.appendChild(svgEl("rect", {
+        x: 10, y: 10, width: 180, height: 180,
+        fill: "#fff",
+        stroke: palette === "print" ? "#000" : "var(--cut)",
+        "stroke-width": "2.2"
+      }));
+
+      // Centerline (mast) and waterline
+      svg.appendChild(line(100, 10, 100, 190, "valley", palette));
+      svg.appendChild(line(10, 100, 190, 100, "valley", palette));
+      // Main diagonals
+      svg.appendChild(line(10, 10, 190, 190, "valley", palette));
+      svg.appendChild(line(190, 10, 10, 190, "mountain", palette));
+      // Sail peak to waterline
+      svg.appendChild(line(100, 10, 10, 100, "valley", palette));
+      svg.appendChild(line(100, 10, 190, 100, "mountain", palette));
+      // Hull corners up to waterline
+      svg.appendChild(line(10, 190, 100, 100, "valley", palette));
+      svg.appendChild(line(190, 190, 100, 100, "valley", palette));
+      // Hull rail (mountain)
+      svg.appendChild(line(40, 145, 160, 145, "mountain", palette));
+      // Sail trim
+      svg.appendChild(line(100, 40, 55, 100, "mountain", palette));
+      svg.appendChild(line(100, 40, 145, 100, "valley", palette));
+
+      svg.appendChild(label(100, 55, "SAIL", "middle", palette));
+      svg.appendChild(label(100, 162, "HULL", "middle", palette));
+      svg.appendChild(label(28, 55, "PORT", "start", palette));
+      svg.appendChild(label(172, 55, "STBD", "end", palette));
+
+      return svg;
+    }
+
+    /** Traditional masu (square open box) crease pattern. */
+    function buildBox(palette = "screen") {
+      const svg = svgEl("svg", {
+        viewBox: "0 0 200 200",
+        role: "img",
+        "aria-label": "Masu box crease pattern"
+      });
+
+      svg.appendChild(svgEl("rect", {
+        x: 10, y: 10, width: 180, height: 180,
+        fill: "#fff",
+        stroke: palette === "print" ? "#000" : "var(--cut)",
+        "stroke-width": "2.2"
+      }));
+
+      // 4×4 grid (valley) — walls are one quarter of the square
+      [55, 100, 145].forEach((pos) => {
+        svg.appendChild(line(10, pos, 190, pos, "valley", palette));
+        svg.appendChild(line(pos, 10, pos, 190, "valley", palette));
+      });
+
+      // Corner diagonals for locking walls
+      svg.appendChild(line(10, 10, 55, 55, "mountain", palette));
+      svg.appendChild(line(190, 10, 145, 55, "mountain", palette));
+      svg.appendChild(line(10, 190, 55, 145, "mountain", palette));
+      svg.appendChild(line(190, 190, 145, 145, "mountain", palette));
+
+      // Inner floor outline (mountain when walls rise)
+      // Drawn only on the floor square so they don't fight the full grid strokes.
+      svg.appendChild(line(55, 55, 145, 55, "mountain", palette));
+      svg.appendChild(line(55, 145, 145, 145, "mountain", palette));
+      svg.appendChild(line(55, 55, 55, 145, "mountain", palette));
+      svg.appendChild(line(145, 55, 145, 145, "mountain", palette));
+
+      // Corner-squash helpers between wall midpoints and floor corners
+      svg.appendChild(line(55, 100, 100, 55, "valley", palette));
+      svg.appendChild(line(100, 55, 145, 100, "valley", palette));
+      svg.appendChild(line(145, 100, 100, 145, "valley", palette));
+      svg.appendChild(line(100, 145, 55, 100, "valley", palette));
+
+      svg.appendChild(label(100, 100, "FLOOR", "middle", palette));
+      svg.appendChild(label(100, 32, "WALL", "middle", palette));
+      svg.appendChild(label(100, 168, "WALL", "middle", palette));
+      svg.appendChild(label(32, 100, "W", "middle", palette));
+      svg.appendChild(label(168, 100, "W", "middle", palette));
+
+      return svg;
+    }
+
+    /** Fortune teller / cootie catcher from a square. */
+    function buildFortune(palette = "screen") {
+      const svg = svgEl("svg", {
+        viewBox: "0 0 200 200",
+        role: "img",
+        "aria-label": "Fortune teller crease pattern"
+      });
+
+      svg.appendChild(svgEl("rect", {
+        x: 10, y: 10, width: 180, height: 180,
+        fill: "#fff",
+        stroke: palette === "print" ? "#000" : "var(--cut)",
+        "stroke-width": "2.2"
+      }));
+
+      // Book folds through the center
+      svg.appendChild(line(100, 10, 100, 190, "valley", palette));
+      svg.appendChild(line(10, 100, 190, 100, "valley", palette));
+      // Diagonals
+      svg.appendChild(line(10, 10, 190, 190, "valley", palette));
+      svg.appendChild(line(190, 10, 10, 190, "valley", palette));
+      // Blintz diamond: corners folded to center (edge midpoints)
+      svg.appendChild(line(100, 10, 190, 100, "valley", palette));
+      svg.appendChild(line(190, 100, 100, 190, "valley", palette));
+      svg.appendChild(line(100, 190, 10, 100, "valley", palette));
+      svg.appendChild(line(10, 100, 100, 10, "valley", palette));
+      // Second-layer pocket square (mountain when inverted)
+      svg.appendChild(line(55, 55, 145, 55, "mountain", palette));
+      svg.appendChild(line(145, 55, 145, 145, "mountain", palette));
+      svg.appendChild(line(145, 145, 55, 145, "mountain", palette));
+      svg.appendChild(line(55, 145, 55, 55, "mountain", palette));
+      // Inner X for finger pockets
+      svg.appendChild(line(55, 55, 145, 145, "mountain", palette));
+      svg.appendChild(line(145, 55, 55, 145, "mountain", palette));
+
+      svg.appendChild(label(100, 32, "1", "middle", palette));
+      svg.appendChild(label(168, 100, "2", "middle", palette));
+      svg.appendChild(label(100, 168, "3", "middle", palette));
+      svg.appendChild(label(32, 100, "4", "middle", palette));
+      svg.appendChild(label(100, 100, "LUCK", "middle", palette));
+
+      return svg;
+    }
+
+    /** Classic dart paper airplane from a letter-proportion rectangle. */
+    function buildAirplane(palette = "screen") {
+      const svg = svgEl("svg", {
+        viewBox: "0 0 200 260",
+        role: "img",
+        "aria-label": "Paper airplane crease pattern"
+      });
+
+      // Letter-proportion cutting rectangle
+      svg.appendChild(svgEl("rect", {
+        x: 20, y: 15, width: 160, height: 230,
+        fill: "#fff",
+        stroke: palette === "print" ? "#000" : "var(--cut)",
+        "stroke-width": "2.2"
+      }));
+
+      // Center fuselage crease
+      svg.appendChild(line(100, 15, 100, 245, "valley", palette));
+      // First nose corners down to centerline
+      svg.appendChild(line(100, 15, 20, 95, "valley", palette));
+      svg.appendChild(line(100, 15, 180, 95, "valley", palette));
+      // Second nose taper
+      svg.appendChild(line(100, 95, 20, 155, "valley", palette));
+      svg.appendChild(line(100, 95, 180, 155, "valley", palette));
+      // Wing roots (mountain once the sheet is halved)
+      svg.appendChild(line(55, 155, 55, 245, "mountain", palette));
+      svg.appendChild(line(145, 155, 145, 245, "mountain", palette));
+      // Wing trailing tips
+      svg.appendChild(line(20, 215, 55, 245, "valley", palette));
+      svg.appendChild(line(180, 215, 145, 245, "valley", palette));
+      // Optional elevon trim near the tail
+      svg.appendChild(line(55, 225, 145, 225, "mountain", palette));
+
+      svg.appendChild(label(100, 55, "NOSE", "middle", palette));
+      svg.appendChild(label(100, 125, "FUSELAGE", "middle", palette));
+      svg.appendChild(label(38, 200, "WING", "middle", palette));
+      svg.appendChild(label(162, 200, "WING", "middle", palette));
+      svg.appendChild(label(100, 235, "TAIL", "middle", palette));
+
+      return svg;
+    }
+
+    const models = {
+      envelope: {
+        title: "Secret Envelope",
+        blurb: "A foldable pocket for hiding a short coded note. Start from a square cut from letter paper.",
+        size: "Square · ~7 in on US Letter",
+        steps: [
+          "Cut out the outer square along the solid border.",
+          "Valley-fold left and right panels to the center, then unfold.",
+          "Valley-fold the bottom tuck panel up; crease the corner diagonals.",
+          "Valley-fold the top flap down; reinforce the mountain tip guides.",
+          "Refold the sides, fold the tuck panel into the pocket, then close the flap."
+        ],
+        build: buildEnvelope
+      },
+      sailboat: {
+        title: "Sailboat",
+        blurb: "A classic one-sheet sailboat. Pre-crease the diagonals and waterline, then collapse into hull and sail.",
+        size: "Square · ~7 in on US Letter",
+        steps: [
+          "Cut out the square on the solid border.",
+          "Valley-fold both centerlines; mountain-fold one diagonal, valley the other.",
+          "Bring the top corner down to form the sail using the sail trim creases.",
+          "Fold the bottom corners up along the hull lines to make the boat body.",
+          "Mountain-fold the hull rail so the boat stands with a flat bottom edge."
+        ],
+        build: buildSailboat
+      },
+      box: {
+        title: "Masu Box",
+        blurb: "A traditional open square box. The grid sets wall height; corner mountains lock the sides.",
+        size: "Square · ~7 in on US Letter",
+        steps: [
+          "Cut out the square on the solid border.",
+          "Valley-fold the 4×4 grid in both directions, then unfold flat.",
+          "Mountain-crease the inner floor square and the four corner diagonals.",
+          "Pinch each corner, standing the walls upright along the mountain floor edges.",
+          "Tuck the corner flaps against the walls so the box locks open."
+        ],
+        build: buildBox
+      },
+      fortune: {
+        title: "Fortune Teller",
+        blurb: "A cootie catcher with numbered outer flaps—write cipher clues or fortunes under the pockets.",
+        size: "Square · ~7 in on US Letter",
+        steps: [
+          "Cut out the square on the solid border.",
+          "Valley-fold both midlines and both diagonals, then unfold.",
+          "Valley-fold each corner to the center along the diamond (blintz), then flip.",
+          "Again fold each corner to the center; reinforce the mountain pocket square.",
+          "Fold in half, slip fingers into the four pockets, and open into the fortune teller."
+        ],
+        build: buildFortune
+      },
+      airplane: {
+        title: "Airplane",
+        blurb: "A classic dart paper airplane from a letter-proportion rectangle. Pre-crease the nose and wings, then fly.",
+        size: "Rectangle · letter proportions on US Letter",
+        steps: [
+          "Cut out the rectangle on the solid border.",
+          "Valley-fold the long centerline, then unfold.",
+          "Valley-fold both top corners to the centerline for the first nose taper.",
+          "Valley-fold the new slanted edges to the centerline again.",
+          "Fold in half on the centerline, then mountain-fold each wing down along the wing-root creases."
+        ],
+        build: buildAirplane
+      }
+    };
+
+    function selectedModelId() {
+      const chosen = document.querySelector('input[name="origamiModel"]:checked');
+      return chosen ? chosen.value : "envelope";
+    }
+
+    function renderSteps(target, steps) {
+      target.replaceChildren();
+      steps.forEach((step) => {
+        const item = document.createElement("li");
+        item.textContent = step;
+        target.appendChild(item);
+      });
+    }
+
+    function renderModel() {
+      const model = models[selectedModelId()];
+      const preview = model.build("screen");
+      const printSvg = model.build("print");
+
+      previewHost.replaceChildren(preview);
+      printHost.replaceChildren(printSvg);
+      modelTitle.textContent = model.title;
+      modelBlurb.textContent = model.blurb;
+      printTitle.textContent = model.title;
+      printSize.textContent = model.size;
+      renderSteps(modelSteps, model.steps);
+      renderSteps(printSteps, model.steps);
+    }
+
+    document.querySelectorAll('input[name="origamiModel"]').forEach((input) => {
+      input.addEventListener("change", renderModel);
+    });
+
+    printButton.addEventListener("click", () => {
+      renderModel();
+      window.print();
+    });
+
+    renderModel();
+  </script>
+  <script>
+    (function initMobileNav() {
+      const toggle = document.querySelector(".nav-toggle");
+      const menu = document.getElementById("site-menu");
+      if (!toggle || !menu) return;
+
+      const setOpen = (open) => {
+        menu.classList.toggle("is-open", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      };
+
+      toggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setOpen(toggle.getAttribute("aria-expanded") !== "true");
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".site-nav")) setOpen(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") setOpen(false);
+      });
+
+      window.matchMedia("(max-width: 720px)").addEventListener("change", (event) => {
+        if (!event.matches) setOpen(false);
+      });
+    })();
+  </script>
+</body>
+</html>
